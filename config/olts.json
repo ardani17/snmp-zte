@@ -1,0 +1,24 @@
+{
+  "server": {
+    "host": "0.0.0.0",
+    "port": 8080
+  },
+  "redis": {
+    "host": "",
+    "port": 6379,
+    "password": "",
+    "db": 0
+  },
+  "olts": [
+    {
+      "id": "ardani-c320",
+      "name": "OLT C320 - ARDANI",
+      "model": "C320",
+      "ip_address": "91.192.81.36",
+      "port": 2161,
+      "community": "public",
+      "board_count": 2,
+      "pon_per_board": 16
+    }
+  ]
+}
