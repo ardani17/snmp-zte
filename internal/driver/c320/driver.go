@@ -316,14 +316,173 @@ func (d *Driver) GetSystemInfo(ctx context.Context) (*driver.SystemInfo, error) 
 
 // GetBoardInfo returns board information
 func (d *Driver) GetBoardInfo(ctx context.Context, boardID int) (*model.BoardInfo, error) {
-	// TODO: Implement board info retrieval
-	return &model.BoardInfo{BoardID: boardID}, nil
+	if !d.connected {
+		if err := d.Connect(); err != nil {
+			return nil, err
+		}
+	}
+
+	info := &model.BoardInfo{BoardID: boardID}
+	boardIDStr := strconv.Itoa(boardID)
+
+	// Get Card Type
+	if val, err := d.snmpGet(BaseOID3 + CardTypePrefix + "." + boardIDStr); err == nil {
+		info.Type = extractString(val)
+	}
+
+	// Get Card Status
+	if val, err := d.snmpGet(BaseOID3 + CardStatusPrefix + "." + boardIDStr); err == nil {
+		if intVal, ok := val.(int); ok {
+			info.Status = model.CardStatus(intVal).String()
+		}
+	}
+
+	// Get CPU Load
+	if val, err := d.snmpGet(BaseOID3 + CardCpuLoadPrefix + "." + boardIDStr); err == nil {
+		if intVal, ok := val.(int); ok {
+			info.CpuLoad = intVal
+		}
+	}
+
+	// Get Memory Usage
+	if val, err := d.snmpGet(BaseOID3 + CardMemUsagePrefix + "." + boardIDStr); err == nil {
+		if intVal, ok := val.(int); ok {
+			info.MemUsage = intVal
+		}
+	}
+
+	return info, nil
+}
+
+// GetAllBoards returns all board information
+func (d *Driver) GetAllBoards(ctx context.Context) ([]model.BoardInfo, error) {
+	var boards []model.BoardInfo
+	for i := 1; i <= MaxBoards; i++ {
+		info, err := d.GetBoardInfo(ctx, i)
+		if err != nil {
+			continue
+		}
+		boards = append(boards, *info)
+	}
+	return boards, nil
 }
 
 // GetPONInfo returns PON port information
 func (d *Driver) GetPONInfo(ctx context.Context, boardID, ponID int) (*model.PONInfo, error) {
-	// TODO: Implement PON info retrieval
-	return &model.PONInfo{BoardID: boardID, PonID: ponID}, nil
+	if !d.connected {
+		if err := d.Connect(); err != nil {
+			return nil, err
+		}
+	}
+
+	info := &model.PONInfo{
+		BoardID: boardID,
+		PonID:   ponID,
+	}
+
+	// Calculate PON index
+	ponIndex := (boardID-1)*MaxPonPerBoard + ponID
+	ponIndexStr := strconv.Itoa(ponIndex)
+
+	// Get TX Power
+	if val, err := d.snmpGet(BaseOID3 + PonTxPowerPrefix + "." + ponIndexStr); err == nil {
+		if intVal, ok := val.(int); ok {
+			info.TxPower = float64(intVal) / 100.0
+		}
+	}
+
+	// Get RX Power
+	if val, err := d.snmpGet(BaseOID3 + PonRxPowerPrefix + "." + ponIndexStr); err == nil {
+		if intVal, ok := val.(int); ok {
+			info.RxPower = float64(intVal) / 100.0
+		}
+	}
+
+	return info, nil
+}
+
+// GetONUTraffic returns ONU traffic statistics (placeholder - requires specific OID)
+func (d *Driver) GetONUTraffic(ctx context.Context, boardID, ponID, onuID int) (*model.ONUTraffic, error) {
+	if !d.connected {
+		if err := d.Connect(); err != nil {
+			return nil, err
+		}
+	}
+
+	traffic := &model.ONUTraffic{
+		Board:     boardID,
+		PON:       ponID,
+		ONUID:     onuID,
+		Timestamp: time.Now().UTC().Format(time.RFC3339),
+	}
+
+	// Note: ONU traffic OIDs vary by OLT configuration
+	// These are placeholder implementations
+	return traffic, nil
+}
+
+// GetInterfaceStats returns interface statistics
+func (d *Driver) GetInterfaceStats(ctx context.Context) ([]model.InterfaceStats, error) {
+	if !d.connected {
+		if err := d.Connect(); err != nil {
+			return nil, err
+		}
+	}
+
+	var stats []model.InterfaceStats
+	indexMap := make(map[int]*model.InterfaceStats)
+
+	// Walk interface descriptions
+	d.client.Walk("1.3.6.1.2.1.2.2.1.2", func(pdu gosnmp.SnmpPDU) error {
+		idx := extractLastOIDPart(pdu.Name)
+		if idx > 0 {
+			indexMap[idx] = &model.InterfaceStats{
+				Index:       idx,
+				Description: extractString(pdu.Value),
+			}
+		}
+		return nil
+	})
+
+	// Walk interface status
+	d.client.Walk("1.3.6.1.2.1.2.2.1.8", func(pdu gosnmp.SnmpPDU) error {
+		idx := extractLastOIDPart(pdu.Name)
+		if stat, ok := indexMap[idx]; ok {
+			if intVal, ok := pdu.Value.(int); ok {
+				if intVal == 1 {
+					stat.Status = "Up"
+				} else {
+					stat.Status = "Down"
+				}
+			}
+		}
+		return nil
+	})
+
+	// Walk RX bytes
+	d.client.Walk("1.3.6.1.2.1.2.2.1.10", func(pdu gosnmp.SnmpPDU) error {
+		idx := extractLastOIDPart(pdu.Name)
+		if stat, ok := indexMap[idx]; ok {
+			stat.RxBytes = extractCounter64(pdu.Value)
+		}
+		return nil
+	})
+
+	// Walk TX bytes
+	d.client.Walk("1.3.6.1.2.1.2.2.1.16", func(pdu gosnmp.SnmpPDU) error {
+		idx := extractLastOIDPart(pdu.Name)
+		if stat, ok := indexMap[idx]; ok {
+			stat.TxBytes = extractCounter64(pdu.Value)
+		}
+		return nil
+	})
+
+	// Convert to slice
+	for _, stat := range indexMap {
+		stats = append(stats, *stat)
+	}
+
+	return stats, nil
 }
 
 // snmpGet performs an SNMP GET request
@@ -341,15 +500,28 @@ func (d *Driver) snmpGet(oid string) (interface{}, error) {
 // Helper functions
 
 func extractOnuID(oid string) int {
-	// Extract last component from OID
-	// e.g., ".1.3.6.1.4.1.3902.1082.500.10.2.3.3.1.2.285278465.5" -> 5
+	return extractLastOIDPart(oid)
+}
+
+func extractLastOIDPart(oid string) int {
 	parts := splitOID(oid)
-	if len(parts) < 2 {
+	if len(parts) < 1 {
 		return 0
 	}
 	lastPart := parts[len(parts)-1]
 	id, _ := strconv.Atoi(lastPart)
 	return id
+}
+
+func extractOnuIDSuffix(boardID, ponID int) string {
+	var baseOnuID int
+	if boardID == 1 {
+		baseOnuID = Board1OnuIDBase
+	} else {
+		baseOnuID = Board2OnuIDBase
+	}
+	suffix := baseOnuID + (ponID * OnuIDIncrement)
+	return strconv.Itoa(suffix)
 }
 
 func splitOID(oid string) []string {
@@ -382,11 +554,25 @@ func extractString(val interface{}) string {
 
 func extractSerialNumber(val interface{}) string {
 	s := extractString(val)
-	// Remove "1," prefix if present
 	if len(s) > 2 && s[:2] == "1," {
 		return s[2:]
 	}
 	return s
+}
+
+func extractCounter64(val interface{}) int64 {
+	switch v := val.(type) {
+	case uint:
+		return int64(v)
+	case uint64:
+		return int64(v)
+	case int:
+		return int64(v)
+	case int64:
+		return v
+	default:
+		return 0
+	}
 }
 
 func convertPower(val interface{}) string {
@@ -419,8 +605,6 @@ func convertDateTime(val interface{}) string {
 	if !ok || len(bytes) != 8 {
 		return ""
 	}
-	// Parse 8-byte datetime format
-	// Year(2), Month(1), Day(1), Hour(1), Min(1), Sec(1), Reserved(2)
 	year := int(bytes[0])<<8 | int(bytes[1])
 	month := int(bytes[2])
 	day := int(bytes[3])
@@ -432,8 +616,6 @@ func convertDateTime(val interface{}) string {
 }
 
 func calculateUptime(lastOnline string) string {
-	// Parse lastOnline and calculate duration
-	// TODO: Implement proper uptime calculation
 	return lastOnline
 }
 

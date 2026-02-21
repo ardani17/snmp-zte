@@ -21,6 +21,8 @@ type Driver interface {
 	GetSystemInfo(ctx context.Context) (*SystemInfo, error)
 	GetBoardInfo(ctx context.Context, boardID int) (*model.BoardInfo, error)
 	GetPONInfo(ctx context.Context, boardID, ponID int) (*model.PONInfo, error)
+	GetAllBoards(ctx context.Context) ([]model.BoardInfo, error)
+	GetInterfaceStats(ctx context.Context) ([]model.InterfaceStats, error)
 
 	// Validation
 	ValidateBoardID(boardID int) bool
@@ -34,11 +36,11 @@ type Driver interface {
 
 // ModelInfo represents OLT model information
 type ModelInfo struct {
-	Name         string `json:"name"`
-	Vendor       string `json:"vendor"`
-	MaxBoards    int    `json:"max_boards"`
-	MaxPonPerBoard int  `json:"max_pon_per_board"`
-	MaxOnuPerPon int    `json:"max_onu_per_pon"`
+	Name           string `json:"name"`
+	Vendor         string `json:"vendor"`
+	MaxBoards      int    `json:"max_boards"`
+	MaxPonPerBoard int    `json:"max_pon_per_board"`
+	MaxOnuPerPon   int    `json:"max_onu_per_pon"`
 }
 
 // SystemInfo represents OLT system information
@@ -48,12 +50,6 @@ type SystemInfo struct {
 	Uptime      string `json:"uptime"`
 	Contact     string `json:"contact"`
 	Location    string `json:"location"`
-}
-
-// OIDConfig represents OID configuration for a specific OLT model
-type OIDConfig struct {
-	BaseOID1 string
-	BaseOID2 string
 }
 
 // BoardPonConfig represents OID configuration for a specific Board/PON combination

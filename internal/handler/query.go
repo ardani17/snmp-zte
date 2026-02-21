@@ -110,6 +110,14 @@ func (h *QueryHandler) Query(w http.ResponseWriter, r *http.Request) {
 		result, err = drv.GetEmptySlots(ctx, req.Board, req.Pon)
 	case "system_info":
 		result, err = drv.GetSystemInfo(ctx)
+	case "board_info":
+		result, err = drv.GetBoardInfo(ctx, req.Board)
+	case "all_boards":
+		result, err = drv.GetAllBoards(ctx)
+	case "pon_info":
+		result, err = drv.GetPONInfo(ctx, req.Board, req.Pon)
+	case "interface_stats":
+		result, err = drv.GetInterfaceStats(ctx)
 	default:
 		response.BadRequest(w, "Unknown query: "+req.Query)
 		return

@@ -10,8 +10,9 @@ import (
 const (
 	BaseOID1 = ".1.3.6.1.4.1.3902.1082"
 	BaseOID2 = ".1.3.6.1.4.1.3902.1012"
+	BaseOID3 = ".1.3.6.1.4.1.3902.1015"
 
-	// OID Prefixes (same for all Board/PON)
+	// OID Prefixes for ONU
 	OnuIDNamePrefix              = ".500.10.2.3.3.1.2"
 	OnuTypePrefix                = ".3.50.11.2.1.17"
 	OnuSerialNumberPrefix        = ".500.10.2.3.3.1.18"
@@ -24,6 +25,16 @@ const (
 	OnuLastOfflineTimePrefix     = ".500.10.2.3.8.1.6"
 	OnuLastOfflineReasonPrefix   = ".500.10.2.3.8.1.7"
 	OnuGponOpticalDistancePrefix = ".500.10.2.3.10.1.2"
+
+	// Board/Card OIDs (under BaseOID3)
+	CardTypePrefix     = ".2.1.1.3.1.2"
+	CardStatusPrefix   = ".2.1.1.3.1.5"
+	CardCpuLoadPrefix  = ".2.1.1.3.1.9"
+	CardMemUsagePrefix = ".2.1.1.3.1.11"
+
+	// PON Port OIDs
+	PonTxPowerPrefix = ".1010.11.1.1.5"
+	PonRxPowerPrefix = ".1010.11.2.1.2"
 
 	// Board-PON ID Constants
 	Board1OnuIDBase   = 285278464
