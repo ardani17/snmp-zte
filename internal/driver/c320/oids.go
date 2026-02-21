@@ -26,21 +26,24 @@ const (
 	OnuLastOfflineReasonPrefix   = ".500.10.2.3.8.1.7"
 	OnuGponOpticalDistancePrefix = ".500.10.2.3.10.1.2"
 
-	// Board/Card OIDs (under BaseOID3)
-	CardTypePrefix     = ".2.1.1.3.1.2"
-	CardStatusPrefix   = ".2.1.1.3.1.5"
-	CardCpuLoadPrefix  = ".2.1.1.3.1.9"
-	CardMemUsagePrefix = ".2.1.1.3.1.11"
+	// Card/Board OIDs (discovered via SNMP walk)
+	CardCpuLoadOID  = ".2.1.1.3.1.9.1.1"    // CPU load per card
+	CardMemUsageOID = ".2.1.1.3.1.10.1.1"   // Memory usage per card
 
-	// PON Port OIDs
-	PonTxPowerPrefix = ".1010.11.1.1.5"
-	PonRxPowerPrefix = ".1010.11.2.1.2"
+	// PON Port OIDs (discovered via SNMP walk)
+	// Index: 268501248 for Board 1 (268500992 + 256)
+	PonRxPowerOID = ".1010.11.2.1.2"  // RX power in hundredths
+	PonTxPowerOID = ".1010.11.1.1.5"  // TX power in hundredths
 
 	// Board-PON ID Constants
 	Board1OnuIDBase   = 285278464
 	Board1OnuTypeBase = 268500992
 	Board2OnuIDBase   = 285278720
 	Board2OnuTypeBase = 268566528
+
+	// PON Index base (for PON port stats)
+	Board1PonIndexBase = 268501248
+	Board2PonIndexBase = 268566784
 
 	// Increment values
 	OnuIDIncrement   = 1
@@ -92,4 +95,12 @@ func GenerateBoardPonOID(boardID, ponID int) *driver.BoardPonConfig {
 		OnuLastOfflineReasonOID:   OnuLastOfflineReasonPrefix + "." + strconv.Itoa(onuIDSuffix),
 		OnuGponOpticalDistanceOID: OnuGponOpticalDistancePrefix + "." + strconv.Itoa(onuIDSuffix),
 	}
+}
+
+// GetPonIndexBase returns the PON index base for a board
+func GetPonIndexBase(boardID int) int {
+	if boardID == 1 {
+		return Board1PonIndexBase
+	}
+	return Board2PonIndexBase
 }
