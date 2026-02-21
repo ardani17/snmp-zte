@@ -10,10 +10,11 @@ import (
 
 	"github.com/ardani/snmp-zte/internal/config"
 	"github.com/ardani/snmp-zte/internal/handler"
+	"github.com/ardani/snmp-zte/internal/middleware"
 	"github.com/ardani/snmp-zte/internal/service"
 	"github.com/ardani/snmp-zte/pkg/response"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -53,14 +54,18 @@ func main() {
 	// Initialize handlers
 	onuHandler := handler.NewONUHandler(onuService)
 	oltHandler := handler.NewOLTHandler(oltService)
+	queryHandler := handler.NewQueryHandler()
 
-	// Setup router
-	router := setupRouter(oltHandler, onuHandler)
+	// Setup router with all middleware
+	router := setupRouter(oltHandler, onuHandler, queryHandler)
 
 	// Start server
 	server := &http.Server{
-		Addr:    cfg.Server.Addr(),
-		Handler: router,
+		Addr:         cfg.Server.Addr(),
+		Handler:      router,
+		ReadTimeout:  30 * time.Second,
+		WriteTimeout: 90 * time.Second,
+		IdleTimeout:  120 * time.Second,
 	}
 
 	// Graceful shutdown
@@ -82,7 +87,12 @@ func main() {
 		cancel()
 	}()
 
-	log.Info().Str("addr", cfg.Server.Addr()).Msg("Starting server")
+	log.Info().
+		Str("addr", cfg.Server.Addr()).
+		Int("rate_limit", 20).
+		Int("max_concurrent_snmp", 100).
+		Msg("Starting server")
+
 	if err := server.ListenAndServe(); err != http.ErrServerClosed {
 		log.Fatal().Err(err).Msg("Server error")
 	}
@@ -91,28 +101,69 @@ func main() {
 	log.Info().Msg("Server stopped")
 }
 
-func setupRouter(oltHandler *handler.OLTHandler, onuHandler *handler.ONUHandler) http.Handler {
+func setupRouter(
+	oltHandler *handler.OLTHandler,
+	onuHandler *handler.ONUHandler,
+	queryHandler *handler.QueryHandler,
+) http.Handler {
 	r := chi.NewRouter()
 
-	// Middleware
-	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
-	r.Use(middleware.Timeout(90 * time.Second))
+	// ─────────────────────────────────────────────────────────────────
+	// MIDDLEWARE CHAIN
+	// ─────────────────────────────────────────────────────────────────
+	
+	// Basic middleware
+	r.Use(chiMiddleware.RequestID)
+	r.Use(chiMiddleware.RealIP)
+	r.Use(chiMiddleware.Logger)
+	r.Use(chiMiddleware.Recoverer)
+	
+	// Rate limiting: 20 requests per minute per IP
+	rateLimiter := middleware.NewRateLimiter(20, time.Minute)
+	r.Use(rateLimiter.Middleware)
+	
+	// CORS: Allow all origins (for public use)
+	r.Use(middleware.DefaultCORS())
+	
+	// Timeout
+	r.Use(chiMiddleware.Timeout(90 * time.Second))
 
-	// Routes
+	// ─────────────────────────────────────────────────────────────────
+	// ROUTES
+	// ─────────────────────────────────────────────────────────────────
+
+	// Root endpoint
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		response.JSON(w, http.StatusOK, map[string]string{
-			"name":    "SNMP-ZTE API",
-			"version": "1.0.0",
-			"status":  "running",
+		response.JSON(w, http.StatusOK, map[string]interface{}{
+			"name":              "SNMP-ZTE API",
+			"version":           "2.0.0",
+			"status":            "running",
+			"features":          []string{"stateless_query", "rate_limiting", "cors"},
+			"rate_limit":        "20 req/min per IP",
+			"max_concurrent":    100,
 		})
 	})
 
-	// API v1
+	// Health check
+	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+		response.JSON(w, http.StatusOK, map[string]string{
+			"status": "healthy",
+		})
+	})
+
+	// Pool statistics
+	r.Get("/stats", queryHandler.PoolStats)
+
+	// ─────────────────────────────────────────────────────────────────
+	// API V1 - STATELESS QUERY (No credentials stored)
+	// ─────────────────────────────────────────────────────────────────
 	r.Route("/api/v1", func(r chi.Router) {
-		// OLT Management
+		// Stateless query endpoint (for public use)
+		// Credentials sent per request, never stored
+		r.Post("/query", queryHandler.Query)
+		r.Post("/olt-info", queryHandler.OLTInfo)
+
+		// Legacy endpoints (with stored OLT config)
 		r.Route("/olts", func(r chi.Router) {
 			r.Get("/", oltHandler.List)
 			r.Post("/", oltHandler.Create)
@@ -121,7 +172,6 @@ func setupRouter(oltHandler *handler.OLTHandler, onuHandler *handler.ONUHandler)
 			r.Delete("/{olt_id}", oltHandler.Delete)
 		})
 
-		// ONU Operations
 		r.Route("/olts/{olt_id}", func(r chi.Router) {
 			r.Route("/board/{board_id}/pon/{pon_id}", func(r chi.Router) {
 				r.Get("/", onuHandler.List)
