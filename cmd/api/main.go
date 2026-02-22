@@ -75,7 +75,7 @@ func main() {
 		server.Shutdown(ctx)
 	}()
 
-	log.Info().Str("addr", cfg.Server.Addr()).Str("swagger", "http://"+cfg.Server.Addr()+"/swagger/index.html").Msg("Starting")
+	log.Info().Str("addr", cfg.Server.Addr()).Str("swagger", "http://localhost:"+cfg.Server.Port+"/swagger/index.html").Msg("Starting")
 
 	if err := server.ListenAndServe(); err != http.ErrServerClosed {
 		log.Fatal().Err(err).Msg("Server error")
@@ -106,8 +106,18 @@ func setupRouter(oltHandler *handler.OLTHandler, onuHandler *handler.ONUHandler,
 
 	r.Get("/stats", queryHandler.PoolStats)
 
-	// Swagger UI
-	r.Get("/swagger/*", httpSwagger.Handler())
+	// Swagger redirect: /swagger -> /swagger/index.html
+	r.Get("/swagger", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/swagger/index.html", http.StatusMovedPermanently)
+	})
+
+	// Swagger UI - serve at /swagger/*
+	r.Get("/swagger/", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/swagger/index.html", http.StatusMovedPermanently)
+	})
+	r.Get("/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL("/swagger/doc.json"),
+	))
 
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Post("/query", queryHandler.Query)

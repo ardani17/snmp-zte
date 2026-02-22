@@ -26,14 +26,15 @@ const (
 	OnuLastOfflineReasonPrefix   = ".500.10.2.3.8.1.7"
 	OnuGponOpticalDistancePrefix = ".500.10.2.3.10.1.2"
 
-	// Card/Board OIDs (discovered via SNMP walk)
-	CardCpuLoadOID  = ".2.1.1.3.1.9.1.1"    // CPU load per card
-	CardMemUsageOID = ".2.1.1.3.1.10.1.1"   // Memory usage per card
+	// Board/Card OIDs (under BaseOID3)
+	CardTypePrefix     = ".2.1.1.3.1.2"
+	CardStatusPrefix   = ".2.1.1.3.1.5"
+	CardCpuLoadPrefix  = ".2.1.1.3.1.9"
+	CardMemUsagePrefix = ".2.1.1.3.1.11"
 
-	// PON Port OIDs (discovered via SNMP walk)
-	// Index: 268501248 for Board 1 (268500992 + 256)
-	PonRxPowerOID = ".1010.11.2.1.2"  // RX power in hundredths
-	PonTxPowerOID = ".1010.11.1.1.5"  // TX power in hundredths
+	// PON Port OIDs
+	PonTxPowerPrefix = ".1010.11.1.1.5"
+	PonRxPowerPrefix = ".1010.11.2.1.2"
 
 	// Board-PON ID Constants
 	Board1OnuIDBase   = 285278464

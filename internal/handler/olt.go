@@ -21,13 +21,27 @@ func NewOLTHandler(service *service.OLTService) *OLTHandler {
 	return &OLTHandler{service: service}
 }
 
-// List returns all OLTs
+// List godoc
+// @Summary List all OLTs
+// @Description Get a list of all configured OLTs
+// @Tags OLT
+// @Produce json
+// @Success 200 {array} model.OLT
+// @Router /api/v1/olts [get]
 func (h *OLTHandler) List(w http.ResponseWriter, r *http.Request) {
 	olts := h.service.List()
 	response.JSON(w, http.StatusOK, olts)
 }
 
-// Get returns an OLT by ID
+// Get godoc
+// @Summary Get OLT
+// @Description Get OLT by ID
+// @Tags OLT
+// @Produce json
+// @Param olt_id path string true "OLT ID"
+// @Success 200 {object} model.OLT
+// @Failure 404 {object} response.ErrorResponse
+// @Router /api/v1/olts/{olt_id} [get]
 func (h *OLTHandler) Get(w http.ResponseWriter, r *http.Request) {
 	oltID := chi.URLParam(r, "olt_id")
 	if oltID == "" {
@@ -44,7 +58,17 @@ func (h *OLTHandler) Get(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, http.StatusOK, olt)
 }
 
-// Create creates a new OLT
+// Create godoc
+// @Summary Create OLT
+// @Description Create a new OLT configuration
+// @Tags OLT
+// @Accept json
+// @Produce json
+// @Param request body model.OLT true "OLT info"
+// @Success 201 {object} model.OLT
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Router /api/v1/olts [post]
 func (h *OLTHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		ID          string `json:"id"`
@@ -114,7 +138,18 @@ func (h *OLTHandler) Create(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, http.StatusCreated, olt)
 }
 
-// Update updates an existing OLT
+// Update godoc
+// @Summary Update OLT
+// @Description Update an existing OLT configuration
+// @Tags OLT
+// @Accept json
+// @Produce json
+// @Param olt_id path string true "OLT ID"
+// @Param request body model.OLT true "OLT info"
+// @Success 200 {object} model.OLT
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Router /api/v1/olts/{olt_id} [put]
 func (h *OLTHandler) Update(w http.ResponseWriter, r *http.Request) {
 	oltID := chi.URLParam(r, "olt_id")
 	if oltID == "" {
@@ -156,7 +191,15 @@ func (h *OLTHandler) Update(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, http.StatusOK, olt)
 }
 
-// Delete removes an OLT
+// Delete godoc
+// @Summary Delete OLT
+// @Description Remove an OLT configuration
+// @Tags OLT
+// @Produce json
+// @Param olt_id path string true "OLT ID"
+// @Success 200 {object} map[string]string
+// @Failure 404 {object} response.ErrorResponse
+// @Router /api/v1/olts/{olt_id} [delete]
 func (h *OLTHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	oltID := chi.URLParam(r, "olt_id")
 	if oltID == "" {
