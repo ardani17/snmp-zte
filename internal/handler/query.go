@@ -44,6 +44,7 @@ type QueryRequest struct {
 // QueryResponse represents a query response
 type QueryResponse struct {
 	Query     string      `json:"query"`
+	Summary   string      `json:"summary,omitempty"`
 	Data      interface{} `json:"data"`
 	Timestamp string      `json:"timestamp"`
 	Duration  string      `json:"duration"`
@@ -158,6 +159,17 @@ func (h *QueryHandler) Query(w http.ResponseWriter, r *http.Request) {
 		Data:      result,
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
 		Duration:  time.Since(start).String(),
+	}
+
+	// Tambahkan summary khusus untuk empty_slots (misal: "110/128")
+	if req.Query == "empty_slots" {
+		if slots, ok := result.([]model.ONUSlot); ok {
+			total := 128 // Default ZTE C320
+			if drv.GetModelInfo().MaxOnuPerPon > 0 {
+				total = drv.GetModelInfo().MaxOnuPerPon
+			}
+			resp.Summary = fmt.Sprintf("%d/%d", len(slots), total)
+		}
 	}
 
 	response.JSON(w, http.StatusOK, resp)
