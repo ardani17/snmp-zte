@@ -9,6 +9,7 @@ import (
 
 	"github.com/ardani/snmp-zte/internal/driver"
 	"github.com/ardani/snmp-zte/internal/driver/c320"
+	"github.com/ardani/snmp-zte/internal/model"
 	"github.com/ardani/snmp-zte/internal/snmp"
 	"github.com/ardani/snmp-zte/pkg/response"
 )
