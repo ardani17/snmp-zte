@@ -75,7 +75,7 @@ func main() {
 		server.Shutdown(ctx)
 	}()
 
-	log.Info().Str("addr", cfg.Server.Addr()).Str("swagger", "http://localhost:"+cfg.Server.Port+"/swagger/index.html").Msg("Starting")
+	log.Info().Str("addr", cfg.Server.Addr()).Str("swagger", fmt.Sprintf("http://localhost:%d/swagger/index.html", cfg.Server.Port)).Msg("Starting")
 
 	if err := server.ListenAndServe(); err != http.ErrServerClosed {
 		log.Fatal().Err(err).Msg("Server error")
