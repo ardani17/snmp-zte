@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/ardani/snmp-zte/internal/config"
-	_ "github.com/ardani/snmp-zte/docs" // swagger docs
 	"github.com/ardani/snmp-zte/internal/handler"
 	"github.com/ardani/snmp-zte/internal/middleware"
 	"github.com/ardani/snmp-zte/internal/service"
@@ -20,6 +19,8 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	httpSwagger "github.com/swaggo/http-swagger"
+
+	_ "github.com/ardani/snmp-zte/docs" // swagger docs
 )
 
 // @title SNMP-ZTE API
@@ -36,9 +37,6 @@ import (
 
 // @host localhost:8080
 // @BasePath /
-// @accept json
-// @produce json
-
 func main() {
 	// Setup logger
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
@@ -133,27 +131,26 @@ func setupRouter(
 	r.Use(chiMiddleware.RealIP)
 	r.Use(chiMiddleware.Logger)
 	r.Use(chiMiddleware.Recoverer)
-	
-	// Rate limiting: 20 requests per minute per IP
+
+	// Rate limiting
 	rateLimiter := middleware.NewRateLimiter(20, time.Minute)
 	r.Use(rateLimiter.Middleware)
-	
-	// CORS: Allow all origins
+
+	// CORS
 	r.Use(middleware.DefaultCORS())
-	
+
 	// Timeout
 	r.Use(chiMiddleware.Timeout(90 * time.Second))
 
 	// Root endpoint
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		response.JSON(w, http.StatusOK, map[string]interface{}{
-			"name":              "SNMP-ZTE API",
-			"version":           "2.1.0",
-			"status":            "running",
-			"features":          []string{"stateless_query", "rate_limiting", "cors", "swagger"},
-			"rate_limit":        "20 req/min per IP",
-			"max_concurrent":    100,
-			"swagger_docs":      "/swagger/index.html",
+			"name":           "SNMP-ZTE API",
+			"version":        "2.1.0",
+			"status":         "running",
+			"swagger_docs":   "/swagger/index.html",
+			"rate_limit":     "20 req/min per IP",
+			"max_concurrent": 100,
 		})
 	})
 
@@ -167,18 +164,18 @@ func setupRouter(
 	// Pool statistics
 	r.Get("/stats", queryHandler.PoolStats)
 
-	// Swagger UI
+	// Swagger UI - serve at /swagger/*
 	r.Get("/swagger/*", httpSwagger.Handler(
-		httpSwagger.URL("http://localhost:8080/swagger/doc.json"),
+		httpSwagger.URL("/swagger/doc.json"),
 	))
 
 	// API v1
 	r.Route("/api/v1", func(r chi.Router) {
-		// Stateless query endpoint (for public use)
+		// Stateless query endpoint
 		r.Post("/query", queryHandler.Query)
 		r.Post("/olt-info", queryHandler.OLTInfo)
 
-		// Legacy endpoints (with stored OLT config)
+		// Legacy endpoints
 		r.Route("/olts", func(r chi.Router) {
 			r.Get("/", oltHandler.List)
 			r.Post("/", oltHandler.Create)
