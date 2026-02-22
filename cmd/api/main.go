@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/ardani/snmp-zte/internal/config"
+	_ "github.com/ardani/snmp-zte/docs"
 	"github.com/ardani/snmp-zte/internal/handler"
 	"github.com/ardani/snmp-zte/internal/middleware"
 	"github.com/ardani/snmp-zte/internal/service"
@@ -18,8 +19,6 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-
-	_ "github.com/ardani/snmp-zte/docs"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
@@ -107,10 +106,8 @@ func setupRouter(oltHandler *handler.OLTHandler, onuHandler *handler.ONUHandler,
 
 	r.Get("/stats", queryHandler.PoolStats)
 
-	// Swagger UI - serve at /swagger/*
-	r.Get("/swagger/*", httpSwagger.Handler(
-		httpSwagger.URL("/swagger/doc.json"),
-	))
+	// Swagger UI
+	r.Get("/swagger/*", httpSwagger.Handler())
 
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Post("/query", queryHandler.Query)
