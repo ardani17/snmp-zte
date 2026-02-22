@@ -107,8 +107,10 @@ func setupRouter(oltHandler *handler.OLTHandler, onuHandler *handler.ONUHandler,
 
 	r.Get("/stats", queryHandler.PoolStats)
 
-	// Swagger
-	r.Get("/swagger/*", httpSwagger.Handler())
+	// Swagger UI - serve at /swagger/*
+	r.Get("/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL("/swagger/doc.json"),
+	))
 
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Post("/query", queryHandler.Query)

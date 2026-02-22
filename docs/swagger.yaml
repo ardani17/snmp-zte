@@ -1,172 +1,74 @@
-basePath: /
-definitions:
-  handler.OLTInfoRequest:
-    properties:
-      community:
-        example: public
-        type: string
-      ip:
-        example: 192.168.1.1
-        type: string
-      model:
-        example: C320
-        type: string
-      port:
-        example: 161
-        type: integer
-    type: object
-  handler.QueryRequest:
-    properties:
-      board:
-        example: 1
-        type: integer
-      community:
-        example: public
-        type: string
-      ip:
-        description: OLT connection details (not stored)
-        example: 192.168.1.1
-        type: string
-      model:
-        description: C320, C300, C600
-        example: C320
-        type: string
-      onu_id:
-        example: 1
-        type: integer
-      pon:
-        example: 1
-        type: integer
-      port:
-        example: 161
-        type: integer
-      query:
-        description: Query parameters
-        example: onu_list
-        type: string
-    type: object
-  handler.QueryResponse:
-    properties:
-      data: {}
-      duration:
-        type: string
-      query:
-        type: string
-      timestamp:
-        type: string
-    type: object
-  response.ErrorResponse:
-    properties:
-      code:
-        type: integer
-      message:
-        type: string
-      status:
-        type: string
-    type: object
-  response.Response:
-    properties:
-      code:
-        type: integer
-      data: {}
-      status:
-        type: string
-    type: object
-host: localhost:8080
+schemes:
+- http
+swagger: "2.0"
 info:
+  description: Multi-OLT SNMP monitoring system for ZTE devices
+  title: SNMP-ZTE API
+  termsOfService: http://swagger.io/terms/
   contact:
-    email: adifta22@gmail.com
     name: API Support
     url: https://github.com/ardani17/snmp-zte
-  description: Multi-OLT SNMP monitoring system for ZTE devices (C320, C300, C600)
+    email: adifta22@gmail.com
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
-  termsOfService: http://swagger.io/terms/
-  title: SNMP-ZTE API
   version: "2.1"
+host: localhost:8080
+basePath: /
 paths:
-  /api/v1/olt-info:
-    post:
-      consumes:
-      - application/json
-      description: Get OLT system information
-      parameters:
-      - description: OLT Info Request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/handler.OLTInfoRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.Response'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-      summary: Get OLT Info
-      tags:
-      - Query
   /api/v1/query:
     post:
+      description: Query OLT data without storing credentials
       consumes:
       - application/json
-      description: 'Query OLT data without storing credentials. Supports: onu_list,
-        onu_detail, empty_slots, system_info, board_info, all_boards, pon_info, interface_stats'
+      produces:
+      - application/json
+      summary: Stateless SNMP Query
       parameters:
       - description: Query Request
-        in: body
         name: request
+        in: body
         required: true
         schema:
-          $ref: '#/definitions/handler.QueryRequest'
-      produces:
-      - application/json
+          type: object
+          properties:
+            board:
+              type: integer
+              example: 1
+            community:
+              type: string
+              example: public
+            ip:
+              type: string
+              example: 192.168.1.1
+            model:
+              type: string
+              example: C320
+            onu_id:
+              type: integer
+              example: 1
+            pon:
+              type: integer
+              example: 1
+            port:
+              type: integer
+              example: 161
+            query:
+              type: string
+              example: onu_list
       responses:
         "200":
           description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/handler.QueryResponse'
-              type: object
         "400":
           description: Bad Request
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
         "500":
           description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-        "504":
-          description: Gateway Timeout
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-      summary: Stateless SNMP Query
-      tags:
-      - Query
-  /stats:
+  /health:
     get:
-      description: Get connection pool statistics
+      description: Health check endpoint
       produces:
       - application/json
+      summary: Health Check
       responses:
         "200":
           description: OK
-          schema:
-            $ref: '#/definitions/response.Response'
-      summary: Get SNMP Pool Stats
-      tags:
-      - System
-swagger: "2.0"
