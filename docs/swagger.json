@@ -21,10 +21,11 @@
     "paths": {
         "/api/v1/query": {
             "post": {
-                "description": "Query OLT data without storing credentials",
+                "description": "Query OLT data without storing credentials. Supports: onu_list, onu_detail, empty_slots, system_info, board_info, all_boards, pon_info, interface_stats",
                 "consumes": ["application/json"],
                 "produces": ["application/json"],
                 "summary": "Stateless SNMP Query",
+                "tags": ["Query"],
                 "parameters": [
                     {
                         "description": "Query Request",
@@ -33,23 +34,111 @@
                         "required": true,
                         "schema": {
                             "type": "object",
+                            "required": ["ip", "community", "query"],
                             "properties": {
-                                "ip": {"type": "string", "example": "192.168.1.1"},
-                                "port": {"type": "integer", "example": 161},
-                                "community": {"type": "string", "example": "public"},
-                                "model": {"type": "string", "example": "C320"},
-                                "query": {"type": "string", "example": "onu_list"},
-                                "board": {"type": "integer", "example": 1},
-                                "pon": {"type": "integer", "example": 1},
-                                "onu_id": {"type": "integer", "example": 1}
+                                "ip": {"type": "string", "example": "192.168.1.1", "description": "OLT IP address"},
+                                "port": {"type": "integer", "example": 161, "description": "SNMP port"},
+                                "community": {"type": "string", "example": "public", "description": "SNMP community string"},
+                                "model": {"type": "string", "example": "C320", "description": "OLT model (C320, C300, C600)"},
+                                "query": {"type": "string", "example": "onu_list", "description": "Query type"},
+                                "board": {"type": "integer", "example": 1, "description": "Board number"},
+                                "pon": {"type": "integer", "example": 1, "description": "PON number"},
+                                "onu_id": {"type": "integer", "example": 1, "description": "ONU ID (for onu_detail)"}
                             }
                         }
                     }
                 ],
                 "responses": {
-                    "200": {"description": "OK"},
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "code": {"type": "integer"},
+                                "status": {"type": "string"},
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "query": {"type": "string"},
+                                        "data": {"type": "object"},
+                                        "timestamp": {"type": "string"},
+                                        "duration": {"type": "string"}
+                                    }
+                                }
+                            }
+                        }
+                    },
                     "400": {"description": "Bad Request"},
-                    "500": {"description": "Internal Server Error"}
+                    "500": {"description": "Internal Server Error"},
+                    "504": {"description": "Gateway Timeout"}
+                }
+            }
+        },
+        "/api/v1/olt-info": {
+            "post": {
+                "description": "Get OLT system information (description, name, uptime, contact, location)",
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "summary": "Get OLT System Info",
+                "tags": ["Query"],
+                "parameters": [
+                    {
+                        "description": "OLT Info Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "required": ["ip"],
+                            "properties": {
+                                "ip": {"type": "string", "example": "192.168.1.1", "description": "OLT IP address"},
+                                "port": {"type": "integer", "example": 161, "description": "SNMP port (default: 161)"},
+                                "community": {"type": "string", "example": "public", "description": "SNMP community string (default: public)"},
+                                "model": {"type": "string", "example": "C320", "description": "OLT model (default: C320)"}
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "code": {"type": "integer"},
+                                "status": {"type": "string"},
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "system": {
+                                            "type": "object",
+                                            "properties": {
+                                                "description": {"type": "string"},
+                                                "name": {"type": "string"},
+                                                "uptime": {"type": "string"},
+                                                "contact": {"type": "string"},
+                                                "location": {"type": "string"}
+                                            }
+                                        },
+                                        "model": {
+                                            "type": "object",
+                                            "properties": {
+                                                "name": {"type": "string"},
+                                                "vendor": {"type": "string"},
+                                                "max_boards": {"type": "integer"},
+                                                "max_pon_per_board": {"type": "integer"},
+                                                "max_onu_per_pon": {"type": "integer"}
+                                            }
+                                        },
+                                        "duration": {"type": "string"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {"description": "Bad Request"},
+                    "500": {"description": "Internal Server Error"},
+                    "504": {"description": "Gateway Timeout"}
                 }
             }
         },
@@ -58,8 +147,45 @@
                 "description": "Health check endpoint",
                 "produces": ["application/json"],
                 "summary": "Health Check",
+                "tags": ["System"],
                 "responses": {
-                    "200": {"description": "OK"}
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "code": {"type": "integer"},
+                                "status": {"type": "string"},
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "string", "example": "healthy"}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/stats": {
+            "get": {
+                "description": "Get SNMP connection pool statistics",
+                "produces": ["application/json"],
+                "summary": "Pool Statistics",
+                "tags": ["System"],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "max_concurrent": {"type": "integer"},
+                                "active_connections": {"type": "integer"},
+                                "available_slots": {"type": "integer"}
+                            }
+                        }
+                    }
                 }
             }
         }

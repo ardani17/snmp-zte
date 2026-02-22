@@ -4,25 +4,17 @@ package docs
 import "github.com/swaggo/swag"
 
 const docTemplate = `{
-    "schemes": {{ marshal .Schemes }},
+    "schemes": ["http"],
     "swagger": "2.0",
     "info": {
-        "description": "{{escape .Description}}",
-        "title": "{{.Title}}",
-        "termsOfService": "http://swagger.io/terms/",
-        "contact": {
-            "name": "API Support",
-            "url": "https://github.com/ardani17/snmp-zte",
-            "email": "adifta22@gmail.com"
-        },
-        "license": {
-            "name": "MIT",
-            "url": "https://opensource.org/licenses/MIT"
-        },
-        "version": "{{.Version}}"
+        "description": "Multi-OLT SNMP monitoring system for ZTE devices",
+        "title": "SNMP-ZTE API",
+        "contact": {"name": "ardani17", "email": "adifta22@gmail.com"},
+        "license": {"name": "MIT"},
+        "version": "2.1"
     },
-    "host": "{{.Host}}",
-    "basePath": "{{.BasePath}}",
+    "host": "localhost:8080",
+    "basePath": "/",
     "paths": {
         "/api/v1/query": {
             "post": {
@@ -30,48 +22,32 @@ const docTemplate = `{
                 "consumes": ["application/json"],
                 "produces": ["application/json"],
                 "summary": "Stateless SNMP Query",
-                "parameters": [
-                    {
-                        "description": "Query Request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "ip": {"type": "string", "example": "192.168.1.1"},
-                                "port": {"type": "integer", "example": 161},
-                                "community": {"type": "string", "example": "public"},
-                                "model": {"type": "string", "example": "C320"},
-                                "query": {"type": "string", "example": "onu_list"},
-                                "board": {"type": "integer", "example": 1},
-                                "pon": {"type": "integer", "example": 1},
-                                "onu_id": {"type": "integer", "example": 1}
-                            }
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {"description": "OK"},
-                    "400": {"description": "Bad Request"},
-                    "500": {"description": "Internal Server Error"}
-                }
+                "tags": ["Query"],
+                "parameters": [{"name": "body", "in": "body", "required": true, "schema": {"type": "object", "required": ["ip", "community", "query"], "properties": {"ip": {"type": "string"}, "port": {"type": "integer"}, "community": {"type": "string"}, "model": {"type": "string"}, "query": {"type": "string"}, "board": {"type": "integer"}, "pon": {"type": "integer"}, "onu_id": {"type": "integer"}}}}],
+                "responses": {"200": {"description": "OK"}, "400": {"description": "Bad Request"}, "500": {"description": "Internal Server Error"}}
+            }
+        },
+        "/api/v1/olt-info": {
+            "post": {
+                "description": "Get OLT system information",
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "summary": "Get OLT System Info",
+                "tags": ["Query"],
+                "parameters": [{"name": "body", "in": "body", "required": true, "schema": {"type": "object", "required": ["ip"], "properties": {"ip": {"type": "string"}, "port": {"type": "integer"}, "community": {"type": "string"}, "model": {"type": "string"}}}}],
+                "responses": {"200": {"description": "OK"}, "400": {"description": "Bad Request"}, "500": {"description": "Internal Server Error"}}
             }
         },
         "/health": {
-            "get": {
-                "description": "Health check endpoint",
-                "produces": ["application/json"],
-                "summary": "Health Check",
-                "responses": {
-                    "200": {"description": "OK"}
-                }
-            }
+            "get": {"description": "Health check endpoint", "produces": ["application/json"], "summary": "Health Check", "tags": ["System"], "responses": {"200": {"description": "OK"}}}
+        },
+        "/stats": {
+            "get": {"description": "Get SNMP connection pool statistics", "produces": ["application/json"], "summary": "Pool Statistics", "tags": ["System"], "responses": {"200": {"description": "OK"}}}
         }
     }
 }`
 
-// SwaggerInfo holds exported Swagger Info so clients can modify it
+// SwaggerInfo holds swagger info
 var SwaggerInfo = &swag.Spec{
 	Version:          "2.1",
 	Host:             "localhost:8080",
