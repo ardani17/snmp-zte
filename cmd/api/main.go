@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/ardani/snmp-zte/internal/config"
-	_ "github.com/ardani/snmp-zte/docs"
 	"github.com/ardani/snmp-zte/internal/handler"
 	"github.com/ardani/snmp-zte/internal/middleware"
 	"github.com/ardani/snmp-zte/internal/service"
@@ -19,12 +18,14 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+
+	_ "github.com/ardani/snmp-zte/docs"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 // @title SNMP-ZTE API
 // @version 2.1
-// @description Multi-OLT SNMP monitoring system for ZTE devices (C320, C300, C600)
+// @description Multi-OLT SNMP monitoring system for ZTE devices
 // @host localhost:8080
 // @BasePath /
 func main() {
@@ -43,7 +44,6 @@ func main() {
 			DB:       cfg.Redis.DB,
 		})
 		if err := redisClient.Ping(context.Background()).Err(); err != nil {
-			log.Warn().Err(err).Msg("Redis not available")
 			redisClient = nil
 		} else {
 			defer redisClient.Close()
@@ -95,10 +95,9 @@ func setupRouter(oltHandler *handler.OLTHandler, onuHandler *handler.ONUHandler,
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		response.JSON(w, http.StatusOK, map[string]interface{}{
-			"name":         "SNMP-ZTE API",
-			"version":      "2.1.0",
-			"swagger":      "/swagger/index.html",
-			"rate_limit":   "20 req/min",
+			"name":    "SNMP-ZTE API",
+			"version": "2.1.0",
+			"swagger": "/swagger/index.html",
 		})
 	})
 
@@ -108,10 +107,8 @@ func setupRouter(oltHandler *handler.OLTHandler, onuHandler *handler.ONUHandler,
 
 	r.Get("/stats", queryHandler.PoolStats)
 
-	// Swagger UI
-	r.Get("/swagger/*", httpSwagger.Handler(
-		httpSwagger.URL("/swagger/doc.json"),
-	))
+	// Swagger
+	r.Get("/swagger/*", httpSwagger.Handler())
 
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Post("/query", queryHandler.Query)
