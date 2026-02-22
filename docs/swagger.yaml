@@ -1,6 +1,4 @@
 basePath: /
-consumes:
-- application/json
 definitions:
   handler.OLTInfoRequest:
     properties:
@@ -171,6 +169,4 @@ paths:
       summary: Get SNMP Pool Stats
       tags:
       - System
-produces:
-- application/json
 swagger: "2.0"
