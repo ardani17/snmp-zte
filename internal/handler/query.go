@@ -54,7 +54,7 @@ type QueryResponse struct {
 // @Description Melakukan query SNMP ke OLT tanpa menyimpan data login.
 // @Description List 'query' yang didukung:
 // @Description - onu_list: Daftar semua ONU di Port PON tertentu
-// @Description - onu_detail: Detail lengkap satu ONU (butuh onu_id)
+// @Description - onu_detail: Detail lengkap satu ONU (WAJIB isi onu_id)
 // @Description - empty_slots: Cari ID ONU yang masih kosong/tersedia
 // @Description - system_info: Informasi sistem OLT (Nama, Deskripsi, Uptime)
 // @Description - board_info: Status kartu/board (CPU, Memori, Tipe)
@@ -125,6 +125,10 @@ func (h *QueryHandler) Query(w http.ResponseWriter, r *http.Request) {
 	case "onu_list":
 		result, err = drv.GetONUList(ctx, req.Board, req.Pon)
 	case "onu_detail":
+		if req.OnuID == 0 {
+			response.BadRequest(w, "onu_id is required for onu_detail query")
+			return
+		}
 		result, err = drv.GetONUDetail(ctx, req.Board, req.Pon, req.OnuID)
 	case "empty_slots":
 		result, err = drv.GetEmptySlots(ctx, req.Board, req.Pon)
