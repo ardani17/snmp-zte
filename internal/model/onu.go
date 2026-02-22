@@ -10,6 +10,8 @@ type ONUInfo struct {
 	Type         string `json:"type"`
 	SerialNumber string `json:"serial_number"`
 	RXPower      string `json:"rx_power"`
+	TXPower      string `json:"tx_power"`
+	Distance     string `json:"distance"`
 	Status       string `json:"status"`
 }
 

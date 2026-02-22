@@ -139,6 +139,16 @@ func (d *Driver) GetONUList(ctx context.Context, boardID, ponID int) ([]model.ON
 			info.RXPower = convertPower(val)
 		}
 
+		// Ambil Kekuatan Sinyal (TX Power)
+		if val, err := d.snmpGet(BaseOID2 + cfg.OnuTxPowerOID + "." + onuIDStr + ".1"); err == nil {
+			info.TXPower = convertPower(val)
+		}
+
+		// Ambil Jarak (Distance)
+		if val, err := d.snmpGet(BaseOID1 + cfg.OnuGponOpticalDistanceOID + "." + onuIDStr); err == nil {
+			info.Distance = fmt.Sprintf("%v", val)
+		}
+
 		// Ambil Status (Online/Offline)
 		if val, err := d.snmpGet(BaseOID1 + cfg.OnuStatusOID + "." + onuIDStr); err == nil {
 			info.Status = convertStatus(val)
