@@ -7,13 +7,13 @@ import (
 	"github.com/ardani/snmp-zte/internal/model"
 )
 
-// OLTService provides OLT management operations
+// OLTService menyediakan operasi pengelolaan OLT.
 type OLTService struct {
 	cfg    *config.Config
 	mu     sync.RWMutex
 }
 
-// NewOLTService creates a new OLT service
+// NewOLTService membuat instance OLT service baru.
 func NewOLTService(cfg *config.Config) *OLTService {
 	return &OLTService{
 		cfg: cfg,
@@ -64,7 +64,7 @@ func (s *OLTService) Get(id string) (*model.OLT, error) {
 	return nil, ErrOLTNotFound
 }
 
-// Create adds a new OLT
+// Create menambah OLT baru dan menyimpannya ke konfigurasi.
 func (s *OLTService) Create(olt model.OLT) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -84,6 +84,7 @@ func (s *OLTService) Create(olt model.OLT) error {
 		return err
 	}
 
+	// Simpan perubahan ke file config/olts.json
 	return config.Save(s.cfg)
 }
 

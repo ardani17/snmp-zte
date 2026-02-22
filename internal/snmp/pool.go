@@ -8,14 +8,14 @@ import (
 	"github.com/gosnmp/gosnmp"
 )
 
-// Pool manages SNMP connections with concurrency limits
+// Pool mengelola koneksi SNMP dengan batasan konkurensi (jumlah pertanyaan bersamaan).
 type Pool struct {
 	maxConcurrent int
 	sem           chan struct{}
 	mu            sync.Mutex
 }
 
-// NewPool creates a new SNMP connection pool
+// NewPool membuat pool koneksi SNMP baru.
 func NewPool(maxConcurrent int) *Pool {
 	return &Pool{
 		maxConcurrent: maxConcurrent,
@@ -23,9 +23,9 @@ func NewPool(maxConcurrent int) *Pool {
 	}
 }
 
-// Query executes an SNMP query with connection pooling
+// Query menjalankan query SNMP menggunakan pooling koneksi.
 func (p *Pool) Query(ctx context.Context, cfg Config, fn func(*gosnmp.GoSNMP) error) error {
-	// Acquire semaphore
+	// 1. Mengambil izin (semaphore) dari antrean agar tidak melebihi batas maksimal.
 	select {
 	case p.sem <- struct{}{}:
 		defer func() { <-p.sem }()
@@ -33,7 +33,7 @@ func (p *Pool) Query(ctx context.Context, cfg Config, fn func(*gosnmp.GoSNMP) er
 		return ctx.Err()
 	}
 
-	// Create connection (SNMP is UDP, so we create per query)
+	// 2. Membuat koneksi (SNMP menggunakan UDP, jadi kita buat setiap ada query).
 	client := &gosnmp.GoSNMP{
 		Target:    cfg.Host,
 		Port:      cfg.Port,
@@ -52,7 +52,7 @@ func (p *Pool) Query(ctx context.Context, cfg Config, fn func(*gosnmp.GoSNMP) er
 	return fn(client)
 }
 
-// Stats returns current pool statistics
+// Stats mengembalikan statistik pool saat ini.
 func (p *Pool) Stats() PoolStats {
 	return PoolStats{
 		MaxConcurrent:  p.maxConcurrent,
@@ -61,31 +61,31 @@ func (p *Pool) Stats() PoolStats {
 	}
 }
 
-// PoolStats represents pool statistics
+// PoolStats merepresentasikan data statistik pool.
 type PoolStats struct {
 	MaxConcurrent    int `json:"max_concurrent"`
 	ActiveConnections int `json:"active_connections"`
 	AvailableSlots   int `json:"available_slots"`
 }
 
-// Global pool instance
+// Instance pool global.
 var globalPool *Pool
 var poolOnce sync.Once
 
-// GetPool returns the global SNMP pool
+// GetPool mengembalikan instance pool SNMP global.
 func GetPool() *Pool {
 	poolOnce.Do(func() {
-		globalPool = NewPool(100) // Max 100 concurrent SNMP requests
+		globalPool = NewPool(100) // Maksimal 100 request SNMP bersamaan.
 	})
 	return globalPool
 }
 
-// SetPoolMax sets the max concurrent connections for the global pool
+// SetPoolMax mengatur jumlah maksimal koneksi bersamaan untuk pool global.
 func SetPoolMax(max int) {
 	globalPool = NewPool(max)
 }
 
-// QueryWithTimeout executes an SNMP query with timeout
+// QueryWithTimeout menjalankan query SNMP dengan batas waktu (timeout).
 func QueryWithTimeout(host string, port uint16, community string, timeout time.Duration, fn func(*gosnmp.GoSNMP) error) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()

@@ -11,37 +11,23 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-// OLTHandler handles OLT management requests
+// OLTHandler menangani pengelolaan data OLT (Simpan/Edit/Hapus).
 type OLTHandler struct {
 	service *service.OLTService
 }
 
-// NewOLTHandler creates a new OLT handler
+// NewOLTHandler membuat handler OLT baru.
 func NewOLTHandler(service *service.OLTService) *OLTHandler {
 	return &OLTHandler{service: service}
 }
 
-// List godoc
-// @Summary List all OLTs
-// @Description Get a list of all configured OLTs
-// @Tags OLT
-// @Produce json
-// @Success 200 {array} model.OLT
-// @Router /api/v1/olts [get]
+// List mengembalikan daftar semua OLT yang terkonfigurasi.
 func (h *OLTHandler) List(w http.ResponseWriter, r *http.Request) {
 	olts := h.service.List()
 	response.JSON(w, http.StatusOK, olts)
 }
 
-// Get godoc
-// @Summary Get OLT
-// @Description Get OLT by ID
-// @Tags OLT
-// @Produce json
-// @Param olt_id path string true "OLT ID"
-// @Success 200 {object} model.OLT
-// @Failure 404 {object} response.ErrorResponse
-// @Router /api/v1/olts/{olt_id} [get]
+// Get mengambil data OLT berdasarkan ID.
 func (h *OLTHandler) Get(w http.ResponseWriter, r *http.Request) {
 	oltID := chi.URLParam(r, "olt_id")
 	if oltID == "" {
@@ -58,17 +44,8 @@ func (h *OLTHandler) Get(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, http.StatusOK, olt)
 }
 
-// Create godoc
-// @Summary Create OLT
-// @Description Create a new OLT configuration
-// @Tags OLT
-// @Accept json
-// @Produce json
-// @Param request body model.OLT true "OLT info"
-// @Success 201 {object} model.OLT
-// @Failure 400 {object} response.ErrorResponse
-// @Failure 409 {object} response.ErrorResponse
-// @Router /api/v1/olts [post]
+// Create menangani pendaftaran OLT baru.
+// Data ini AKAN DISIMPAN di server agar nantinya bisa dipanggil cukup dengan ID saja.
 func (h *OLTHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		ID          string `json:"id"`
@@ -86,7 +63,7 @@ func (h *OLTHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate required fields
+	// Validasi kolom yang wajib diisi
 	if req.ID == "" {
 		response.BadRequest(w, "ID is required")
 		return
@@ -138,18 +115,7 @@ func (h *OLTHandler) Create(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, http.StatusCreated, olt)
 }
 
-// Update godoc
-// @Summary Update OLT
-// @Description Update an existing OLT configuration
-// @Tags OLT
-// @Accept json
-// @Produce json
-// @Param olt_id path string true "OLT ID"
-// @Param request body model.OLT true "OLT info"
-// @Success 200 {object} model.OLT
-// @Failure 400 {object} response.ErrorResponse
-// @Failure 404 {object} response.ErrorResponse
-// @Router /api/v1/olts/{olt_id} [put]
+// Update memperbarui konfigurasi OLT yang sudah ada.
 func (h *OLTHandler) Update(w http.ResponseWriter, r *http.Request) {
 	oltID := chi.URLParam(r, "olt_id")
 	if oltID == "" {
@@ -191,15 +157,7 @@ func (h *OLTHandler) Update(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, http.StatusOK, olt)
 }
 
-// Delete godoc
-// @Summary Delete OLT
-// @Description Remove an OLT configuration
-// @Tags OLT
-// @Produce json
-// @Param olt_id path string true "OLT ID"
-// @Success 200 {object} map[string]string
-// @Failure 404 {object} response.ErrorResponse
-// @Router /api/v1/olts/{olt_id} [delete]
+// Delete menghapus konfigurasi OLT.
 func (h *OLTHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	oltID := chi.URLParam(r, "olt_id")
 	if oltID == "" {

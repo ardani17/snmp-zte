@@ -6,13 +6,13 @@ import (
 	"github.com/ardani/snmp-zte/internal/driver"
 )
 
-// OID constants for ZTE C320
+// Konstanta OID untuk ZTE C320
 const (
 	BaseOID1 = ".1.3.6.1.4.1.3902.1082"
 	BaseOID2 = ".1.3.6.1.4.1.3902.1012"
 	BaseOID3 = ".1.3.6.1.4.1.3902.1015"
 
-	// OID Prefixes for ONU
+	// Prefix OID untuk ONU
 	OnuIDNamePrefix              = ".500.10.2.3.3.1.2"
 	OnuTypePrefix                = ".3.50.11.2.1.17"
 	OnuSerialNumberPrefix        = ".500.10.2.3.3.1.18"
@@ -26,37 +26,37 @@ const (
 	OnuLastOfflineReasonPrefix   = ".500.10.2.3.8.1.7"
 	OnuGponOpticalDistancePrefix = ".500.10.2.3.10.1.2"
 
-	// Board/Card OIDs (under BaseOID3)
+	// OID untuk Board/Card (di bawah BaseOID3)
 	CardTypePrefix     = ".2.1.1.3.1.2"
 	CardStatusPrefix   = ".2.1.1.3.1.5"
 	CardCpuLoadPrefix  = ".2.1.1.3.1.9"
 	CardMemUsagePrefix = ".2.1.1.3.1.11"
 
-	// PON Port OIDs
+	// OID untuk Port PON
 	PonTxPowerPrefix = ".1010.11.1.1.5"
 	PonRxPowerPrefix = ".1010.11.2.1.2"
 
-	// Board-PON ID Constants
+	// Konstanta ID Board-PON
 	Board1OnuIDBase   = 285278464
 	Board1OnuTypeBase = 268500992
 	Board2OnuIDBase   = 285278720
 	Board2OnuTypeBase = 268566528
 
-	// PON Index base (for PON port stats)
+	// Base Index PON (untuk statistik port PON)
 	Board1PonIndexBase = 268501248
 	Board2PonIndexBase = 268566784
 
-	// Increment values
+	// Nilai Increment (Penambahan)
 	OnuIDIncrement   = 1
 	OnuTypeIncrement = 256
 
-	// Limits
+	// Batasan Maksimal
 	MaxBoards       = 2
 	MaxPonPerBoard  = 16
 	MaxOnuPerPon    = 128
 )
 
-// ModelInfo returns C320 model information
+// ModelInfo mengembalikan informasi model C320.
 func ModelInfo() driver.ModelInfo {
 	return driver.ModelInfo{
 		Name:           "ZTE C320",
@@ -67,7 +67,7 @@ func ModelInfo() driver.ModelInfo {
 	}
 }
 
-// GenerateBoardPonOID generates OID configuration for a specific Board/PON
+// GenerateBoardPonOID membuat konfigurasi OID untuk kombinasi Board/PON tertentu.
 func GenerateBoardPonOID(boardID, ponID int) *driver.BoardPonConfig {
 	var baseOnuID, baseOnuType int
 
@@ -98,7 +98,7 @@ func GenerateBoardPonOID(boardID, ponID int) *driver.BoardPonConfig {
 	}
 }
 
-// GetPonIndexBase returns the PON index base for a board
+// GetPonIndexBase mengembalikan base index PON untuk sebuah board.
 func GetPonIndexBase(boardID int) int {
 	if boardID == 1 {
 		return Board1PonIndexBase

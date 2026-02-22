@@ -8,7 +8,7 @@ import (
 	"sync"
 )
 
-// Config represents application configuration
+// Config merepresentasikan konfigurasi aplikasi (Server, Redis, dan daftar OLT).
 type Config struct {
 	Server  ServerConfig  `json:"server"`
 	Redis   RedisConfig   `json:"redis"`
@@ -60,7 +60,7 @@ func SetConfigPath(path string) {
 	cfgPath = path
 }
 
-// Load loads configuration from file
+// Load memuat konfigurasi dari file. Fungsi ini hanya berjalan sekali (Singleton).
 func Load() (*Config, error) {
 	var err error
 	cfgOnce.Do(func() {
@@ -133,9 +133,10 @@ func createDefaultConfig() (*Config, error) {
 	return cfg, nil
 }
 
-// Save saves configuration to file
+// Save menyimpan konfigurasi saat ini kembali ke file JSON.
+// Ini digunakan saat Anda menambah/merubah/menghapus OLT via API.
 func Save(cfg *Config) error {
-	data, err := json.MarshalIndent(cfg, "", "  ")
+	data, err := json.MarshalIndent(cfg, "", "  ") // Agar format JSON rapi di file
 	if err != nil {
 		return fmt.Errorf("failed to marshal config: %w", err)
 	}

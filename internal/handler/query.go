@@ -13,28 +13,29 @@ import (
 	"github.com/ardani/snmp-zte/pkg/response"
 )
 
-// QueryHandler handles stateless SNMP queries
+// QueryHandler menangani query SNMP "stateless" (tanpa simpan data).
 type QueryHandler struct {
 	pool *snmp.Pool
 }
 
-// NewQueryHandler creates a new query handler
+// NewQueryHandler membuat handler query baru.
 func NewQueryHandler() *QueryHandler {
 	return &QueryHandler{
 		pool: snmp.GetPool(),
 	}
 }
 
-// QueryRequest represents a stateless query request
+// QueryRequest merepresentasikan permintaan query stateless.
+// Semua detail koneksi OLT harus dikirim di setiap request.
 type QueryRequest struct {
-	// OLT connection details (not stored)
+	// Detail koneksi OLT (Data ini TIDAK disimpan oleh server)
 	IP        string `json:"ip" example:"192.168.1.1"`
 	Port      int    `json:"port" example:"161"`
 	Community string `json:"community" example:"public"`
 	Model     string `json:"model" example:"C320"` // C320, C300, C600
 
-	// Query parameters
-	Query string `json:"query" example:"onu_list"` // onu_list, onu_detail, empty_slots, system_info, board_info, all_boards, pon_info, interface_stats
+	// Parameter Query (Apa yang ingin ditanyakan ke OLT)
+	Query string `json:"query" example:"onu_list"` // onu_list, onu_detail, dsb.
 	Board int    `json:"board" example:"1"`
 	Pon   int    `json:"pon" example:"1"`
 	OnuID int    `json:"onu_id,omitempty" example:"1"`
@@ -49,12 +50,21 @@ type QueryResponse struct {
 }
 
 // Query godoc
-// @Summary Stateless SNMP Query
-// @Description Query OLT data without storing credentials. Supports: onu_list, onu_detail, empty_slots, system_info, board_info, all_boards, pon_info, interface_stats
+// @Summary Stateless SNMP Query (Query Tanpa Kredensial)
+// @Description Melakukan query SNMP ke OLT tanpa menyimpan data login.
+// @Description List 'query' yang didukung:
+// @Description - onu_list: Daftar semua ONU di Port PON tertentu
+// @Description - onu_detail: Detail lengkap satu ONU (butuh onu_id)
+// @Description - empty_slots: Cari ID ONU yang masih kosong/tersedia
+// @Description - system_info: Informasi sistem OLT (Nama, Deskripsi, Uptime)
+// @Description - board_info: Status kartu/board (CPU, Memori, Tipe)
+// @Description - all_boards: Status semua kartu yang ada di OLT
+// @Description - pon_info: Statistik port PON (TX/RX Power)
+// @Description - interface_stats: Statistik lalu lintas interface (semua port)
 // @Tags Query
 // @Accept json
 // @Produce json
-// @Param request body QueryRequest true "Query Request"
+// @Param request body QueryRequest true "Detail Query (IP, Community, Model, dan Jenis Query)"
 // @Success 200 {object} response.Response{data=QueryResponse}
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 500 {object} response.ErrorResponse
@@ -91,25 +101,25 @@ func (h *QueryHandler) Query(w http.ResponseWriter, r *http.Request) {
 		req.Model = "C320"
 	}
 
-	// Create context with timeout
+	// Berikan batas waktu query (timeout) agar sistem tidak gantung jika OLT lambat
 	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
 	defer cancel()
 
-	// Get driver based on model
+	// Ambil driver berdasarkan model yang diminta (misal: C320)
 	drv, err := h.getDriver(req)
 	if err != nil {
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	// Connect
+	// Hubungkan ke OLT
 	if err := drv.Connect(); err != nil {
-		response.Error(w, http.StatusGatewayTimeout, "Failed to connect to OLT: "+err.Error())
+		response.Error(w, http.StatusGatewayTimeout, "Gagal terhubung ke OLT: "+err.Error())
 		return
 	}
 	defer drv.Close()
 
-	// Execute query
+	// Jalankan query sesuai permintaan
 	var result interface{}
 	switch req.Query {
 	case "onu_list":
@@ -138,7 +148,7 @@ func (h *QueryHandler) Query(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Build response
+	// Susun jawaban (response)
 	resp := QueryResponse{
 		Query:     req.Query,
 		Data:      result,

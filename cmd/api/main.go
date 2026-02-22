@@ -29,13 +29,16 @@ import (
 // @host localhost:8080
 // @BasePath /
 func main() {
+	// 1. Inisialisasi Logger untuk mencetak log ke konsol
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
 
+	// 2. Memuat konfigurasi dari file atau environment
 	cfg, err := config.Load()
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to load config")
 	}
 
+	// 3. Menyiapkan koneksi Redis jika dikonfigurasi
 	var redisClient *redis.Client
 	if cfg.Redis.Host != "" {
 		redisClient = redis.NewClient(&redis.Options{
@@ -50,12 +53,14 @@ func main() {
 		}
 	}
 
+	// 4. Inisialisasi Service (Logika Bisnis) dan Handler (Pengelola HTTP)
 	onuService := service.NewONUService(cfg, redisClient)
 	oltService := service.NewOLTService(cfg)
 	onuHandler := handler.NewONUHandler(onuService)
 	oltHandler := handler.NewOLTHandler(oltService)
 	queryHandler := handler.NewQueryHandler()
 
+	// 5. Setup Router menggunakan Chi
 	router := setupRouter(oltHandler, onuHandler, queryHandler)
 
 	server := &http.Server{
@@ -85,14 +90,17 @@ func main() {
 
 func setupRouter(oltHandler *handler.OLTHandler, onuHandler *handler.ONUHandler, queryHandler *handler.QueryHandler) http.Handler {
 	r := chi.NewRouter()
-	r.Use(chiMiddleware.RequestID)
-	r.Use(chiMiddleware.RealIP)
-	r.Use(chiMiddleware.Logger)
-	r.Use(chiMiddleware.Recoverer)
-	r.Use(middleware.NewRateLimiter(20, time.Minute).Middleware)
-	r.Use(middleware.DefaultCORS())
-	r.Use(chiMiddleware.Timeout(90 * time.Second))
 
+	// Menambahkan Middlewares (Fungsi yang berjalan sebelum handler utama)
+	r.Use(chiMiddleware.RequestID)    // Memberikan ID unik untuk setiap request
+	r.Use(chiMiddleware.RealIP)       // Mendapatkan IP asli client
+	r.Use(chiMiddleware.Logger)       // Mencatat log setiap request HTTP
+	r.Use(chiMiddleware.Recoverer)    // Mencegah aplikasi crash jika ada panic
+	r.Use(middleware.NewRateLimiter(20, time.Minute).Middleware) // Batasan 20 request per menit per IP
+	r.Use(middleware.DefaultCORS())   // Mengizinkan akses dari domain luar (Cross-Origin Resource Sharing)
+	r.Use(chiMiddleware.Timeout(90 * time.Second)) // Batas waktu request maksimal 90 detik
+
+	// Endpoint Dasar
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		response.JSON(w, http.StatusOK, map[string]interface{}{
 			"name":    "SNMP-ZTE API",
@@ -105,14 +113,13 @@ func setupRouter(oltHandler *handler.OLTHandler, onuHandler *handler.ONUHandler,
 		response.JSON(w, http.StatusOK, map[string]string{"status": "healthy"})
 	})
 
+	// Statistik Pool Koneksi SNMP
 	r.Get("/stats", queryHandler.PoolStats)
 
-	// Swagger redirect: /swagger -> /swagger/index.html
+	// Dokumentasi Swagger UI
 	r.Get("/swagger", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/swagger/index.html", http.StatusMovedPermanently)
 	})
-
-	// Swagger UI - serve at /swagger/*
 	r.Get("/swagger/", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/swagger/index.html", http.StatusMovedPermanently)
 	})
@@ -120,10 +127,13 @@ func setupRouter(oltHandler *handler.OLTHandler, onuHandler *handler.ONUHandler,
 		httpSwagger.URL("/swagger/doc.json"),
 	))
 
+	// Grup API Versi 1
 	r.Route("/api/v1", func(r chi.Router) {
+		// Endpoint "Stateless" (Tanpa simpan kredensial)
 		r.Post("/query", queryHandler.Query)
 		r.Post("/olt-info", queryHandler.OLTInfo)
 
+		// Pengelolaan Data OLT (CRUD)
 		r.Route("/olts", func(r chi.Router) {
 			r.Get("/", oltHandler.List)
 			r.Post("/", oltHandler.Create)
@@ -132,12 +142,13 @@ func setupRouter(oltHandler *handler.OLTHandler, onuHandler *handler.ONUHandler,
 			r.Delete("/{olt_id}", oltHandler.Delete)
 		})
 
+		// Operasi Detail ke ONU di dalam OLT
 		r.Route("/olts/{olt_id}", func(r chi.Router) {
 			r.Route("/board/{board_id}/pon/{pon_id}", func(r chi.Router) {
-				r.Get("/", onuHandler.List)
-				r.Delete("/cache", onuHandler.ClearCache)
-				r.Get("/empty", onuHandler.EmptySlots)
-				r.Get("/onu/{onu_id}", onuHandler.Detail)
+				r.Get("/", onuHandler.List)        // List ONU di satu port PON
+				r.Delete("/cache", onuHandler.ClearCache) // Bersihkan cache
+				r.Get("/empty", onuHandler.EmptySlots)    // Cek slot kosong
+				r.Get("/onu/{onu_id}", onuHandler.Detail) // Detail ONU spesifik
 			})
 		})
 	})

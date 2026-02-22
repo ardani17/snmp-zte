@@ -9,28 +9,17 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-// ONUHandler handles ONU query requests
+// ONUHandler menangani permintaan query ONU (modem pelanggan).
 type ONUHandler struct {
 	service *service.ONUService
 }
 
-// NewONUHandler creates a new ONU handler
+// NewONUHandler membuat instance ONU handler baru.
 func NewONUHandler(service *service.ONUService) *ONUHandler {
 	return &ONUHandler{service: service}
 }
 
-// List godoc
-// @Summary List ONUs
-// @Description Get list of ONUs for a specific Board and PON port
-// @Tags ONU
-// @Produce json
-// @Param olt_id path string true "OLT ID"
-// @Param board_id path int true "Board ID"
-// @Param pon_id path int true "PON ID"
-// @Success 200 {array} model.ONU
-// @Failure 400 {object} response.ErrorResponse
-// @Failure 500 {object} response.ErrorResponse
-// @Router /api/v1/olts/{olt_id}/board/{board_id}/pon/{pon_id} [get]
+// List mengembalikan daftar ONU untuk Board dan port PON tertentu.
 func (h *ONUHandler) List(w http.ResponseWriter, r *http.Request) {
 	oltID := chi.URLParam(r, "olt_id")
 	boardID, err := strconv.Atoi(chi.URLParam(r, "board_id"))
@@ -54,19 +43,7 @@ func (h *ONUHandler) List(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, http.StatusOK, onuList)
 }
 
-// Detail godoc
-// @Summary Get ONU Detail
-// @Description Get detailed information for a single ONU
-// @Tags ONU
-// @Produce json
-// @Param olt_id path string true "OLT ID"
-// @Param board_id path int true "Board ID"
-// @Param pon_id path int true "PON ID"
-// @Param onu_id path int true "ONU ID"
-// @Success 200 {object} model.ONUDetail
-// @Failure 400 {object} response.ErrorResponse
-// @Failure 500 {object} response.ErrorResponse
-// @Router /api/v1/olts/{olt_id}/board/{board_id}/pon/{pon_id}/onu/{onu_id} [get]
+// Detail mengambil informasi rinci untuk satu ONU tunggal.
 func (h *ONUHandler) Detail(w http.ResponseWriter, r *http.Request) {
 	oltID := chi.URLParam(r, "olt_id")
 	boardID, err := strconv.Atoi(chi.URLParam(r, "board_id"))
@@ -96,18 +73,7 @@ func (h *ONUHandler) Detail(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, http.StatusOK, detail)
 }
 
-// EmptySlots godoc
-// @Summary Get Empty ONU Slots
-// @Description Get available ONU slots for a specific Board and PON port
-// @Tags ONU
-// @Produce json
-// @Param olt_id path string true "OLT ID"
-// @Param board_id path int true "Board ID"
-// @Param pon_id path int true "PON ID"
-// @Success 200 {array} int
-// @Failure 400 {object} response.ErrorResponse
-// @Failure 500 {object} response.ErrorResponse
-// @Router /api/v1/olts/{olt_id}/board/{board_id}/pon/{pon_id}/empty [get]
+// EmptySlots mengambil slot ONU yang tersedia (belum terpakai) di port PON.
 func (h *ONUHandler) EmptySlots(w http.ResponseWriter, r *http.Request) {
 	oltID := chi.URLParam(r, "olt_id")
 	boardID, err := strconv.Atoi(chi.URLParam(r, "board_id"))
@@ -131,18 +97,7 @@ func (h *ONUHandler) EmptySlots(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, http.StatusOK, slots)
 }
 
-// ClearCache godoc
-// @Summary Clear ONU Cache
-// @Description Clear cached ONU data for a specific Board and PON port
-// @Tags ONU
-// @Produce json
-// @Param olt_id path string true "OLT ID"
-// @Param board_id path int true "Board ID"
-// @Param pon_id path int true "PON ID"
-// @Success 200 {object} map[string]interface{}
-// @Failure 400 {object} response.ErrorResponse
-// @Failure 500 {object} response.ErrorResponse
-// @Router /api/v1/olts/{olt_id}/board/{board_id}/pon/{pon_id}/cache [delete]
+// ClearCache menghapus data cache ONU untuk port PON tertentu.
 func (h *ONUHandler) ClearCache(w http.ResponseWriter, r *http.Request) {
 	oltID := chi.URLParam(r, "olt_id")
 	boardID, err := strconv.Atoi(chi.URLParam(r, "board_id"))

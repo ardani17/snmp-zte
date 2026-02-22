@@ -9,16 +9,17 @@ import (
 )
 
 const (
-	// DefaultTTL is the default cache TTL (5 minutes)
+	// DefaultTTL adalah durasi penyimpanan cache default (5 menit).
+	// Jika data sudah lebih dari 5 menit, program akan bertanya lagi ke OLT.
 	DefaultTTL = 5 * time.Minute
 )
 
-// Cache represents a cache interface
+// Cache mendefinisikan standar (interface) untuk sistem penyimpanan sementara.
 type Cache interface {
-	Get(ctx context.Context, key string, dest interface{}) error
-	Set(ctx context.Context, key string, value interface{}, ttl time.Duration) error
-	Delete(ctx context.Context, key string) error
-	Exists(ctx context.Context, key string) (bool, error)
+	Get(ctx context.Context, key string, dest interface{}) error // Mengambil data
+	Set(ctx context.Context, key string, value interface{}, ttl time.Duration) error // Menyimpan data
+	Delete(ctx context.Context, key string) error // Menghapus data
+	Exists(ctx context.Context, key string) (bool, error) // Cek apakah data ada
 }
 
 // RedisCache implements Cache using Redis

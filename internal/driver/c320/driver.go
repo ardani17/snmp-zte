@@ -11,7 +11,7 @@ import (
 	"github.com/gosnmp/gosnmp"
 )
 
-// Driver implements driver.Driver for ZTE C320
+// Driver mengimplementasikan driver.Driver untuk ZTE C320.
 type Driver struct {
 	client    *gosnmp.GoSNMP
 	snmpHost  string
@@ -20,7 +20,7 @@ type Driver struct {
 	connected bool
 }
 
-// New creates a new C320 driver
+// New membuat instance driver C320 baru.
 func New(host string, port uint16, community string) *Driver {
 	return &Driver{
 		snmpHost:  host,
@@ -29,25 +29,25 @@ func New(host string, port uint16, community string) *Driver {
 	}
 }
 
-// GetModelName returns the model name
+// GetModelName mengembalikan nama model.
 func (d *Driver) GetModelName() string {
 	return "C320"
 }
 
-// GetModelInfo returns model information
+// GetModelInfo mengembalikan informasi model.
 func (d *Driver) GetModelInfo() driver.ModelInfo {
 	return ModelInfo()
 }
 
-// Connect establishes SNMP connection
+// Connect membuka koneksi SNMP ke OLT.
 func (d *Driver) Connect() error {
 	d.client = &gosnmp.GoSNMP{
 		Target:    d.snmpHost,
 		Port:      d.snmpPort,
 		Community: d.community,
 		Version:   gosnmp.Version2c,
-		Timeout:   5 * time.Second,
-		Retries:   2,
+		Timeout:   5 * time.Second, // Tunggu respon OLT maksimal 5 detik
+		Retries:   2,               // Coba lagi 2 kali jika gagal
 		MaxOids:   60,
 	}
 
@@ -59,7 +59,7 @@ func (d *Driver) Connect() error {
 	return nil
 }
 
-// Close closes the SNMP connection
+// Close menutup koneksi SNMP.
 func (d *Driver) Close() error {
 	if d.client != nil && d.client.Conn != nil {
 		d.connected = false
@@ -68,22 +68,22 @@ func (d *Driver) Close() error {
 	return nil
 }
 
-// ValidateBoardID validates board ID
+// ValidateBoardID memvalidasi ID board.
 func (d *Driver) ValidateBoardID(boardID int) bool {
 	return boardID >= 1 && boardID <= MaxBoards
 }
 
-// ValidatePonID validates PON ID
+// ValidatePonID memvalidasi ID PON.
 func (d *Driver) ValidatePonID(ponID int) bool {
 	return ponID >= 1 && ponID <= MaxPonPerBoard
 }
 
-// ValidateOnuID validates ONU ID
+// ValidateOnuID memvalidasi ID ONU.
 func (d *Driver) ValidateOnuID(onuID int) bool {
 	return onuID >= 1 && onuID <= MaxOnuPerPon
 }
 
-// GetONUList returns list of ONUs for a Board/PON
+// GetONUList mengambil daftar ONU untuk Board/PON tertentu.
 func (d *Driver) GetONUList(ctx context.Context, boardID, ponID int) ([]model.ONUInfo, error) {
 	if !d.connected {
 		if err := d.Connect(); err != nil {
@@ -96,9 +96,11 @@ func (d *Driver) GetONUList(ctx context.Context, boardID, ponID int) ([]model.ON
 	var onuList []model.ONUInfo
 	onuMap := make(map[int]*model.ONUInfo)
 
-	// Walk to get all ONU IDs and Names
+	// 1. SNMP Walk untuk mendapatkan daftar Nama & ID ONU yang aktif di port tersebut.
+	// OID di sini spesifik untuk ZTE, digabung dengan ID Board & PON.
 	oid := BaseOID1 + cfg.OnuIDNameOID
 	err := d.client.Walk(oid, func(pdu gosnmp.SnmpPDU) error {
+		// Dari Nama OID yang didapat, kita ambil angka terakhirnya sebagai ID ONU.
 		onuID := extractOnuID(pdu.Name)
 		if onuID == 0 {
 			return nil
@@ -108,7 +110,7 @@ func (d *Driver) GetONUList(ctx context.Context, boardID, ponID int) ([]model.ON
 			Board: boardID,
 			PON:   ponID,
 			ID:    onuID,
-			Name:  extractString(pdu.Value),
+			Name:  extractString(pdu.Value), // Nama ONU (biasanya diinput teknisi)
 		}
 		onuMap[onuID] = info
 		return nil
@@ -118,26 +120,26 @@ func (d *Driver) GetONUList(ctx context.Context, boardID, ponID int) ([]model.ON
 		return nil, fmt.Errorf("SNMP walk failed: %w", err)
 	}
 
-	// Get additional info for each ONU
+	// 2. Ambil informasi tambahan (Tipe, SN, Sinyal, Status) untuk setiap ONU yang ditemukan.
 	for onuID, info := range onuMap {
 		onuIDStr := strconv.Itoa(onuID)
 		
-		// Get ONU Type
+		// Ambil Tipe ONU
 		if val, err := d.snmpGet(BaseOID2 + cfg.OnuTypeOID + "." + onuIDStr); err == nil {
 			info.Type = extractString(val)
 		}
 
-		// Get Serial Number
+		// Ambil Serial Number
 		if val, err := d.snmpGet(BaseOID1 + cfg.OnuSerialNumberOID + "." + onuIDStr); err == nil {
 			info.SerialNumber = extractSerialNumber(val)
 		}
 
-		// Get RX Power
+		// Ambil Kekuatan Sinyal (RX Power)
 		if val, err := d.snmpGet(BaseOID1 + cfg.OnuRxPowerOID + "." + onuIDStr + ".1"); err == nil {
 			info.RXPower = convertPower(val)
 		}
 
-		// Get Status
+		// Ambil Status (Online/Offline)
 		if val, err := d.snmpGet(BaseOID1 + cfg.OnuStatusOID + "." + onuIDStr); err == nil {
 			info.Status = convertStatus(val)
 		}
@@ -148,7 +150,7 @@ func (d *Driver) GetONUList(ctx context.Context, boardID, ponID int) ([]model.ON
 	return onuList, nil
 }
 
-// GetONUDetail returns detailed information for a single ONU
+// GetONUDetail mengambil informasi detail untuk satu ONU tunggal.
 func (d *Driver) GetONUDetail(ctx context.Context, boardID, ponID, onuID int) (*model.ONUDetail, error) {
 	if !d.connected {
 		if err := d.Connect(); err != nil {
@@ -167,67 +169,67 @@ func (d *Driver) GetONUDetail(ctx context.Context, boardID, ponID, onuID int) (*
 		},
 	}
 
-	// Get Name
+	// Ambil Nama
 	if val, err := d.snmpGet(BaseOID1 + cfg.OnuIDNameOID + "." + onuIDStr); err == nil {
 		detail.Name = extractString(val)
 	}
 
-	// Get Type
+	// Ambil Tipe
 	if val, err := d.snmpGet(BaseOID2 + cfg.OnuTypeOID + "." + onuIDStr); err == nil {
 		detail.Type = extractString(val)
 	}
 
-	// Get Serial Number
+	// Ambil Serial Number
 	if val, err := d.snmpGet(BaseOID1 + cfg.OnuSerialNumberOID + "." + onuIDStr); err == nil {
 		detail.SerialNumber = extractSerialNumber(val)
 	}
 
-	// Get RX Power
+	// Ambil Sinyal RX
 	if val, err := d.snmpGet(BaseOID1 + cfg.OnuRxPowerOID + "." + onuIDStr + ".1"); err == nil {
 		detail.RXPower = convertPower(val)
 	}
 
-	// Get TX Power
+	// Ambil Sinyal TX
 	if val, err := d.snmpGet(BaseOID2 + cfg.OnuTxPowerOID + "." + onuIDStr + ".1"); err == nil {
 		detail.TXPower = convertPower(val)
 	}
 
-	// Get Status
+	// Ambil Status
 	if val, err := d.snmpGet(BaseOID1 + cfg.OnuStatusOID + "." + onuIDStr); err == nil {
 		detail.Status = convertStatus(val)
 	}
 
-	// Get IP Address
+	// Ambil Alamat IP
 	if val, err := d.snmpGet(BaseOID2 + cfg.OnuIPAddressOID + "." + onuIDStr + ".1"); err == nil {
 		detail.IPAddress = extractString(val)
 	}
 
-	// Get Description
+	// Ambil Deskripsi
 	if val, err := d.snmpGet(BaseOID1 + cfg.OnuDescriptionOID + "." + onuIDStr); err == nil {
 		detail.Description = extractString(val)
 	}
 
-	// Get Last Online
+	// Ambil Waktu Terakhir Online
 	if val, err := d.snmpGet(BaseOID1 + cfg.OnuLastOnlineOID + "." + onuIDStr); err == nil {
 		detail.LastOnline = convertDateTime(val)
 	}
 
-	// Get Last Offline
+	// Ambil Waktu Terakhir Offline
 	if val, err := d.snmpGet(BaseOID1 + cfg.OnuLastOfflineOID + "." + onuIDStr); err == nil {
 		detail.LastOffline = convertDateTime(val)
 	}
 
-	// Get Offline Reason
+	// Ambil Alasan Offline
 	if val, err := d.snmpGet(BaseOID1 + cfg.OnuLastOfflineReasonOID + "." + onuIDStr); err == nil {
 		detail.OfflineReason = convertOfflineReason(val)
 	}
 
-	// Get Distance
+	// Ambil Jarak
 	if val, err := d.snmpGet(BaseOID1 + cfg.OnuGponOpticalDistanceOID + "." + onuIDStr); err == nil {
 		detail.Distance = fmt.Sprintf("%v", val)
 	}
 
-	// Calculate Uptime
+	// Hitung Uptime
 	if detail.LastOnline != "" {
 		detail.Uptime = calculateUptime(detail.LastOnline)
 	}
@@ -235,7 +237,7 @@ func (d *Driver) GetONUDetail(ctx context.Context, boardID, ponID, onuID int) (*
 	return detail, nil
 }
 
-// GetEmptySlots returns available ONU slots
+// GetEmptySlots mengambil slot ONU yang masih kosong.
 func (d *Driver) GetEmptySlots(ctx context.Context, boardID, ponID int) ([]model.ONUSlot, error) {
 	if !d.connected {
 		if err := d.Connect(); err != nil {
@@ -245,7 +247,7 @@ func (d *Driver) GetEmptySlots(ctx context.Context, boardID, ponID int) ([]model
 
 	cfg := GenerateBoardPonOID(boardID, ponID)
 	
-	// Track used ONU IDs
+	// Lacak ID ONU yang sudah terpakai
 	usedIDs := make(map[int]bool)
 	
 	oid := BaseOID1 + cfg.OnuIDNameOID
@@ -261,7 +263,7 @@ func (d *Driver) GetEmptySlots(ctx context.Context, boardID, ponID int) ([]model
 		return nil, fmt.Errorf("SNMP walk failed: %w", err)
 	}
 
-	// Find empty slots
+	// Cari slot yang kosong
 	var emptySlots []model.ONUSlot
 	for i := 1; i <= MaxOnuPerPon; i++ {
 		if !usedIDs[i] {
@@ -276,7 +278,7 @@ func (d *Driver) GetEmptySlots(ctx context.Context, boardID, ponID int) ([]model
 	return emptySlots, nil
 }
 
-// GetSystemInfo returns OLT system information
+// GetSystemInfo mengambil informasi sistem OLT.
 func (d *Driver) GetSystemInfo(ctx context.Context) (*driver.SystemInfo, error) {
 	if !d.connected {
 		if err := d.Connect(); err != nil {
@@ -286,27 +288,27 @@ func (d *Driver) GetSystemInfo(ctx context.Context) (*driver.SystemInfo, error) 
 
 	info := &driver.SystemInfo{}
 
-	// System Description
+	// Deskripsi Sistem
 	if val, err := d.snmpGet("1.3.6.1.2.1.1.1.0"); err == nil {
 		info.Description = extractString(val)
 	}
 
-	// System Name
+	// Nama Sistem
 	if val, err := d.snmpGet("1.3.6.1.2.1.1.5.0"); err == nil {
 		info.Name = extractString(val)
 	}
 
-	// System Uptime
+	// Uptime Sistem
 	if val, err := d.snmpGet("1.3.6.1.2.1.1.3.0"); err == nil {
 		info.Uptime = fmt.Sprintf("%v", val)
 	}
 
-	// System Contact
+	// Kontak Sistem
 	if val, err := d.snmpGet("1.3.6.1.2.1.1.4.0"); err == nil {
 		info.Contact = extractString(val)
 	}
 
-	// System Location
+	// Lokasi Sistem
 	if val, err := d.snmpGet("1.3.6.1.2.1.1.6.0"); err == nil {
 		info.Location = extractString(val)
 	}
@@ -314,7 +316,7 @@ func (d *Driver) GetSystemInfo(ctx context.Context) (*driver.SystemInfo, error) 
 	return info, nil
 }
 
-// GetBoardInfo returns board information
+// GetBoardInfo mengambil informasi board/kartu.
 func (d *Driver) GetBoardInfo(ctx context.Context, boardID int) (*model.BoardInfo, error) {
 	if !d.connected {
 		if err := d.Connect(); err != nil {
@@ -325,26 +327,26 @@ func (d *Driver) GetBoardInfo(ctx context.Context, boardID int) (*model.BoardInf
 	info := &model.BoardInfo{BoardID: boardID}
 	boardIDStr := strconv.Itoa(boardID)
 
-	// Get Card Type
+	// Ambil Tipe Kartu
 	if val, err := d.snmpGet(BaseOID3 + CardTypePrefix + "." + boardIDStr); err == nil {
 		info.Type = extractString(val)
 	}
 
-	// Get Card Status
+	// Ambil Status Kartu
 	if val, err := d.snmpGet(BaseOID3 + CardStatusPrefix + "." + boardIDStr); err == nil {
 		if intVal, ok := val.(int); ok {
 			info.Status = model.CardStatus(intVal).String()
 		}
 	}
 
-	// Get CPU Load
+	// Ambil Beban CPU
 	if val, err := d.snmpGet(BaseOID3 + CardCpuLoadPrefix + "." + boardIDStr); err == nil {
 		if intVal, ok := val.(int); ok {
 			info.CpuLoad = intVal
 		}
 	}
 
-	// Get Memory Usage
+	// Ambil Penggunaan Memori
 	if val, err := d.snmpGet(BaseOID3 + CardMemUsagePrefix + "." + boardIDStr); err == nil {
 		if intVal, ok := val.(int); ok {
 			info.MemUsage = intVal
@@ -354,7 +356,7 @@ func (d *Driver) GetBoardInfo(ctx context.Context, boardID int) (*model.BoardInf
 	return info, nil
 }
 
-// GetAllBoards returns all board information
+// GetAllBoards mengambil semua informasi board.
 func (d *Driver) GetAllBoards(ctx context.Context) ([]model.BoardInfo, error) {
 	var boards []model.BoardInfo
 	for i := 1; i <= MaxBoards; i++ {
@@ -367,7 +369,7 @@ func (d *Driver) GetAllBoards(ctx context.Context) ([]model.BoardInfo, error) {
 	return boards, nil
 }
 
-// GetPONInfo returns PON port information
+// GetPONInfo mengambil informasi port PON.
 func (d *Driver) GetPONInfo(ctx context.Context, boardID, ponID int) (*model.PONInfo, error) {
 	if !d.connected {
 		if err := d.Connect(); err != nil {
@@ -380,18 +382,18 @@ func (d *Driver) GetPONInfo(ctx context.Context, boardID, ponID int) (*model.PON
 		PonID:   ponID,
 	}
 
-	// Calculate PON index
+	// Hitung index PON
 	ponIndex := (boardID-1)*MaxPonPerBoard + ponID
 	ponIndexStr := strconv.Itoa(ponIndex)
 
-	// Get TX Power
+	// Ambil Sinyal TX
 	if val, err := d.snmpGet(BaseOID3 + PonTxPowerPrefix + "." + ponIndexStr); err == nil {
 		if intVal, ok := val.(int); ok {
 			info.TxPower = float64(intVal) / 100.0
 		}
 	}
 
-	// Get RX Power
+	// Ambil Sinyal RX
 	if val, err := d.snmpGet(BaseOID3 + PonRxPowerPrefix + "." + ponIndexStr); err == nil {
 		if intVal, ok := val.(int); ok {
 			info.RxPower = float64(intVal) / 100.0
@@ -401,7 +403,7 @@ func (d *Driver) GetPONInfo(ctx context.Context, boardID, ponID int) (*model.PON
 	return info, nil
 }
 
-// GetONUTraffic returns ONU traffic statistics (placeholder - requires specific OID)
+// GetONUTraffic mengambil statistik trafik ONU (Placeholder - butuh OID spesifik).
 func (d *Driver) GetONUTraffic(ctx context.Context, boardID, ponID, onuID int) (*model.ONUTraffic, error) {
 	if !d.connected {
 		if err := d.Connect(); err != nil {
@@ -416,12 +418,12 @@ func (d *Driver) GetONUTraffic(ctx context.Context, boardID, ponID, onuID int) (
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
 	}
 
-	// Note: ONU traffic OIDs vary by OLT configuration
-	// These are placeholder implementations
+	// Catatan: OID trafik ONU bervariasi tergantung konfigurasi OLT.
+	// Ini adalah implementasi sementara (placeholder).
 	return traffic, nil
 }
 
-// GetInterfaceStats returns interface statistics
+// GetInterfaceStats mengambil statistik interface.
 func (d *Driver) GetInterfaceStats(ctx context.Context) ([]model.InterfaceStats, error) {
 	if !d.connected {
 		if err := d.Connect(); err != nil {
@@ -432,7 +434,7 @@ func (d *Driver) GetInterfaceStats(ctx context.Context) ([]model.InterfaceStats,
 	var stats []model.InterfaceStats
 	indexMap := make(map[int]*model.InterfaceStats)
 
-	// Walk interface descriptions
+	// Walk deskripsi interface
 	d.client.Walk("1.3.6.1.2.1.2.2.1.2", func(pdu gosnmp.SnmpPDU) error {
 		idx := extractLastOIDPart(pdu.Name)
 		if idx > 0 {
@@ -444,7 +446,7 @@ func (d *Driver) GetInterfaceStats(ctx context.Context) ([]model.InterfaceStats,
 		return nil
 	})
 
-	// Walk interface status
+	// Walk status interface
 	d.client.Walk("1.3.6.1.2.1.2.2.1.8", func(pdu gosnmp.SnmpPDU) error {
 		idx := extractLastOIDPart(pdu.Name)
 		if stat, ok := indexMap[idx]; ok {
@@ -459,7 +461,7 @@ func (d *Driver) GetInterfaceStats(ctx context.Context) ([]model.InterfaceStats,
 		return nil
 	})
 
-	// Walk RX bytes
+	// Walk byte RX
 	d.client.Walk("1.3.6.1.2.1.2.2.1.10", func(pdu gosnmp.SnmpPDU) error {
 		idx := extractLastOIDPart(pdu.Name)
 		if stat, ok := indexMap[idx]; ok {
@@ -468,7 +470,7 @@ func (d *Driver) GetInterfaceStats(ctx context.Context) ([]model.InterfaceStats,
 		return nil
 	})
 
-	// Walk TX bytes
+	// Walk byte TX
 	d.client.Walk("1.3.6.1.2.1.2.2.1.16", func(pdu gosnmp.SnmpPDU) error {
 		idx := extractLastOIDPart(pdu.Name)
 		if stat, ok := indexMap[idx]; ok {
@@ -477,7 +479,7 @@ func (d *Driver) GetInterfaceStats(ctx context.Context) ([]model.InterfaceStats,
 		return nil
 	})
 
-	// Convert to slice
+	// Konversi ke slice
 	for _, stat := range indexMap {
 		stats = append(stats, *stat)
 	}
@@ -485,7 +487,7 @@ func (d *Driver) GetInterfaceStats(ctx context.Context) ([]model.InterfaceStats,
 	return stats, nil
 }
 
-// snmpGet performs an SNMP GET request
+// snmpGet melakukan permintaan SNMP GET.
 func (d *Driver) snmpGet(oid string) (interface{}, error) {
 	result, err := d.client.Get([]string{oid})
 	if err != nil {
@@ -497,7 +499,7 @@ func (d *Driver) snmpGet(oid string) (interface{}, error) {
 	return result.Variables[0].Value, nil
 }
 
-// Helper functions
+// Fungsi Pembantu (Helpers)
 
 func extractOnuID(oid string) int {
 	return extractLastOIDPart(oid)
@@ -619,5 +621,5 @@ func calculateUptime(lastOnline string) string {
 	return lastOnline
 }
 
-// Ensure Driver implements driver.Driver interface
+// Pastikan Driver mengimplementasikan interface driver.Driver
 var _ driver.Driver = (*Driver)(nil)

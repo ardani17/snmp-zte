@@ -12,19 +12,21 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// ONUService provides ONU operations
+// ONUService menyediakan operasi untuk berkomunikasi dengan ONU.
 type ONUService struct {
 	cfg      *config.Config
 	cache    cache.Cache
 	drivers  map[string]driver.Driver
 }
 
-// NewONUService creates a new ONU service
+// NewONUService membuat instance ONU service baru dan menyiapkan driver.
 func NewONUService(cfg *config.Config, redisClient *redis.Client) *ONUService {
 	var c cache.Cache
 	if redisClient != nil {
+		// Gunakan Redis jika tersedia
 		c = cache.NewRedisCache(redisClient, cache.DefaultTTL)
 	} else {
+		// Jika tidak ada Redis, jangan gunakan cache (NoOp)
 		c = cache.NewNoOpCache()
 	}
 
@@ -34,7 +36,7 @@ func NewONUService(cfg *config.Config, redisClient *redis.Client) *ONUService {
 		drivers: make(map[string]driver.Driver),
 	}
 
-	// Initialize drivers for configured OLTs
+	// Siapkan driver untuk setiap OLT yang terdaftar di konfigurasi
 	for _, oltCfg := range cfg.OLTs {
 		d := s.createDriver(oltCfg)
 		if d != nil {
@@ -69,14 +71,14 @@ func (s *ONUService) getDriver(oltID string) (driver.Driver, error) {
 	return d, nil
 }
 
-// GetONUList returns list of ONUs for a Board/PON
+// GetONUList mengambil daftar ONU dari driver dengan sistem Caching.
 func (s *ONUService) GetONUList(ctx context.Context, oltID string, boardID, ponID int) ([]model.ONUInfo, error) {
 	d, err := s.getDriver(oltID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Validate
+	// Validasi ID Board dan PON
 	if !d.ValidateBoardID(boardID) {
 		return nil, fmt.Errorf("invalid board ID: %d", boardID)
 	}
@@ -84,25 +86,25 @@ func (s *ONUService) GetONUList(ctx context.Context, oltID string, boardID, ponI
 		return nil, fmt.Errorf("invalid PON ID: %d", ponID)
 	}
 
-	// Try cache first
+	// 1. Coba ambil dari Cache dulu agar tidak perlu tanya OLT (lebih cepat)
 	cacheKey := cache.ONUListKey(oltID, boardID, ponID)
 	var cached []model.ONUInfo
 	if err := s.cache.Get(ctx, cacheKey, &cached); err == nil {
 		return cached, nil
 	}
 
-	// Fetch from driver
+	// 2. Jika tidak ada di cache, baru minta ke Driver SNMP
 	onuList, err := d.GetONUList(ctx, boardID, ponID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Add OLT ID to each ONU
+	// Tambahkan ID OLT ke masing-masing data ONU
 	for i := range onuList {
 		onuList[i].OLTID = oltID
 	}
 
-	// Cache result
+	// 3. Simpan hasilnya ke Cache untuk permintaan berikutnya
 	s.cache.Set(ctx, cacheKey, onuList, cache.DefaultTTL)
 
 	return onuList, nil
