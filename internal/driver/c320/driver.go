@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/ardani/snmp-zte/internal/driver"
@@ -497,6 +498,105 @@ func (d *Driver) GetInterfaceStats(ctx context.Context) ([]model.InterfaceStats,
 	return stats, nil
 }
 
+// GetFanInfo mengambil informasi fan
+func (d *Driver) GetFanInfo(ctx context.Context) ([]map[string]interface{}, error) {
+	if !d.connected {
+		if err := d.Connect(); err != nil {
+			return nil, err
+		}
+	}
+
+	var fans []map[string]interface{}
+	fanMap := make(map[int]map[string]interface{})
+
+	// Walk fan table to get indices
+	err := d.client.Walk(FanTableOID, func(pdu gosnmp.SnmpPDU) error {
+		// Extract fan index from OID
+		parts := strings.Split(pdu.Name, ".")
+		if len(parts) < 1 {
+			return nil
+		}
+		
+		idxStr := parts[len(parts)-1]
+		idx, err := strconv.Atoi(idxStr)
+		if err != nil {
+			// Try second to last
+			if len(parts) >= 2 {
+				idxStr = parts[len(parts)-2]
+				idx, _ = strconv.Atoi(idxStr)
+			}
+		}
+		
+		if idx == 0 {
+			idx = len(fanMap) + 1
+		}
+
+		if _, exists := fanMap[idx]; !exists {
+			fanMap[idx] = map[string]interface{}{
+				"index": idx,
+			}
+		}
+		
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Get details for each fan
+	for idx := range fanMap {
+		fan := map[string]interface{}{
+			"index": idx,
+		}
+
+		// Get speed level
+		speedOID := fmt.Sprintf("%s.%d", FanSpeedLevelOID, idx)
+		if val, err := d.snmpGet(speedOID); err == nil {
+			if intVal := extractInt(val); intVal > 0 {
+				fan["speed_level"] = intVal
+				// Convert to string
+				switch intVal {
+				case 1:
+					fan["speed"] = "Low"
+				case 2:
+					fan["speed"] = "Standard"
+				case 3:
+					fan["speed"] = "High"
+				case 4:
+					fan["speed"] = "Super"
+				default:
+					fan["speed"] = "Unknown"
+				}
+			}
+		}
+
+		// Get status
+		statusOID := fmt.Sprintf("%s.%d", FanStatusOID, idx)
+		if val, err := d.snmpGet(statusOID); err == nil {
+			if intVal := extractInt(val); intVal == 1 {
+				fan["status"] = "Normal"
+			} else {
+				fan["status"] = "Abnormal"
+			}
+		}
+
+		// Get present
+		presentOID := fmt.Sprintf("%s.%d", FanPresentOID, idx)
+		if val, err := d.snmpGet(presentOID); err == nil {
+			if extractInt(val) == 1 {
+				fan["present"] = true
+			} else {
+				fan["present"] = false
+			}
+		}
+
+		fans = append(fans, fan)
+	}
+
+	return fans, nil
+}
+
 // snmpGet melakukan permintaan SNMP GET.
 func (d *Driver) snmpGet(oid string) (interface{}, error) {
 	result, err := d.client.Get([]string{oid})
@@ -561,6 +661,25 @@ func extractString(val interface{}) string {
 		return string(v)
 	default:
 		return fmt.Sprintf("%v", v)
+	}
+}
+
+func extractInt(val interface{}) int {
+	switch v := val.(type) {
+	case int:
+		return v
+	case int32:
+		return int(v)
+	case int64:
+		return int(v)
+	case uint:
+		return int(v)
+	case uint32:
+		return int(v)
+	case uint64:
+		return int(v)
+	default:
+		return 0
 	}
 }
 

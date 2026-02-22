@@ -36,6 +36,23 @@ const (
 	PonTxPowerPrefix = ".1010.11.1.1.5"
 	PonRxPowerPrefix = ".1010.11.2.1.2"
 
+	// OID System (RFC 1213)
+	SysDescrOID   = ".1.3.6.1.2.1.1.1.0"
+	SysNameOID    = ".1.3.6.1.2.1.1.5.0"
+	SysUptimeOID  = ".1.3.6.1.2.1.1.3.0"
+	SysContactOID = ".1.3.6.1.2.1.1.4.0"
+	SysLocationOID = ".1.3.6.1.2.1.1.6.0"
+
+	// OID untuk Fan
+	FanTableOID       = ".1.3.6.1.4.1.3902.1015.2.1.3.10.10.10"
+	FanSpeedLevelOID  = ".1.3.6.1.4.1.3902.1015.2.1.3.10.10.10.1.3"
+	FanStatusOID      = ".1.3.6.1.4.1.3902.1015.2.1.3.10.10.10.1.5"
+	FanPresentOID     = ".1.3.6.1.4.1.3902.1015.2.1.3.10.10.10.1.6"
+
+	// OID untuk Temperature
+	TempTableOID      = ".1.3.6.1.4.1.3902.1015.2.1.3.10.10.11"
+	TempValueOID      = ".1.3.6.1.4.1.3902.1015.2.1.3.10.10.11.1.3"
+
 	// Konstanta ID Board-PON
 	Board1OnuIDBase   = 285278464
 	Board1OnuTypeBase = 268500992

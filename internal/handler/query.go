@@ -63,6 +63,7 @@ type QueryResponse struct {
 // @Description - all_boards: Status semua kartu yang ada di OLT
 // @Description - pon_info: Statistik port PON (TX/RX Power)
 // @Description - interface_stats: Statistik lalu lintas interface (semua port)
+// @Description - fan_info: Informasi status fan/kipas
 // @Tags Query
 // @Accept json
 // @Produce json
@@ -144,6 +145,8 @@ func (h *QueryHandler) Query(w http.ResponseWriter, r *http.Request) {
 		result, err = drv.GetPONInfo(ctx, req.Board, req.Pon)
 	case "interface_stats":
 		result, err = drv.GetInterfaceStats(ctx)
+	case "fan_info":
+		result, err = drv.GetFanInfo(ctx)
 	default:
 		response.BadRequest(w, "Unknown query: "+req.Query)
 		return

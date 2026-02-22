@@ -23,6 +23,7 @@ type Driver interface {
 	GetPONInfo(ctx context.Context, boardID, ponID int) (*model.PONInfo, error)
 	GetAllBoards(ctx context.Context) ([]model.BoardInfo, error)
 	GetInterfaceStats(ctx context.Context) ([]model.InterfaceStats, error)
+	GetFanInfo(ctx context.Context) ([]map[string]interface{}, error)
 
 	// Validation
 	ValidateBoardID(boardID int) bool
