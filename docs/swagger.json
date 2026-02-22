@@ -1,0 +1,131 @@
+{
+    "schemes": ["http"],
+    "swagger": "2.0",
+    "info": {
+        "description": "Multi-OLT SNMP monitoring system for ZTE devices (C320, C300, C600)",
+        "title": "SNMP-ZTE API",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "API Support",
+            "url": "https://github.com/ardani17/snmp-zte",
+            "email": "adifta22@gmail.com"
+        },
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        },
+        "version": "2.1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/",
+    "paths": {
+        "/api/v1/query": {
+            "post": {
+                "description": "Query OLT data without storing credentials. Supports: onu_list, onu_detail, empty_slots, system_info, board_info, all_boards, pon_info, interface_stats",
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "tags": ["Query"],
+                "summary": "Stateless SNMP Query",
+                "parameters": [
+                    {
+                        "description": "Query Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.QueryRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {"description": "OK"},
+                    "400": {"description": "Bad Request"},
+                    "500": {"description": "Internal Server Error"},
+                    "504": {"description": "Gateway Timeout"}
+                }
+            }
+        },
+        "/api/v1/olt-info": {
+            "post": {
+                "description": "Get OLT system information",
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "tags": ["Query"],
+                "summary": "Get OLT Info",
+                "parameters": [
+                    {
+                        "description": "OLT Info Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.OLTInfoRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {"description": "OK"},
+                    "400": {"description": "Bad Request"},
+                    "500": {"description": "Internal Server Error"}
+                }
+            }
+        },
+        "/stats": {
+            "get": {
+                "description": "Get connection pool statistics",
+                "produces": ["application/json"],
+                "tags": ["System"],
+                "summary": "Get SNMP Pool Stats",
+                "responses": {
+                    "200": {"description": "OK"}
+                }
+            }
+        },
+        "/health": {
+            "get": {
+                "description": "Health check endpoint",
+                "produces": ["application/json"],
+                "tags": ["System"],
+                "summary": "Health Check",
+                "responses": {
+                    "200": {"description": "OK"}
+                }
+            }
+        }
+    },
+    "definitions": {
+        "handler.QueryRequest": {
+            "type": "object",
+            "required": ["ip", "community", "query"],
+            "properties": {
+                "ip": {"type": "string", "example": "192.168.1.1"},
+                "port": {"type": "integer", "example": 161},
+                "community": {"type": "string", "example": "public"},
+                "model": {"type": "string", "example": "C320"},
+                "query": {"type": "string", "example": "onu_list"},
+                "board": {"type": "integer", "example": 1},
+                "pon": {"type": "integer", "example": 1},
+                "onu_id": {"type": "integer", "example": 1}
+            }
+        },
+        "handler.QueryResponse": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string"},
+                "data": {"type": "object"},
+                "timestamp": {"type": "string"},
+                "duration": {"type": "string"}
+            }
+        },
+        "handler.OLTInfoRequest": {
+            "type": "object",
+            "required": ["ip"],
+            "properties": {
+                "ip": {"type": "string", "example": "192.168.1.1"},
+                "port": {"type": "integer", "example": 161},
+                "community": {"type": "string", "example": "public"},
+                "model": {"type": "string", "example": "C320"}
+            }
+        }
+    }
+}

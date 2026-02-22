@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/ardani/snmp-zte/internal/config"
+	_ "github.com/ardani/snmp-zte/docs" // swagger docs
 	"github.com/ardani/snmp-zte/internal/handler"
 	"github.com/ardani/snmp-zte/internal/middleware"
 	"github.com/ardani/snmp-zte/internal/service"
@@ -18,7 +19,25 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
+
+// @title SNMP-ZTE API
+// @version 2.1
+// @description Multi-OLT SNMP monitoring system for ZTE devices (C320, C300, C600)
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.url https://github.com/ardani17/snmp-zte
+// @contact.email adifta22@gmail.com
+
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
+
+// @host localhost:8080
+// @BasePath /
+// @accept json
+// @produce json
 
 func main() {
 	// Setup logger
@@ -30,7 +49,7 @@ func main() {
 		log.Fatal().Err(err).Msg("Failed to load config")
 	}
 
-	// Initialize Redis client (optional, skip if not configured)
+	// Initialize Redis client (optional)
 	var redisClient *redis.Client
 	if cfg.Redis.Host != "" {
 		redisClient = redis.NewClient(&redis.Options{
@@ -56,7 +75,7 @@ func main() {
 	oltHandler := handler.NewOLTHandler(oltService)
 	queryHandler := handler.NewQueryHandler()
 
-	// Setup router with all middleware
+	// Setup router
 	router := setupRouter(oltHandler, onuHandler, queryHandler)
 
 	// Start server
@@ -89,6 +108,7 @@ func main() {
 
 	log.Info().
 		Str("addr", cfg.Server.Addr()).
+		Str("swagger", "http://"+cfg.Server.Addr()+"/swagger/index.html").
 		Int("rate_limit", 20).
 		Int("max_concurrent_snmp", 100).
 		Msg("Starting server")
@@ -108,11 +128,7 @@ func setupRouter(
 ) http.Handler {
 	r := chi.NewRouter()
 
-	// ─────────────────────────────────────────────────────────────────
-	// MIDDLEWARE CHAIN
-	// ─────────────────────────────────────────────────────────────────
-	
-	// Basic middleware
+	// Middleware
 	r.Use(chiMiddleware.RequestID)
 	r.Use(chiMiddleware.RealIP)
 	r.Use(chiMiddleware.Logger)
@@ -122,25 +138,22 @@ func setupRouter(
 	rateLimiter := middleware.NewRateLimiter(20, time.Minute)
 	r.Use(rateLimiter.Middleware)
 	
-	// CORS: Allow all origins (for public use)
+	// CORS: Allow all origins
 	r.Use(middleware.DefaultCORS())
 	
 	// Timeout
 	r.Use(chiMiddleware.Timeout(90 * time.Second))
 
-	// ─────────────────────────────────────────────────────────────────
-	// ROUTES
-	// ─────────────────────────────────────────────────────────────────
-
 	// Root endpoint
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		response.JSON(w, http.StatusOK, map[string]interface{}{
 			"name":              "SNMP-ZTE API",
-			"version":           "2.0.0",
+			"version":           "2.1.0",
 			"status":            "running",
-			"features":          []string{"stateless_query", "rate_limiting", "cors"},
+			"features":          []string{"stateless_query", "rate_limiting", "cors", "swagger"},
 			"rate_limit":        "20 req/min per IP",
 			"max_concurrent":    100,
+			"swagger_docs":      "/swagger/index.html",
 		})
 	})
 
@@ -154,12 +167,14 @@ func setupRouter(
 	// Pool statistics
 	r.Get("/stats", queryHandler.PoolStats)
 
-	// ─────────────────────────────────────────────────────────────────
-	// API V1 - STATELESS QUERY (No credentials stored)
-	// ─────────────────────────────────────────────────────────────────
+	// Swagger UI
+	r.Get("/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL("http://localhost:8080/swagger/doc.json"),
+	))
+
+	// API v1
 	r.Route("/api/v1", func(r chi.Router) {
 		// Stateless query endpoint (for public use)
-		// Credentials sent per request, never stored
 		r.Post("/query", queryHandler.Query)
 		r.Post("/olt-info", queryHandler.OLTInfo)
 

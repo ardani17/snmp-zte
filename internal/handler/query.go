@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/ardani/snmp-zte/internal/driver"
@@ -28,17 +27,17 @@ func NewQueryHandler() *QueryHandler {
 
 // QueryRequest represents a stateless query request
 type QueryRequest struct {
-	// Connection details (required, not stored)
-	IP        string `json:"ip"`
-	Port      int    `json:"port"`
-	Community string `json:"community"`
-	Model     string `json:"model"` // C320, C300, C600
+	// OLT connection details (not stored)
+	IP        string `json:"ip" example:"192.168.1.1"`
+	Port      int    `json:"port" example:"161"`
+	Community string `json:"community" example:"public"`
+	Model     string `json:"model" example:"C320"` // C320, C300, C600
 
 	// Query parameters
-	Query string `json:"query"` // onu_list, onu_detail, empty_slots, system_info
-	Board int    `json:"board"`
-	Pon   int    `json:"pon"`
-	OnuID int    `json:"onu_id,omitempty"`
+	Query string `json:"query" example:"onu_list"` // onu_list, onu_detail, empty_slots, system_info, board_info, all_boards, pon_info, interface_stats
+	Board int    `json:"board" example:"1"`
+	Pon   int    `json:"pon" example:"1"`
+	OnuID int    `json:"onu_id,omitempty" example:"1"`
 }
 
 // QueryResponse represents a query response
@@ -49,7 +48,18 @@ type QueryResponse struct {
 	Duration  string      `json:"duration"`
 }
 
-// Query handles stateless SNMP queries
+// Query godoc
+// @Summary Stateless SNMP Query
+// @Description Query OLT data without storing credentials. Supports: onu_list, onu_detail, empty_slots, system_info, board_info, all_boards, pon_info, interface_stats
+// @Tags Query
+// @Accept json
+// @Produce json
+// @Param request body QueryRequest true "Query Request"
+// @Success 200 {object} response.Response{data=QueryResponse}
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Failure 504 {object} response.ErrorResponse
+// @Router /api/v1/query [post]
 func (h *QueryHandler) Query(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 
@@ -78,11 +88,11 @@ func (h *QueryHandler) Query(w http.ResponseWriter, r *http.Request) {
 		req.Port = 161
 	}
 	if req.Model == "" {
-		req.Model = "C320" // Default to C320
+		req.Model = "C320"
 	}
 
 	// Create context with timeout
-	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
 	defer cancel()
 
 	// Get driver based on model
@@ -139,11 +149,29 @@ func (h *QueryHandler) Query(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, http.StatusOK, resp)
 }
 
-// OLTInfo handles OLT info request
+// OLTInfoRequest represents OLT info request
+type OLTInfoRequest struct {
+	IP        string `json:"ip" example:"192.168.1.1"`
+	Port      int    `json:"port" example:"161"`
+	Community string `json:"community" example:"public"`
+	Model     string `json:"model" example:"C320"`
+}
+
+// OLTInfo godoc
+// @Summary Get OLT Info
+// @Description Get OLT system information
+// @Tags Query
+// @Accept json
+// @Produce json
+// @Param request body OLTInfoRequest true "OLT Info Request"
+// @Success 200 {object} response.Response
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/v1/olt-info [post]
 func (h *QueryHandler) OLTInfo(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 
-	var req QueryRequest
+	var req OLTInfoRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.BadRequest(w, "Invalid request body")
 		return
@@ -160,33 +188,31 @@ func (h *QueryHandler) OLTInfo(w http.ResponseWriter, r *http.Request) {
 	if req.Community == "" {
 		req.Community = "public"
 	}
+	if req.Model == "" {
+		req.Model = "C320"
+	}
 
-	// Create context with timeout
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 
-	// Get driver
-	drv, err := h.getDriver(req)
+	drv, err := h.getDriverFromOLTInfo(req)
 	if err != nil {
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	// Connect
 	if err := drv.Connect(); err != nil {
 		response.Error(w, http.StatusGatewayTimeout, "Failed to connect to OLT")
 		return
 	}
 	defer drv.Close()
 
-	// Get system info
 	info, err := drv.GetSystemInfo(ctx)
 	if err != nil {
 		response.Error(w, http.StatusInternalServerError, "Failed to get OLT info")
 		return
 	}
 
-	// Get model info
 	modelInfo := drv.GetModelInfo()
 
 	response.JSON(w, http.StatusOK, map[string]interface{}{
@@ -196,7 +222,13 @@ func (h *QueryHandler) OLTInfo(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// PoolStats returns SNMP pool statistics
+// PoolStats godoc
+// @Summary Get SNMP Pool Stats
+// @Description Get connection pool statistics
+// @Tags System
+// @Produce json
+// @Success 200 {object} response.Response
+// @Router /stats [get]
 func (h *QueryHandler) PoolStats(w http.ResponseWriter, r *http.Request) {
 	stats := h.pool.Stats()
 	response.JSON(w, http.StatusOK, stats)
@@ -206,24 +238,16 @@ func (h *QueryHandler) getDriver(req QueryRequest) (driver.Driver, error) {
 	switch req.Model {
 	case "C320", "c320":
 		return c320.New(req.IP, uint16(req.Port), req.Community), nil
-	// C300 and C600 will be added later
-	// case "C300", "c300":
-	// 	return c300.New(req.IP, uint16(req.Port), req.Community), nil
-	// case "C600", "c600":
-	// 	return c600.New(req.IP, uint16(req.Port), req.Community), nil
 	default:
 		return nil, fmt.Errorf("unsupported OLT model: %s (supported: C320)", req.Model)
 	}
 }
 
-// parseIntOrDefault parses a string to int, returning default if error
-func parseIntOrDefault(s string, def int) int {
-	if s == "" {
-		return def
+func (h *QueryHandler) getDriverFromOLTInfo(req OLTInfoRequest) (driver.Driver, error) {
+	switch req.Model {
+	case "C320", "c320":
+		return c320.New(req.IP, uint16(req.Port), req.Community), nil
+	default:
+		return nil, fmt.Errorf("unsupported OLT model: %s", req.Model)
 	}
-	val, err := strconv.Atoi(s)
-	if err != nil {
-		return def
-	}
-	return val
 }
