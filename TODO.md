@@ -2,16 +2,37 @@
 
 ## 📋 Project Overview
 
-**Tujuan:** API SNMP untuk ZTE OLT (bagian dari Billing Management System)
+**Tujuan:** API SNMP stateless untuk ZTE OLT (bagian dari Billing Management System)
+
+**Arsitektur: STATELESS-ONLY**
+- ✅ **Semua endpoints lewat `/api/v1/query`** (stateless)
+- ✅ **Tidak ada penyimpanan data** - testing friendly
+- ✅ **Bisa test ke OLT manapun** - flexible
+- ✅ **Safe untuk public testing** - no sensitive data stored
+
+**API Pattern:**
+```
+POST /api/v1/query
+{
+  "ip": "91.192.81.36",
+  "port": 2161,
+  "community": "public",
+  "model": "C320",
+  "query": "endpoint_name",  // <- determines data type
+  "board": 1,
+  "pon": 1,
+  "onu_id": 1
+}
+```
 
 **Use Case:** Billing Management ISP dengan integrasi MikroTik + Multi-vendor OLT
 
-**Arsitektur:**
-- API ini akan di-consume oleh aplikasi billing utama
-- Akan ada API serupa untuk merk OLT lain (Huawei, FiberHome, dll)
-- Target: Production system untuk dijual
-
 **OLT Test:** 91.192.81.36:2161 (C320 - ARDANI)
+
+**Development Approach:**
+1. Semua endpoints implementasi di query handler (stateless)
+2. Testing bisa dilakukan secara publik
+3. Setelah semua selesai, bisa dipisah-pisah jika diperlukan
 
 ---
 
@@ -38,6 +59,8 @@
 
 ## 🔥 Phase 2: Bandwidth & Performance (IN PROGRESS)
 
+**Note:** Semua endpoints akan diimplementasikan di query handler (stateless)
+
 ### Prioritas 1: Bandwidth Management
 
 | Endpoint | Status | Fungsi | OID | Priority |
@@ -56,6 +79,8 @@
 ---
 
 ## 📈 Phase 3: Provisioning & Config (PLANNED)
+
+**Note:** Semua endpoints akan diimplementasikan di query handler (stateless)
 
 ### Prioritas 1: ONU Provisioning
 
@@ -79,6 +104,8 @@
 
 ## 🚀 Phase 4: Advanced Features (FUTURE)
 
+**Note:** Semua endpoints akan diimplementasikan di query handler (stateless)
+
 | Feature | Status | Fungsi | Priority |
 |---------|--------|--------|----------|
 | alarm_info | ⬜ TODO | Active alarms/faults | ⭐⭐⭐⭐ |
@@ -90,7 +117,7 @@
 
 ## 💰 Phase 5: Billing Management Essentials
 
-**Note:** Banyak fitur billing dikelola oleh MikroTik, OLT fokus monitoring & usage tracking saja.
+**Note:** Semua endpoints akan diimplementasikan di query handler (stateless). Banyak fitur billing dikelola oleh MikroTik, OLT fokus monitoring & usage tracking saja.
 
 ### Kategori 1: Usage Tracking (OLT Focus) ⭐⭐⭐⭐⭐
 
@@ -130,9 +157,54 @@
 - [ ] Add integration tests dengan mock SNMP
 - [ ] Improve error handling dan logging
 - [ ] Add rate limiting per OLT
-- [ ] Add caching untuk frequently accessed data
+- [ ] Add caching untuk frequently accessed data (optional - stateless preferred)
 - [ ] Dokumentasi API lebih lengkap
 - [ ] Example code untuk client integration
+
+---
+
+## 📚 Stateless Architecture Benefits
+
+### ✅ Advantages
+
+**1. Testing Friendly**
+- Bisa test ke OLT manapun tanpa setup
+- Bisa share untuk public testing
+- Tidak ada data sensitif tersimpan
+
+**2. Security**
+- No credential storage
+- No sensitive data in database
+- Safe untuk expose ke public
+
+**3. Flexibility**
+- Support multiple OLTs
+- Easy switching between OLTs
+- No configuration needed
+
+**4. Development Speed**
+- Faster iteration
+- Easier debugging
+- Simpler architecture
+
+### 📝 Implementation Pattern
+
+**All endpoints follow same pattern:**
+```go
+case "endpoint_name":
+    result, err = drv.GetEndpointData(ctx, params...)
+```
+
+**Example:**
+```go
+case "onu_bandwidth":
+    result, err = drv.GetONUBandwidth(ctx, req.Board, req.Pon, req.OnuID)
+```
+
+**No changes needed in:**
+- Database schema
+- Configuration
+- State management
 
 ---
 
