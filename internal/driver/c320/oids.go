@@ -33,7 +33,6 @@ const (
 	CardPortCountPrefix = ".2.1.1.3.1.7.1.1"
 	CardCpuLoadPrefix  = ".2.1.1.3.1.9.1.1"
 	CardMemUsagePrefix = ".2.1.1.3.1.11.1.1"
-	CardHardVerPrefix  = ".2.1.2.2.1.1.1.1"  // Hardware Version
 	CardSoftVerPrefix  = ".2.1.2.2.1.4.1.1"  // Software Version
 
 	// OID untuk Port PON

@@ -373,12 +373,6 @@ func (d *Driver) GetBoardInfo(ctx context.Context, boardID int) (*model.BoardInf
 		info.MemUsage = extractInt(val)
 	}
 
-	// Ambil Hardware Version
-	hardVerOID := fmt.Sprintf("%s.%d", BaseOID3+CardHardVerPrefix, boardID)
-	if val, err := d.snmpGet(hardVerOID); err == nil {
-		info.HardVer = extractString(val)
-	}
-
 	// Ambil Software Version
 	softVerOID := fmt.Sprintf("%s.%d", BaseOID3+CardSoftVerPrefix, boardID)
 	if val, err := d.snmpGet(softVerOID); err == nil {

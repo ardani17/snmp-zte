@@ -34,7 +34,6 @@ type BoardInfo struct {
 	PortCount int    `json:"port_count"`
 	CpuLoad   int    `json:"cpu_load"`
 	MemUsage  int    `json:"mem_usage"`
-	HardVer   string `json:"hard_ver"`
 	SoftVer   string `json:"soft_ver"`
 }
 
