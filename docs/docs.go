@@ -566,6 +566,60 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "handler.OLTInfoResponse": {
+            "type": "object",
+            "properties": {
+                "duration": {
+                    "type": "string"
+                },
+                "model": {
+                    "$ref": "#/definitions/driver.ModelInfo"
+                },
+                "system": {
+                    "$ref": "#/definitions/driver.SystemInfo"
+                }
+            }
+        },
+        "driver.ModelInfo": {
+            "type": "object",
+            "properties": {
+                "max_boards": {
+                    "type": "integer"
+                },
+                "max_onu_per_pon": {
+                    "type": "integer"
+                },
+                "max_pon_per_board": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "vendor": {
+                    "type": "string"
+                }
+            }
+        },
+        "driver.SystemInfo": {
+            "type": "object",
+            "properties": {
+                "contact": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "uptime": {
+                    "type": "string"
+                }
+            }
+        },
         "model.OLT": {
             "type": "object",
             "properties": {

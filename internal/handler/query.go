@@ -52,6 +52,13 @@ type QueryResponse struct {
 	Duration  string      `json:"duration"`
 }
 
+// OLTInfoResponse merepresentasikan detail lengkap informasi OLT.
+type OLTInfoResponse struct {
+	System   interface{} `json:"system"`   // Detail Sistem (Nama, Deskripsi, Uptime)
+	Model    interface{} `json:"model"`    // Kapabilitas Model (ZTE C320, C300, dll)
+	Duration string      `json:"duration"` // Waktu yang dibutuhkan untuk query
+}
+
 // Query godoc
 // @Summary Stateless SNMP Query (Query Tanpa Kredensial)
 // @Description Melakukan query SNMP ke OLT tanpa menyimpan data login.
@@ -205,7 +212,7 @@ type OLTInfoRequest struct {
 // @Accept json
 // @Produce json
 // @Param request body OLTInfoRequest true "Detail koneksi OLT"
-// @Success 200 {object} response.Response
+// @Success 200 {object} response.Response{data=OLTInfoResponse}
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 500 {object} response.ErrorResponse
 // @Router /api/v1/olt-info [post]
@@ -256,10 +263,10 @@ func (h *QueryHandler) OLTInfo(w http.ResponseWriter, r *http.Request) {
 
 	modelInfo := drv.GetModelInfo()
 
-	response.JSON(w, http.StatusOK, map[string]interface{}{
-		"system":   info,
-		"model":    modelInfo,
-		"duration": time.Since(start).String(),
+	response.JSON(w, http.StatusOK, OLTInfoResponse{
+		System:   info,
+		Model:    modelInfo,
+		Duration: time.Since(start).String(),
 	})
 }
 
