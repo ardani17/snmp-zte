@@ -2,7 +2,14 @@
 
 ## 📋 Project Overview
 
-**Tujuan:** Membuat API SNMP monitoring untuk ZTE OLT (C320, C300, C600) dengan fitur lengkap
+**Tujuan:** API SNMP untuk ZTE OLT (bagian dari Billing Management System)
+
+**Use Case:** Billing Management ISP dengan integrasi MikroTik + Multi-vendor OLT
+
+**Arsitektur:**
+- API ini akan di-consume oleh aplikasi billing utama
+- Akan ada API serupa untuk merk OLT lain (Huawei, FiberHome, dll)
+- Target: Production system untuk dijual
 
 **OLT Test:** 91.192.81.36:2161 (C320 - ARDANI)
 
@@ -81,42 +88,52 @@
 
 ---
 
-## 🎯 Current Sprint (Hari Ini)
+## 💰 Phase 5: Billing Management Essentials (CRITICAL)
 
-**Target:** Selesaikan Phase 2 - Prioritas 1
+### Kategori 1: Customer Usage Tracking ⭐⭐⭐⭐⭐
 
-- [ ] **onu_bandwidth** - Bandwidth SLA monitoring
-  - Research OID: .1.3.6.1.4.1.3902.1015.1010.1.7.7/8
-  - Test ke OLT
-  - Implement GetONUBandwidth
-  - Test endpoint
-  - Commit & Push
+| Endpoint | Status | Fungsi | Untuk Billing |
+|----------|--------|--------|---------------|
+| onu_bandwidth_usage | ⬜ TODO | Real-time bandwidth usage | Cek usage pelanggan |
+| onu_monthly_traffic | ⬜ TODO | Monthly traffic summary | Billing berdasarkan usage |
+| onu_session_time | ⬜ TODO | Online duration | Billing berdasarkan waktu |
+| top_onu_usage | ⬜ TODO | Top bandwidth users | Identifikasi heavy users |
 
-- [ ] **pon_port_stats** - PON port statistics
-  - Research OID: .1.3.6.1.4.1.3902.1015.1010.1.9.1.8
-  - Test ke OLT
-  - Implement GetPONPortStats
-  - Test endpoint
-  - Commit & Push
+### Kategori 2: Provisioning untuk Billing ⭐⭐⭐⭐⭐
 
-- [ ] **onu_errors** - ONU error counters
-  - Research OID: .1.3.6.1.4.1.3902.1015.1010.1.9.1.4
-  - Test ke OLT
-  - Implement GetONUErrors
-  - Test endpoint
-  - Commit & Push
+| Endpoint | Status | Fungsi | Untuk Billing |
+|----------|--------|--------|---------------|
+| onu_service_profile | ⬜ TODO | Get/Set service profile | Assign paket billing |
+| bandwidth_profile_list | ⬜ TODO | List bandwidth profiles | Daftar paket tersedia |
+| onu_change_profile | ⬜ TODO | Change ONU profile | Upgrade/downgrade paket |
+| onu_suspend | ⬜ TODO | Suspend ONU (SET) | Blokir pelanggan tunggak |
+| onu_unsuspend | ⬜ TODO | Unsuspend ONU (SET) | Aktifkan kembali |
 
----
+### Kategori 3: Troubleshooting untuk Support ⭐⭐⭐⭐
 
-## 📊 Progress Summary
+| Endpoint | Status | Fungsi | Untuk Support |
+|----------|--------|--------|---------------|
+| mac_table | ⬜ TODO | MAC address table | Troubleshoot konektivitas |
+| dhcp_snooping | ⬜ TODO | DHCP assignments | Troubleshoot IP issues |
+| arp_table | ⬜ TODO | ARP table | Troubleshoot routing |
+| onu_signal_history | ⬜ TODO | Signal strength history | Troubleshoot quality |
 
-| Phase | Total | Done | Progress |
-|-------|-------|------|----------|
-| Phase 1: Core | 12 | 12 | 100% ✅ |
-| Phase 2: Performance | 4 | 0 | 0% |
-| Phase 3: Provisioning | 8 | 0 | 0% |
-| Phase 4: Advanced | 4 | 0 | 0% |
-| **TOTAL** | **28** | **12** | **43%** |
+### Kategori 4: Reporting untuk Management ⭐⭐⭐⭐
+
+| Endpoint | Status | Fungsi | Untuk Report |
+|----------|--------|--------|--------------|
+| daily_stats | ⬜ TODO | Daily statistics | Daily report |
+| monthly_stats | ⬜ TODO | Monthly statistics | Monthly billing report |
+| onu_availability | ⬜ TODO | Uptime percentage | SLA report |
+| capacity_report | ⬜ TODO | Port capacity usage | Capacity planning |
+
+### Kategori 5: Integration Ready ⭐⭐⭐⭐
+
+| Endpoint | Status | Fungsi | Untuk Integrasi |
+|----------|--------|--------|----------------|
+| webhook_config | ⬜ TODO | Configure webhooks | Push events ke billing |
+| sync_status | ⬜ TODO | Sync status dengan billing | Data consistency |
+| bulk_export | ⬜ TODO | Export all ONU data | Initial sync |
 
 ---
 
@@ -129,6 +146,38 @@
 - [ ] Add caching untuk frequently accessed data
 - [ ] Dokumentasi API lebih lengkap
 - [ ] Example code untuk client integration
+
+---
+
+## 📊 Progress Summary
+
+| Phase | Total | Done | Progress | Priority |
+|-------|-------|------|----------|----------|
+| Phase 1: Core | 12 | 12 | 100% ✅ | Done |
+| Phase 2: Performance | 4 | 0 | 0% | High |
+| Phase 3: Provisioning | 8 | 0 | 0% | Medium |
+| Phase 4: Advanced | 4 | 0 | 0% | Low |
+| Phase 5: Billing Essentials | 17 | 0 | 0% | **CRITICAL** |
+| **TOTAL** | **45** | **12** | **27%** | - |
+
+---
+
+## 🎯 PRIORITY ROADMAP
+
+### **MVP (Minimum Viable Product) - Billing Ready**
+**Target: Phase 1 + Phase 2 + Kategori 1-2 dari Phase 5**
+
+1. ✅ Phase 1: Core (12 endpoints) - **DONE**
+2. ⬜ Phase 2: Performance (4 endpoints)
+3. ⬜ Phase 5 - Kategori 1: Usage Tracking (4 endpoints)
+4. ⬜ Phase 5 - Kategori 2: Provisioning (5 endpoints)
+
+**Total MVP: 25 endpoints**
+
+### **Production Ready - Full Billing System**
+**Target: Semua Phase 1-5**
+
+**Total Production: 45 endpoints**
 
 ---
 
@@ -148,4 +197,6 @@
 
 **Repository:** https://github.com/ardani17/snmp-zte
 
-**Last Commit:** 6c492c9 - feat: Add onu_traffic endpoint
+**Last Commit:** caf1c1f - docs: Add comprehensive TODO.md for project roadmap
+
+**Last Update:** 2026-02-23 - Added Phase 5 for billing management requirements
