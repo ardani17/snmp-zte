@@ -36,8 +36,8 @@ type QueryRequest struct {
 	Model     string `json:"model" example:"C320"` // C320, C300, C600
 
 	// Parameter Query (Apa yang ingin ditanyakan ke OLT)
-	// Enum: onu_list, onu_detail, empty_slots, system_info, board_info, all_boards, pon_info, interface_stats, fan_info
-	Query string `json:"query" example:"onu_list" enums:"onu_list,onu_detail,empty_slots,system_info,board_info,all_boards,pon_info,interface_stats,fan_info"`
+	// Enum: onu_list, onu_detail, empty_slots, system_info, board_info, all_boards, interface_stats, fan_info, temperature_info, onu_traffic
+	Query string `json:"query" example:"onu_list" enums:"onu_list,onu_detail,empty_slots,system_info,board_info,all_boards,interface_stats,fan_info,temperature_info,onu_traffic"`
 	Board int    `json:"board" example:"1"`
 	Pon   int    `json:"pon" example:"1"`
 	OnuID int    `json:"onu_id,omitempty" example:"1"`
@@ -69,7 +69,6 @@ type OLTInfoResponse struct {
 // @Description - system_info: Informasi sistem OLT (Nama, Deskripsi, Uptime)
 // @Description - board_info: Status kartu/board (CPU, Memori, Tipe)
 // @Description - all_boards: Status semua kartu yang ada di OLT
-// @Description - pon_info: Statistik port PON (TX/RX Power)
 // @Description - interface_stats: Statistik lalu lintas interface (semua port)
 // @Description - fan_info: Informasi status fan/kipas
 // @Description - temperature_info: Informasi suhu sistem dan CPU (°C)
@@ -151,8 +150,6 @@ func (h *QueryHandler) Query(w http.ResponseWriter, r *http.Request) {
 		result, err = drv.GetBoardInfo(ctx, req.Board)
 	case "all_boards":
 		result, err = drv.GetAllBoards(ctx)
-	case "pon_info":
-		result, err = drv.GetPONInfo(ctx, req.Board, req.Pon)
 	case "onu_traffic":
 		if req.OnuID == 0 {
 			response.BadRequest(w, "onu_id required for onu_traffic query")

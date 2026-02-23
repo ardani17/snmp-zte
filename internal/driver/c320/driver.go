@@ -395,43 +395,6 @@ func (d *Driver) GetAllBoards(ctx context.Context) ([]model.BoardInfo, error) {
 	return boards, nil
 }
 
-// GetPONInfo mengambil informasi port PON.
-func (d *Driver) GetPONInfo(ctx context.Context, boardID, ponID int) (*model.PONInfo, error) {
-	if !d.connected {
-		if err := d.Connect(); err != nil {
-			return nil, err
-		}
-	}
-
-	info := &model.PONInfo{
-		BoardID: boardID,
-		PonID:   ponID,
-	}
-
-	// Ambil ONUs pada port PON ini
-	onus, err := d.GetONUList(ctx, boardID, ponID)
-	if err == nil {
-		info.ONUCount = len(onus)
-
-		// Hitung average power jika ada ONU
-		if len(onus) > 0 {
-			var totalTX, totalRX float64
-			for _, onu := range onus {
-				if tx, err := strconv.ParseFloat(onu.TXPower, 64); err == nil {
-					totalTX += tx
-				}
-				if rx, err := strconv.ParseFloat(onu.RXPower, 64); err == nil {
-					totalRX += rx
-				}
-			}
-			info.TxPower = totalTX / float64(len(onus))
-			info.RxPower = totalRX / float64(len(onus))
-		}
-	}
-
-	return info, nil
-}
-
 // GetONUTraffic mengambil statistik trafik ONU (Placeholder - butuh OID spesifik).
 func (d *Driver) GetONUTraffic(ctx context.Context, boardID, ponID, onuID int) (*model.ONUTraffic, error) {
 	if !d.connected {

@@ -27,7 +27,7 @@ const docTemplate = `{
                 "tags": [
                     "Query"
                 ],
-                "summary": "Ambil Detail Sistem & Model OLT",
+                "summary": "Ambil Detail Sistem \u0026 Model OLT",
                 "parameters": [
                     {
                         "description": "Detail koneksi OLT",
@@ -43,7 +43,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/handler.OLTInfoResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -482,7 +494,7 @@ const docTemplate = `{
         },
         "/api/v1/query": {
             "post": {
-                "description": "Melakukan query SNMP ke OLT tanpa menyimpan data login.\nList 'query' yang didukung:\n- onu_list: Daftar semua ONU di Port PON tertentu\n- onu_detail: Detail lengkap satu ONU (WAJIB isi onu_id)\n- empty_slots: Cari ID ONU yang masih kosong/tersedia\n- system_info: Informasi sistem OLT (Nama, Deskripsi, Uptime)\n- board_info: Status kartu/board (CPU, Memori, Tipe)\n- all_boards: Status semua kartu yang ada di OLT\n- pon_info: Statistik port PON (TX/RX Power)\n- interface_stats: Statistik lalu lintas interface (semua port)\n- fan_info: Informasi status fan/kipas\n- temperature_info: Informasi suhu sistem dan CPU (°C)\n- onu_traffic: Statistik traffic ONU (RX/TX bytes, WAJIB isi onu_id)",
+                "description": "Melakukan query SNMP ke OLT tanpa menyimpan data login.\nList 'query' yang didukung:\n- onu_list: Daftar semua ONU di Port PON tertentu\n- onu_detail: Detail lengkap satu ONU (WAJIB isi onu_id)\n- empty_slots: Cari ID ONU yang masih kosong/tersedia\n- system_info: Informasi sistem OLT (Nama, Deskripsi, Uptime)\n- board_info: Status kartu/board (CPU, Memori, Tipe)\n- all_boards: Status semua kartu yang ada di OLT\n- interface_stats: Statistik lalu lintas interface (semua port)\n- fan_info: Informasi status fan/kipas\n- temperature_info: Informasi suhu sistem dan CPU (°C)\n- onu_traffic: Statistik traffic ONU (RX/TX bytes, WAJIB isi onu_id)",
                 "consumes": [
                     "application/json"
                 ],
@@ -546,14 +558,14 @@ const docTemplate = `{
         },
         "/stats": {
             "get": {
-                "description": "Ambil statistik pool koneksi",
+                "description": "Get connection pool statistics",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "System"
                 ],
-                "summary": "Ambil Statistik Pool SNMP",
+                "summary": "Get SNMP Pool Stats",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -566,56 +578,108 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "handler.OLTInfoRequest": {
+            "type": "object",
+            "properties": {
+                "community": {
+                    "type": "string",
+                    "example": "public"
+                },
+                "ip": {
+                    "type": "string",
+                    "example": "192.168.1.1"
+                },
+                "model": {
+                    "type": "string",
+                    "example": "C320"
+                },
+                "port": {
+                    "type": "integer",
+                    "example": 161
+                }
+            }
+        },
         "handler.OLTInfoResponse": {
             "type": "object",
             "properties": {
                 "duration": {
+                    "description": "Waktu yang dibutuhkan untuk query",
                     "type": "string"
                 },
                 "model": {
-                    "$ref": "#/definitions/driver.ModelInfo"
+                    "description": "Kapabilitas Model (ZTE C320, C300, dll)"
                 },
                 "system": {
-                    "$ref": "#/definitions/driver.SystemInfo"
+                    "description": "Detail Sistem (Nama, Deskripsi, Uptime)"
                 }
             }
         },
-        "driver.ModelInfo": {
+        "handler.QueryRequest": {
             "type": "object",
             "properties": {
-                "max_boards": {
-                    "type": "integer"
+                "board": {
+                    "type": "integer",
+                    "example": 1
                 },
-                "max_onu_per_pon": {
-                    "type": "integer"
+                "community": {
+                    "type": "string",
+                    "example": "public"
                 },
-                "max_pon_per_board": {
-                    "type": "integer"
+                "ip": {
+                    "description": "Detail koneksi OLT (Data ini TIDAK disimpan oleh server)",
+                    "type": "string",
+                    "example": "192.168.1.1"
                 },
-                "name": {
-                    "type": "string"
+                "model": {
+                    "description": "C320, C300, C600",
+                    "type": "string",
+                    "example": "C320"
                 },
-                "vendor": {
-                    "type": "string"
+                "onu_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "pon": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "port": {
+                    "type": "integer",
+                    "example": 161
+                },
+                "query": {
+                    "description": "Parameter Query (Apa yang ingin ditanyakan ke OLT)\nEnum: onu_list, onu_detail, empty_slots, system_info, board_info, all_boards, interface_stats, fan_info, temperature_info, onu_traffic",
+                    "type": "string",
+                    "enum": [
+                        "onu_list",
+                        "onu_detail",
+                        "empty_slots",
+                        "system_info",
+                        "board_info",
+                        "all_boards",
+                        "interface_stats",
+                        "fan_info",
+                        "temperature_info",
+                        "onu_traffic"
+                    ],
+                    "example": "onu_list"
                 }
             }
         },
-        "driver.SystemInfo": {
+        "handler.QueryResponse": {
             "type": "object",
             "properties": {
-                "contact": {
+                "data": {},
+                "duration": {
                     "type": "string"
                 },
-                "description": {
+                "query": {
                     "type": "string"
                 },
-                "location": {
+                "summary": {
                     "type": "string"
                 },
-                "name": {
-                    "type": "string"
-                },
-                "uptime": {
+                "timestamp": {
                     "type": "string"
                 }
             }
@@ -757,96 +821,6 @@ const docTemplate = `{
                 },
                 "pon": {
                     "type": "integer"
-                }
-            }
-        },
-        "handler.OLTInfoRequest": {
-            "type": "object",
-            "properties": {
-                "community": {
-                    "type": "string",
-                    "example": "public"
-                },
-                "ip": {
-                    "type": "string",
-                    "example": "192.168.1.1"
-                },
-                "model": {
-                    "type": "string",
-                    "example": "C320"
-                },
-                "port": {
-                    "type": "integer",
-                    "example": 161
-                }
-            }
-        },
-        "handler.QueryRequest": {
-            "type": "object",
-            "properties": {
-                "board": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "community": {
-                    "type": "string",
-                    "example": "public"
-                },
-                "ip": {
-                    "description": "Detail koneksi OLT (Data ini TIDAK disimpan oleh server)",
-                    "type": "string",
-                    "example": "192.168.1.1"
-                },
-                "model": {
-                    "description": "C320, C300, C600",
-                    "type": "string",
-                    "example": "C320"
-                },
-                "onu_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "pon": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "port": {
-                    "type": "integer",
-                    "example": 161
-                },
-                "query": {
-                    "description": "Parameter Query (Apa yang ingin ditanyakan ke OLT)\nEnum: onu_list, onu_detail, empty_slots, system_info, board_info, all_boards, pon_info, interface_stats, fan_info",
-                    "type": "string",
-                    "enum": [
-                        "onu_list",
-                        "onu_detail",
-                        "empty_slots",
-                        "system_info",
-                        "board_info",
-                        "all_boards",
-                        "pon_info",
-                        "interface_stats",
-                        "fan_info"
-                    ],
-                    "example": "onu_list"
-                }
-            }
-        },
-        "handler.QueryResponse": {
-            "type": "object",
-            "properties": {
-                "data": {},
-                "duration": {
-                    "type": "string"
-                },
-                "query": {
-                    "type": "string"
-                },
-                "summary": {
-                    "type": "string"
-                },
-                "timestamp": {
-                    "type": "string"
                 }
             }
         },

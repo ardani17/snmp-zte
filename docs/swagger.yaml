@@ -15,6 +15,16 @@ definitions:
         example: 161
         type: integer
     type: object
+  handler.OLTInfoResponse:
+    properties:
+      duration:
+        description: Waktu yang dibutuhkan untuk query
+        type: string
+      model:
+        description: Kapabilitas Model (ZTE C320, C300, dll)
+      system:
+        description: Detail Sistem (Nama, Deskripsi, Uptime)
+    type: object
   handler.QueryRequest:
     properties:
       board:
@@ -43,7 +53,7 @@ definitions:
       query:
         description: |-
           Parameter Query (Apa yang ingin ditanyakan ke OLT)
-          Enum: onu_list, onu_detail, empty_slots, system_info, board_info, all_boards, pon_info, interface_stats, fan_info
+          Enum: onu_list, onu_detail, empty_slots, system_info, board_info, all_boards, interface_stats, fan_info, temperature_info, onu_traffic
         enum:
         - onu_list
         - onu_detail
@@ -51,9 +61,10 @@ definitions:
         - system_info
         - board_info
         - all_boards
-        - pon_info
         - interface_stats
         - fan_info
+        - temperature_info
+        - onu_traffic
         example: onu_list
         type: string
     type: object
@@ -68,6 +79,98 @@ definitions:
         type: string
       timestamp:
         type: string
+    type: object
+  model.OLT:
+    properties:
+      board_count:
+        type: integer
+      community:
+        type: string
+      id:
+        type: string
+      ip_address:
+        type: string
+      model:
+        type: string
+      name:
+        type: string
+      pon_per_board:
+        type: integer
+      port:
+        type: integer
+    type: object
+  model.ONUDetail:
+    properties:
+      board:
+        type: integer
+      description:
+        type: string
+      distance:
+        type: string
+      ip_address:
+        type: string
+      last_down_duration:
+        type: string
+      last_offline:
+        type: string
+      last_online:
+        type: string
+      name:
+        type: string
+      offline_reason:
+        type: string
+      olt_id:
+        type: string
+      onu_id:
+        type: integer
+      pon:
+        type: integer
+      rx_power:
+        type: string
+      serial_number:
+        type: string
+      status:
+        type: string
+      tx_power:
+        type: string
+      type:
+        type: string
+      uptime:
+        type: string
+    type: object
+  model.ONUInfo:
+    properties:
+      board:
+        type: integer
+      distance:
+        type: string
+      name:
+        type: string
+      olt_id:
+        type: string
+      onu_id:
+        type: integer
+      pon:
+        type: integer
+      rx_power:
+        type: string
+      serial_number:
+        type: string
+      status:
+        type: string
+      tx_power:
+        type: string
+      type:
+        type: string
+    type: object
+  model.ONUSlot:
+    properties:
+      board:
+        type: integer
+      onu_id:
+        type: integer
+      pon:
+        type: integer
     type: object
   response.ErrorResponse:
     properties:
@@ -86,10 +189,10 @@ definitions:
       status:
         type: string
     type: object
-host: 185.122.165.206:8080
+host: localhost:8080
 info:
   contact: {}
-  description: Multi-OLT SNMP monitoring system for ZTE devices
+  description: Sistem pemantauan SNMP Multi-OLT untuk perangkat ZTE
   title: SNMP-ZTE API
   version: "2.1"
 paths:
@@ -97,14 +200,220 @@ paths:
     post:
       consumes:
       - application/json
-      description: Get OLT system information
+      description: 'Mengambil informasi lengkap sistem OLT (Nama, Deskripsi, Uptime)
+        serta informasi kapabilitas model perangkat (contoh: Maksimal ONU per PON).'
       parameters:
-      - description: OLT Info Request
+      - description: Detail koneksi OLT
         in: body
         name: request
         required: true
         schema:
           $ref: '#/definitions/handler.OLTInfoRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/handler.OLTInfoResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Ambil Detail Sistem & Model OLT
+      tags:
+      - Query
+  /api/v1/olts:
+    get:
+      description: Mengambil daftar semua perangkat OLT yang terkonfigurasi di server.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.OLT'
+            type: array
+      summary: List semua OLT
+      tags:
+      - OLT
+    post:
+      consumes:
+      - application/json
+      description: Menambahkan perangkat OLT baru ke dalam konfigurasi server.
+      parameters:
+      - description: Data OLT Baru
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.OLT'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.OLT'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Daftarkan OLT Baru
+      tags:
+      - OLT
+  /api/v1/olts/{olt_id}:
+    delete:
+      description: Menghapus konfigurasi OLT dari server.
+      parameters:
+      - description: ID OLT yang akan dihapus
+        in: path
+        name: olt_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Hapus OLT
+      tags:
+      - OLT
+    get:
+      consumes:
+      - application/json
+      description: Mengambil data konfigurasi lengkap satu OLT berdasarkan ID.
+      parameters:
+      - description: ID OLT
+        in: path
+        name: olt_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.OLT'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Ambil Detail OLT
+      tags:
+      - OLT
+    put:
+      consumes:
+      - application/json
+      description: Memperbarui informasi konfigurasi OLT yang sudah ada.
+      parameters:
+      - description: ID OLT yang akan diupdate
+        in: path
+        name: olt_id
+        required: true
+        type: string
+      - description: Data OLT Baru
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.OLT'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.OLT'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Perbarui Data OLT
+      tags:
+      - OLT
+  /api/v1/olts/{olt_id}/board/{board_id}/pon/{pon_id}:
+    get:
+      description: Mengambil daftar semua ONU (modem) yang terdaftar di Board dan
+        Port PON tertentu.
+      parameters:
+      - description: ID OLT
+        in: path
+        name: olt_id
+        required: true
+        type: string
+      - description: ID Board/Slot
+        in: path
+        name: board_id
+        required: true
+        type: integer
+      - description: ID Port PON
+        in: path
+        name: pon_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.ONUInfo'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: List ONU di Port PON
+      tags:
+      - ONU
+  /api/v1/olts/{olt_id}/board/{board_id}/pon/{pon_id}/cache:
+    delete:
+      description: Menghapus data cache ONU untuk port PON tertentu dari Redis.
+      parameters:
+      - description: ID OLT
+        in: path
+        name: olt_id
+        required: true
+        type: string
+      - description: ID Board/Slot
+        in: path
+        name: board_id
+        required: true
+        type: integer
+      - description: ID Port PON
+        in: path
+        name: pon_id
+        required: true
+        type: integer
       produces:
       - application/json
       responses:
@@ -120,9 +429,91 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/response.ErrorResponse'
-      summary: Get OLT Info
+      summary: Bersihkan Cache PON
       tags:
-      - Query
+      - ONU
+  /api/v1/olts/{olt_id}/board/{board_id}/pon/{pon_id}/empty:
+    get:
+      description: Mengembalikan daftar ID ONU yang belum terpakai di port PON tertentu.
+      parameters:
+      - description: ID OLT
+        in: path
+        name: olt_id
+        required: true
+        type: string
+      - description: ID Board/Slot
+        in: path
+        name: board_id
+        required: true
+        type: integer
+      - description: ID Port PON
+        in: path
+        name: pon_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.ONUSlot'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Cari Slot ONU Kosong
+      tags:
+      - ONU
+  /api/v1/olts/{olt_id}/board/{board_id}/pon/{pon_id}/onu/{onu_id}:
+    get:
+      description: Mengambil informasi teknis mendalam untuk satu ONU spesifik (Power,
+        Status, Uptime, dll).
+      parameters:
+      - description: ID OLT
+        in: path
+        name: olt_id
+        required: true
+        type: string
+      - description: ID Board/Slot
+        in: path
+        name: board_id
+        required: true
+        type: integer
+      - description: ID Port PON
+        in: path
+        name: pon_id
+        required: true
+        type: integer
+      - description: ID ONU
+        in: path
+        name: onu_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.ONUDetail'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Detail Lengkap ONU
+      tags:
+      - ONU
   /api/v1/query:
     post:
       consumes:
@@ -136,7 +527,6 @@ paths:
         - system_info: Informasi sistem OLT (Nama, Deskripsi, Uptime)
         - board_info: Status kartu/board (CPU, Memori, Tipe)
         - all_boards: Status semua kartu yang ada di OLT
-        - pon_info: Statistik port PON (TX/RX Power)
         - interface_stats: Statistik lalu lintas interface (semua port)
         - fan_info: Informasi status fan/kipas
         - temperature_info: Informasi suhu sistem dan CPU (°C)

@@ -1,17 +1,17 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "Multi-OLT SNMP monitoring system for ZTE devices",
+        "description": "Sistem pemantauan SNMP Multi-OLT untuk perangkat ZTE",
         "title": "SNMP-ZTE API",
         "contact": {},
         "version": "2.1"
     },
-    "host": "185.122.165.206:8080",
+    "host": "localhost:8080",
     "basePath": "/",
     "paths": {
         "/api/v1/olt-info": {
             "post": {
-                "description": "Get OLT system information",
+                "description": "Mengambil informasi lengkap sistem OLT (Nama, Deskripsi, Uptime) serta informasi kapabilitas model perangkat (contoh: Maksimal ONU per PON).",
                 "consumes": [
                     "application/json"
                 ],
@@ -21,16 +21,327 @@
                 "tags": [
                     "Query"
                 ],
-                "summary": "Get OLT Info",
+                "summary": "Ambil Detail Sistem \u0026 Model OLT",
                 "parameters": [
                     {
-                        "description": "OLT Info Request",
+                        "description": "Detail koneksi OLT",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/handler.OLTInfoRequest"
                         }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/handler.OLTInfoResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/olts": {
+            "get": {
+                "description": "Mengambil daftar semua perangkat OLT yang terkonfigurasi di server.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "OLT"
+                ],
+                "summary": "List semua OLT",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.OLT"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Menambahkan perangkat OLT baru ke dalam konfigurasi server.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "OLT"
+                ],
+                "summary": "Daftarkan OLT Baru",
+                "parameters": [
+                    {
+                        "description": "Data OLT Baru",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.OLT"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/model.OLT"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/olts/{olt_id}": {
+            "get": {
+                "description": "Mengambil data konfigurasi lengkap satu OLT berdasarkan ID.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "OLT"
+                ],
+                "summary": "Ambil Detail OLT",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID OLT",
+                        "name": "olt_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.OLT"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Memperbarui informasi konfigurasi OLT yang sudah ada.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "OLT"
+                ],
+                "summary": "Perbarui Data OLT",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID OLT yang akan diupdate",
+                        "name": "olt_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Data OLT Baru",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.OLT"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.OLT"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Menghapus konfigurasi OLT dari server.",
+                "tags": [
+                    "OLT"
+                ],
+                "summary": "Hapus OLT",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID OLT yang akan dihapus",
+                        "name": "olt_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/olts/{olt_id}/board/{board_id}/pon/{pon_id}": {
+            "get": {
+                "description": "Mengambil daftar semua ONU (modem) yang terdaftar di Board dan Port PON tertentu.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ONU"
+                ],
+                "summary": "List ONU di Port PON",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID OLT",
+                        "name": "olt_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID Board/Slot",
+                        "name": "board_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID Port PON",
+                        "name": "pon_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.ONUInfo"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/olts/{olt_id}/board/{board_id}/pon/{pon_id}/cache": {
+            "delete": {
+                "description": "Menghapus data cache ONU untuk port PON tertentu dari Redis.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ONU"
+                ],
+                "summary": "Bersihkan Cache PON",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID OLT",
+                        "name": "olt_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID Board/Slot",
+                        "name": "board_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID Port PON",
+                        "name": "pon_id",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -55,9 +366,129 @@
                 }
             }
         },
+        "/api/v1/olts/{olt_id}/board/{board_id}/pon/{pon_id}/empty": {
+            "get": {
+                "description": "Mengembalikan daftar ID ONU yang belum terpakai di port PON tertentu.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ONU"
+                ],
+                "summary": "Cari Slot ONU Kosong",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID OLT",
+                        "name": "olt_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID Board/Slot",
+                        "name": "board_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID Port PON",
+                        "name": "pon_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.ONUSlot"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/olts/{olt_id}/board/{board_id}/pon/{pon_id}/onu/{onu_id}": {
+            "get": {
+                "description": "Mengambil informasi teknis mendalam untuk satu ONU spesifik (Power, Status, Uptime, dll).",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ONU"
+                ],
+                "summary": "Detail Lengkap ONU",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID OLT",
+                        "name": "olt_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID Board/Slot",
+                        "name": "board_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID Port PON",
+                        "name": "pon_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID ONU",
+                        "name": "onu_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.ONUDetail"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/query": {
             "post": {
-                "description": "Melakukan query SNMP ke OLT tanpa menyimpan data login.\nList 'query' yang didukung:\n- onu_list: Daftar semua ONU di Port PON tertentu\n- onu_detail: Detail lengkap satu ONU (WAJIB isi onu_id)\n- empty_slots: Cari ID ONU yang masih kosong/tersedia\n- system_info: Informasi sistem OLT (Nama, Deskripsi, Uptime)\n- board_info: Status kartu/board (CPU, Memori, Tipe)\n- all_boards: Status semua kartu yang ada di OLT\n- pon_info: Statistik port PON (TX/RX Power)\n- interface_stats: Statistik lalu lintas interface (semua port)\n- fan_info: Informasi status fan/kipas\n- temperature_info: Informasi suhu sistem dan CPU (°C)\n- onu_traffic: Statistik traffic ONU (RX/TX bytes, WAJIB isi onu_id)",
+                "description": "Melakukan query SNMP ke OLT tanpa menyimpan data login.\nList 'query' yang didukung:\n- onu_list: Daftar semua ONU di Port PON tertentu\n- onu_detail: Detail lengkap satu ONU (WAJIB isi onu_id)\n- empty_slots: Cari ID ONU yang masih kosong/tersedia\n- system_info: Informasi sistem OLT (Nama, Deskripsi, Uptime)\n- board_info: Status kartu/board (CPU, Memori, Tipe)\n- all_boards: Status semua kartu yang ada di OLT\n- interface_stats: Statistik lalu lintas interface (semua port)\n- fan_info: Informasi status fan/kipas\n- temperature_info: Informasi suhu sistem dan CPU (°C)\n- onu_traffic: Statistik traffic ONU (RX/TX bytes, WAJIB isi onu_id)",
                 "consumes": [
                     "application/json"
                 ],
@@ -162,6 +593,21 @@
                 }
             }
         },
+        "handler.OLTInfoResponse": {
+            "type": "object",
+            "properties": {
+                "duration": {
+                    "description": "Waktu yang dibutuhkan untuk query",
+                    "type": "string"
+                },
+                "model": {
+                    "description": "Kapabilitas Model (ZTE C320, C300, dll)"
+                },
+                "system": {
+                    "description": "Detail Sistem (Nama, Deskripsi, Uptime)"
+                }
+            }
+        },
         "handler.QueryRequest": {
             "type": "object",
             "properties": {
@@ -196,7 +642,7 @@
                     "example": 161
                 },
                 "query": {
-                    "description": "Parameter Query (Apa yang ingin ditanyakan ke OLT)\nEnum: onu_list, onu_detail, empty_slots, system_info, board_info, all_boards, pon_info, interface_stats, fan_info",
+                    "description": "Parameter Query (Apa yang ingin ditanyakan ke OLT)\nEnum: onu_list, onu_detail, empty_slots, system_info, board_info, all_boards, interface_stats, fan_info, temperature_info, onu_traffic",
                     "type": "string",
                     "enum": [
                         "onu_list",
@@ -205,9 +651,10 @@
                         "system_info",
                         "board_info",
                         "all_boards",
-                        "pon_info",
                         "interface_stats",
-                        "fan_info"
+                        "fan_info",
+                        "temperature_info",
+                        "onu_traffic"
                     ],
                     "example": "onu_list"
                 }
@@ -228,6 +675,146 @@
                 },
                 "timestamp": {
                     "type": "string"
+                }
+            }
+        },
+        "model.OLT": {
+            "type": "object",
+            "properties": {
+                "board_count": {
+                    "type": "integer"
+                },
+                "community": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "ip_address": {
+                    "type": "string"
+                },
+                "model": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "pon_per_board": {
+                    "type": "integer"
+                },
+                "port": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.ONUDetail": {
+            "type": "object",
+            "properties": {
+                "board": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "distance": {
+                    "type": "string"
+                },
+                "ip_address": {
+                    "type": "string"
+                },
+                "last_down_duration": {
+                    "type": "string"
+                },
+                "last_offline": {
+                    "type": "string"
+                },
+                "last_online": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "offline_reason": {
+                    "type": "string"
+                },
+                "olt_id": {
+                    "type": "string"
+                },
+                "onu_id": {
+                    "type": "integer"
+                },
+                "pon": {
+                    "type": "integer"
+                },
+                "rx_power": {
+                    "type": "string"
+                },
+                "serial_number": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tx_power": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "uptime": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.ONUInfo": {
+            "type": "object",
+            "properties": {
+                "board": {
+                    "type": "integer"
+                },
+                "distance": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "olt_id": {
+                    "type": "string"
+                },
+                "onu_id": {
+                    "type": "integer"
+                },
+                "pon": {
+                    "type": "integer"
+                },
+                "rx_power": {
+                    "type": "string"
+                },
+                "serial_number": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tx_power": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.ONUSlot": {
+            "type": "object",
+            "properties": {
+                "board": {
+                    "type": "integer"
+                },
+                "onu_id": {
+                    "type": "integer"
+                },
+                "pon": {
+                    "type": "integer"
                 }
             }
         },
