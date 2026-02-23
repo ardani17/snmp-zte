@@ -57,7 +57,7 @@
         },
         "/api/v1/query": {
             "post": {
-                "description": "Melakukan query SNMP ke OLT tanpa menyimpan data login.\nList 'query' yang didukung:\n- onu_list: Daftar semua ONU di Port PON tertentu\n- onu_detail: Detail lengkap satu ONU (WAJIB isi onu_id)\n- empty_slots: Cari ID ONU yang masih kosong/tersedia\n- system_info: Informasi sistem OLT (Nama, Deskripsi, Uptime)\n- board_info: Status kartu/board (CPU, Memori, Tipe)\n- all_boards: Status semua kartu yang ada di OLT\n- pon_info: Statistik port PON (TX/RX Power)\n- interface_stats: Statistik lalu lintas interface (semua port)\n- fan_info: Informasi status fan/kipas\n- temperature_info: Informasi suhu sistem dan CPU (°C)",
+                "description": "Melakukan query SNMP ke OLT tanpa menyimpan data login.\nList 'query' yang didukung:\n- onu_list: Daftar semua ONU di Port PON tertentu\n- onu_detail: Detail lengkap satu ONU (WAJIB isi onu_id)\n- empty_slots: Cari ID ONU yang masih kosong/tersedia\n- system_info: Informasi sistem OLT (Nama, Deskripsi, Uptime)\n- board_info: Status kartu/board (CPU, Memori, Tipe)\n- all_boards: Status semua kartu yang ada di OLT\n- pon_info: Statistik port PON (TX/RX Power)\n- interface_stats: Statistik lalu lintas interface (semua port)\n- fan_info: Informasi status fan/kipas\n- temperature_info: Informasi suhu sistem dan CPU (°C)\n- onu_traffic: Statistik traffic ONU (RX/TX bytes, WAJIB isi onu_id)",
                 "consumes": [
                     "application/json"
                 ],

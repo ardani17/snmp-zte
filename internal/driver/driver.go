@@ -16,6 +16,7 @@ type Driver interface {
 	GetONUList(ctx context.Context, boardID, ponID int) ([]model.ONUInfo, error)
 	GetONUDetail(ctx context.Context, boardID, ponID, onuID int) (*model.ONUDetail, error)
 	GetEmptySlots(ctx context.Context, boardID, ponID int) ([]model.ONUSlot, error)
+	GetONUTraffic(ctx context.Context, boardID, ponID, onuID int) (*model.ONUTraffic, error)
 
 	// OLT Info
 	GetSystemInfo(ctx context.Context) (*SystemInfo, error)

@@ -140,6 +140,7 @@ paths:
         - interface_stats: Statistik lalu lintas interface (semua port)
         - fan_info: Informasi status fan/kipas
         - temperature_info: Informasi suhu sistem dan CPU (°C)
+        - onu_traffic: Statistik traffic ONU (RX/TX bytes, WAJIB isi onu_id)
       parameters:
       - description: Detail Query (IP, Community, Model, dan Jenis Query)
         in: body

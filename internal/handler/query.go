@@ -66,6 +66,7 @@ type QueryResponse struct {
 // @Description - interface_stats: Statistik lalu lintas interface (semua port)
 // @Description - fan_info: Informasi status fan/kipas
 // @Description - temperature_info: Informasi suhu sistem dan CPU (°C)
+// @Description - onu_traffic: Statistik traffic ONU (RX/TX bytes, WAJIB isi onu_id)
 // @Tags Query
 // @Accept json
 // @Produce json
@@ -145,6 +146,12 @@ func (h *QueryHandler) Query(w http.ResponseWriter, r *http.Request) {
 		result, err = drv.GetAllBoards(ctx)
 	case "pon_info":
 		result, err = drv.GetPONInfo(ctx, req.Board, req.Pon)
+	case "onu_traffic":
+		if req.OnuID == 0 {
+			response.BadRequest(w, "onu_id required for onu_traffic query")
+			return
+		}
+		result, err = drv.GetONUTraffic(ctx, req.Board, req.Pon, req.OnuID)
 	case "interface_stats":
 		result, err = drv.GetInterfaceStats(ctx)
 	case "fan_info":

@@ -442,8 +442,33 @@ func (d *Driver) GetONUTraffic(ctx context.Context, boardID, ponID, onuID int) (
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
 	}
 
-	// Catatan: OID trafik ONU bervariasi tergantung konfigurasi OLT.
-	// Ini adalah implementasi sementara (placeholder).
+	// Calculate interface index
+	var baseOnuID int
+	if boardID == 1 {
+		baseOnuID = Board1OnuIDBase
+	} else {
+		baseOnuID = Board2OnuIDBase
+	}
+
+	// Interface index formula: base + ponOffset + onuID
+	// Each PON has 256 indices allocated
+	ponOffset := (ponID - 1) * 256
+	interfaceIndex := baseOnuID + ponOffset + onuID
+
+	// Standard IF-MIB OIDs
+	ifInOctetsOID := fmt.Sprintf(".1.3.6.1.2.1.2.2.1.10.%d", interfaceIndex)
+	ifOutOctetsOID := fmt.Sprintf(".1.3.6.1.2.1.2.2.1.16.%d", interfaceIndex)
+
+	// Get RX bytes
+	if val, err := d.snmpGet(ifInOctetsOID); err == nil {
+		traffic.RxBytes = extractCounter64(val)
+	}
+
+	// Get TX bytes
+	if val, err := d.snmpGet(ifOutOctetsOID); err == nil {
+		traffic.TxBytes = extractCounter64(val)
+	}
+
 	return traffic, nil
 }
 
