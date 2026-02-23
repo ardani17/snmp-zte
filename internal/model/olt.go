@@ -76,25 +76,25 @@ type TemperatureInfo struct {
 type CardStatus int
 
 const (
-	CardStatusEmpty CardStatus = 1
-	CardStatusReset CardStatus = 2
-	CardStatusInit  CardStatus = 3
-	CardStatusReady CardStatus = 4
-	CardStatusFault CardStatus = 5
+	CardStatusInService CardStatus = 1 // Active/InService
+	CardStatusFault     CardStatus = 2 // Fault/Error
+	CardStatusOffline   CardStatus = 3 // Offline/Not Present
+	CardStatusInit      CardStatus = 4 // Initializing
+	CardStatusEmpty     CardStatus = 5 // Empty/No Card
 )
 
 func (s CardStatus) String() string {
 	switch s {
-	case CardStatusEmpty:
-		return "Empty"
-	case CardStatusReset:
-		return "Reset"
-	case CardStatusInit:
-		return "Initializing"
-	case CardStatusReady:
-		return "Ready"
+	case CardStatusInService:
+		return "InService"
 	case CardStatusFault:
 		return "Fault"
+	case CardStatusOffline:
+		return "Offline"
+	case CardStatusInit:
+		return "Initializing"
+	case CardStatusEmpty:
+		return "Empty"
 	default:
 		return "Unknown"
 	}
