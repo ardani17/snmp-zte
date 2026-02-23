@@ -1,132 +1,177 @@
-schemes:
-- http
-swagger: "2.0"
+basePath: /
+definitions:
+  handler.OLTInfoRequest:
+    properties:
+      community:
+        example: public
+        type: string
+      ip:
+        example: 192.168.1.1
+        type: string
+      model:
+        example: C320
+        type: string
+      port:
+        example: 161
+        type: integer
+    type: object
+  handler.QueryRequest:
+    properties:
+      board:
+        example: 1
+        type: integer
+      community:
+        example: public
+        type: string
+      ip:
+        description: Detail koneksi OLT (Data ini TIDAK disimpan oleh server)
+        example: 192.168.1.1
+        type: string
+      model:
+        description: C320, C300, C600
+        example: C320
+        type: string
+      onu_id:
+        example: 1
+        type: integer
+      pon:
+        example: 1
+        type: integer
+      port:
+        example: 161
+        type: integer
+      query:
+        description: Parameter Query (Apa yang ingin ditanyakan ke OLT)
+        example: onu_list
+        type: string
+    type: object
+  handler.QueryResponse:
+    properties:
+      data: {}
+      duration:
+        type: string
+      query:
+        type: string
+      summary:
+        type: string
+      timestamp:
+        type: string
+    type: object
+  response.ErrorResponse:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+      status:
+        type: string
+    type: object
+  response.Response:
+    properties:
+      code:
+        type: integer
+      data: {}
+      status:
+        type: string
+    type: object
+host: localhost:8080
 info:
+  contact: {}
   description: Multi-OLT SNMP monitoring system for ZTE devices
   title: SNMP-ZTE API
-  contact:
-    name: ardani17
-    email: adifta22@gmail.com
-  license:
-    name: MIT
   version: "2.1"
-host: localhost:8080
-basePath: /
 paths:
-  /api/v1/query:
-    post:
-      description: Query OLT data without storing credentials
-      consumes:
-      - application/json
-      produces:
-      - application/json
-      summary: Stateless SNMP Query
-      tags:
-      - Query
-      parameters:
-      - name: body
-        in: body
-        required: true
-        schema:
-          type: object
-          required:
-          - ip
-          - community
-          - query
-          properties:
-            ip:
-              type: string
-              example: "192.168.1.1"
-              description: OLT IP address
-            port:
-              type: integer
-              example: 161
-              description: SNMP port
-            community:
-              type: string
-              example: "public"
-              description: SNMP community string
-            model:
-              type: string
-              example: "C320"
-              description: OLT model
-            query:
-              type: string
-              example: "onu_list"
-              description: Query type
-            board:
-              type: integer
-              example: 1
-            pon:
-              type: integer
-              example: 1
-            onu_id:
-              type: integer
-              example: 1
-      responses:
-        "200":
-          description: OK
-        "400":
-          description: Bad Request
-        "500":
-          description: Internal Server Error
   /api/v1/olt-info:
     post:
-      description: Get OLT system information
       consumes:
       - application/json
-      produces:
-      - application/json
-      summary: Get OLT System Info
-      tags:
-      - Query
+      description: Get OLT system information
       parameters:
-      - name: body
+      - description: OLT Info Request
         in: body
+        name: request
         required: true
         schema:
-          type: object
-          required:
-          - ip
-          properties:
-            ip:
-              type: string
-              example: "192.168.1.1"
-            port:
-              type: integer
-              example: 161
-            community:
-              type: string
-              example: "public"
-            model:
-              type: string
-              example: "C320"
+          $ref: '#/definitions/handler.OLTInfoRequest'
+      produces:
+      - application/json
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
         "500":
           description: Internal Server Error
-  /health:
-    get:
-      description: Health check endpoint
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Get OLT Info
+      tags:
+      - Query
+  /api/v1/query:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Melakukan query SNMP ke OLT tanpa menyimpan data login.
+        List 'query' yang didukung:
+        - onu_list: Daftar semua ONU di Port PON tertentu
+        - onu_detail: Detail lengkap satu ONU (WAJIB isi onu_id)
+        - empty_slots: Cari ID ONU yang masih kosong/tersedia
+        - system_info: Informasi sistem OLT (Nama, Deskripsi, Uptime)
+        - board_info: Status kartu/board (CPU, Memori, Tipe)
+        - all_boards: Status semua kartu yang ada di OLT
+        - pon_info: Statistik port PON (TX/RX Power)
+        - interface_stats: Statistik lalu lintas interface (semua port)
+        - fan_info: Informasi status fan/kipas
+      parameters:
+      - description: Detail Query (IP, Community, Model, dan Jenis Query)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.QueryRequest'
       produces:
       - application/json
-      summary: Health Check
-      tags:
-      - System
       responses:
         "200":
           description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/handler.QueryResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "504":
+          description: Gateway Timeout
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Stateless SNMP Query (Query Tanpa Kredensial)
+      tags:
+      - Query
   /stats:
     get:
-      description: Get SNMP connection pool statistics
+      description: Get connection pool statistics
       produces:
       - application/json
-      summary: Pool Statistics
-      tags:
-      - System
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get SNMP Pool Stats
+      tags:
+      - System
+swagger: "2.0"

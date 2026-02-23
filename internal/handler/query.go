@@ -36,7 +36,8 @@ type QueryRequest struct {
 	Model     string `json:"model" example:"C320"` // C320, C300, C600
 
 	// Parameter Query (Apa yang ingin ditanyakan ke OLT)
-	Query string `json:"query" example:"onu_list"` // onu_list, onu_detail, dsb.
+	// Enum: onu_list, onu_detail, empty_slots, system_info, board_info, all_boards, pon_info, interface_stats, fan_info
+	Query string `json:"query" example:"onu_list" enums:"onu_list,onu_detail,empty_slots,system_info,board_info,all_boards,pon_info,interface_stats,fan_info"`
 	Board int    `json:"board" example:"1"`
 	Pon   int    `json:"pon" example:"1"`
 	OnuID int    `json:"onu_id,omitempty" example:"1"`

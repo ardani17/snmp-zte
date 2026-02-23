@@ -4,59 +4,269 @@ package docs
 import "github.com/swaggo/swag"
 
 const docTemplate = `{
-    "schemes": ["http"],
+    "schemes": {{ marshal .Schemes }},
     "swagger": "2.0",
     "info": {
-        "description": "Multi-OLT SNMP monitoring system for ZTE devices",
-        "title": "SNMP-ZTE API",
-        "contact": {"name": "ardani17", "email": "adifta22@gmail.com"},
-        "license": {"name": "MIT"},
-        "version": "2.1"
+        "description": "{{escape .Description}}",
+        "title": "{{.Title}}",
+        "contact": {},
+        "version": "{{.Version}}"
     },
-    "host": "localhost:8080",
-    "basePath": "/",
+    "host": "{{.Host}}",
+    "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/v1/query": {
-            "post": {
-                "description": "Query OLT data without storing credentials",
-                "consumes": ["application/json"],
-                "produces": ["application/json"],
-                "summary": "Stateless SNMP Query",
-                "tags": ["Query"],
-                "parameters": [{"name": "body", "in": "body", "required": true, "schema": {"type": "object", "required": ["ip", "community", "query"], "properties": {"ip": {"type": "string"}, "port": {"type": "integer"}, "community": {"type": "string"}, "model": {"type": "string"}, "query": {"type": "string"}, "board": {"type": "integer"}, "pon": {"type": "integer"}, "onu_id": {"type": "integer"}}}}],
-                "responses": {"200": {"description": "OK"}, "400": {"description": "Bad Request"}, "500": {"description": "Internal Server Error"}}
-            }
-        },
         "/api/v1/olt-info": {
             "post": {
                 "description": "Get OLT system information",
-                "consumes": ["application/json"],
-                "produces": ["application/json"],
-                "summary": "Get OLT System Info",
-                "tags": ["Query"],
-                "parameters": [{"name": "body", "in": "body", "required": true, "schema": {"type": "object", "required": ["ip"], "properties": {"ip": {"type": "string"}, "port": {"type": "integer"}, "community": {"type": "string"}, "model": {"type": "string"}}}}],
-                "responses": {"200": {"description": "OK"}, "400": {"description": "Bad Request"}, "500": {"description": "Internal Server Error"}}
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Query"
+                ],
+                "summary": "Get OLT Info",
+                "parameters": [
+                    {
+                        "description": "OLT Info Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.OLTInfoRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
             }
         },
-        "/health": {
-            "get": {"description": "Health check endpoint", "produces": ["application/json"], "summary": "Health Check", "tags": ["System"], "responses": {"200": {"description": "OK"}}}
+        "/api/v1/query": {
+            "post": {
+                "description": "Melakukan query SNMP ke OLT tanpa menyimpan data login.\nList 'query' yang didukung:\n- onu_list: Daftar semua ONU di Port PON tertentu\n- onu_detail: Detail lengkap satu ONU (WAJIB isi onu_id)\n- empty_slots: Cari ID ONU yang masih kosong/tersedia\n- system_info: Informasi sistem OLT (Nama, Deskripsi, Uptime)\n- board_info: Status kartu/board (CPU, Memori, Tipe)\n- all_boards: Status semua kartu yang ada di OLT\n- pon_info: Statistik port PON (TX/RX Power)\n- interface_stats: Statistik lalu lintas interface (semua port)\n- fan_info: Informasi status fan/kipas",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Query"
+                ],
+                "summary": "Stateless SNMP Query (Query Tanpa Kredensial)",
+                "parameters": [
+                    {
+                        "description": "Detail Query (IP, Community, Model, dan Jenis Query)",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.QueryRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/handler.QueryResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "504": {
+                        "description": "Gateway Timeout",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
         },
         "/stats": {
-            "get": {"description": "Get SNMP connection pool statistics", "produces": ["application/json"], "summary": "Pool Statistics", "tags": ["System"], "responses": {"200": {"description": "OK"}}}
+            "get": {
+                "description": "Get connection pool statistics",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "System"
+                ],
+                "summary": "Get SNMP Pool Stats",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "handler.OLTInfoRequest": {
+            "type": "object",
+            "properties": {
+                "community": {
+                    "type": "string",
+                    "example": "public"
+                },
+                "ip": {
+                    "type": "string",
+                    "example": "192.168.1.1"
+                },
+                "model": {
+                    "type": "string",
+                    "example": "C320"
+                },
+                "port": {
+                    "type": "integer",
+                    "example": 161
+                }
+            }
+        },
+        "handler.QueryRequest": {
+            "type": "object",
+            "properties": {
+                "board": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "community": {
+                    "type": "string",
+                    "example": "public"
+                },
+                "ip": {
+                    "description": "Detail koneksi OLT (Data ini TIDAK disimpan oleh server)",
+                    "type": "string",
+                    "example": "192.168.1.1"
+                },
+                "model": {
+                    "description": "C320, C300, C600",
+                    "type": "string",
+                    "example": "C320"
+                },
+                "onu_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "pon": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "port": {
+                    "type": "integer",
+                    "example": 161
+                },
+                "query": {
+                    "description": "Parameter Query (Apa yang ingin ditanyakan ke OLT)",
+                    "type": "string",
+                    "example": "onu_list"
+                }
+            }
+        },
+        "handler.QueryResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "duration": {
+                    "type": "string"
+                },
+                "query": {
+                    "type": "string"
+                },
+                "summary": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.Response": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {},
+                "status": {
+                    "type": "string"
+                }
+            }
         }
     }
 }`
 
-// SwaggerInfo holds swagger info
+// SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "2.1",
 	Host:             "localhost:8080",
 	BasePath:         "/",
-	Schemes:          []string{"http"},
+	Schemes:          []string{},
 	Title:            "SNMP-ZTE API",
 	Description:      "Multi-OLT SNMP monitoring system for ZTE devices",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
+	LeftDelim:        "{{",
+	RightDelim:       "}}",
 }
 
 func init() {
