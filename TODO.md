@@ -88,52 +88,39 @@
 
 ---
 
-## 💰 Phase 5: Billing Management Essentials (CRITICAL)
+## 💰 Phase 5: Billing Management Essentials
 
-### Kategori 1: Customer Usage Tracking ⭐⭐⭐⭐⭐
+**Note:** Banyak fitur billing dikelola oleh MikroTik, OLT fokus monitoring & usage tracking saja.
 
-| Endpoint | Status | Fungsi | Untuk Billing |
-|----------|--------|--------|---------------|
-| onu_bandwidth_usage | ⬜ TODO | Real-time bandwidth usage | Cek usage pelanggan |
-| onu_monthly_traffic | ⬜ TODO | Monthly traffic summary | Billing berdasarkan usage |
-| onu_session_time | ⬜ TODO | Online duration | Billing berdasarkan waktu |
-| top_onu_usage | ⬜ TODO | Top bandwidth users | Identifikasi heavy users |
+### Kategori 1: Usage Tracking (OLT Focus) ⭐⭐⭐⭐⭐
 
-### Kategori 2: Provisioning untuk Billing ⭐⭐⭐⭐⭐
+| Endpoint | Status | Fungsi | Priority |
+|----------|--------|--------|----------|
+| onu_bandwidth | ⬜ TODO | Real-time bandwidth (assured/max) | ⭐⭐⭐⭐⭐ |
+| pon_port_stats | ⬜ TODO | Traffic per PON port | ⭐⭐⭐⭐⭐ |
+| onu_errors | ⬜ TODO | Error counter per ONU | ⭐⭐⭐⭐ |
+| mac_table | ⬜ TODO | MAC address table | ⭐⭐⭐ |
 
-| Endpoint | Status | Fungsi | Untuk Billing |
-|----------|--------|--------|---------------|
-| onu_service_profile | ⬜ TODO | Get/Set service profile | Assign paket billing |
-| bandwidth_profile_list | ⬜ TODO | List bandwidth profiles | Daftar paket tersedia |
-| onu_change_profile | ⬜ TODO | Change ONU profile | Upgrade/downgrade paket |
-| onu_suspend | ⬜ TODO | Suspend ONU (SET) | Blokir pelanggan tunggak |
-| onu_unsuspend | ⬜ TODO | Unsuspend ONU (SET) | Aktifkan kembali |
+**Note:** Usage tracking untuk monitoring, reporting dikelola MikroTik.
 
-### Kategori 3: Troubleshooting untuk Support ⭐⭐⭐⭐
+### Kategori 2: Provisioning (Basic Only) ⭐⭐⭐⭐
 
-| Endpoint | Status | Fungsi | Untuk Support |
-|----------|--------|--------|---------------|
-| mac_table | ⬜ TODO | MAC address table | Troubleshoot konektivitas |
-| dhcp_snooping | ⬜ TODO | DHCP assignments | Troubleshoot IP issues |
-| arp_table | ⬜ TODO | ARP table | Troubleshoot routing |
-| onu_signal_history | ⬜ TODO | Signal strength history | Troubleshoot quality |
+| Endpoint | Status | Fungsi | Priority |
+|----------|--------|--------|----------|
+| onu_loid | ⬜ TODO | Get LOID ONU | ⭐⭐⭐ |
+| onu_provision | ⬜ TODO | Provision ONU baru | ⭐⭐⭐ |
+| onu_delete | ⬜ TODO | Delete ONU | ⭐⭐ |
+| vlan_list | ⬜ TODO | List VLAN | ⭐⭐ |
+| onu_vlan | ⬜ TODO | VLAN per ONU | ⭐⭐ |
 
-### Kategori 4: Reporting untuk Management ⭐⭐⭐⭐
+**Note:** Suspend/unsuspend dikelola MikroTik, tidak perlu di OLT.
 
-| Endpoint | Status | Fungsi | Untuk Report |
-|----------|--------|--------|--------------|
-| daily_stats | ⬜ TODO | Daily statistics | Daily report |
-| monthly_stats | ⬜ TODO | Monthly statistics | Monthly billing report |
-| onu_availability | ⬜ TODO | Uptime percentage | SLA report |
-| capacity_report | ⬜ TODO | Port capacity usage | Capacity planning |
+### ❌ Skip - Dikelola MikroTik
 
-### Kategori 5: Integration Ready ⭐⭐⭐⭐
-
-| Endpoint | Status | Fungsi | Untuk Integrasi |
-|----------|--------|--------|----------------|
-| webhook_config | ⬜ TODO | Configure webhooks | Push events ke billing |
-| sync_status | ⬜ TODO | Sync status dengan billing | Data consistency |
-| bulk_export | ⬜ TODO | Export all ONU data | Initial sync |
+- ~~onu_suspend/unsuspend~~ → MikroTik
+- ~~reporting (daily/monthly)~~ → MikroTik
+- ~~webhook/integration~~ → MikroTik
+- ~~session time tracking~~ → MikroTik
 
 ---
 
@@ -154,30 +141,62 @@
 | Phase | Total | Done | Progress | Priority |
 |-------|-------|------|----------|----------|
 | Phase 1: Core | 12 | 12 | 100% ✅ | Done |
-| Phase 2: Performance | 4 | 0 | 0% | High |
-| Phase 3: Provisioning | 8 | 0 | 0% | Medium |
-| Phase 4: Advanced | 4 | 0 | 0% | Low |
-| Phase 5: Billing Essentials | 17 | 0 | 0% | **CRITICAL** |
-| **TOTAL** | **45** | **12** | **27%** | - |
+| Phase 2: Performance | 4 | 0 | 0% | 🔥 **WEEK 1** |
+| Phase 3: Provisioning | 8 | 0 | 0% | 📈 Later |
+| Phase 4: Advanced | 4 | 0 | 0% | ⏰ Future |
+| Phase 5: Billing Essentials | 9 | 0 | 0% | 🔥 **WEEK 1** |
+| **TOTAL MVP** | **25** | **12** | **48%** | - |
+
+---
+
+## 🎯 1 WEEK ROADMAP (MVP Complete)
+
+**Target:** 1 Minggu (Deadline: End of February)
+
+### Day 1-2: Phase 2 - Performance (4 endpoints)
+- [ ] **onu_bandwidth** - Bandwidth SLA (assured/max)
+- [ ] **pon_port_stats** - PON port statistics
+- [ ] **onu_errors** - Error counters
+- [ ] **voltage_info** - Voltage monitoring
+
+### Day 3-4: Phase 5 - Usage Tracking (4 endpoints)
+- [ ] **mac_table** - MAC address table
+- [ ] Bandwidth aggregation
+- [ ] Usage calculation
+- [ ] Top users identification
+
+### Day 5-6: Phase 5 - Provisioning Basic (5 endpoints)
+- [ ] **onu_loid** - Get LOID
+- [ ] **onu_provision** - Provision new ONU
+- [ ] **onu_delete** - Delete ONU
+- [ ] **vlan_list** - List VLANs
+- [ ] **onu_vlan** - ONU VLAN config
+
+### Day 7: Testing & Polish
+- [ ] Test all 25 endpoints
+- [ ] Update documentation
+- [ ] Prepare for integration
 
 ---
 
 ## 🎯 PRIORITY ROADMAP
 
-### **MVP (Minimum Viable Product) - Billing Ready**
-**Target: Phase 1 + Phase 2 + Kategori 1-2 dari Phase 5**
+### **MVP (1 Week Target)** 🔥
+**Phase 1 (Done) + Phase 2 + Phase 5 (Usage + Basic Provisioning)**
 
 1. ✅ Phase 1: Core (12 endpoints) - **DONE**
-2. ⬜ Phase 2: Performance (4 endpoints)
-3. ⬜ Phase 5 - Kategori 1: Usage Tracking (4 endpoints)
-4. ⬜ Phase 5 - Kategori 2: Provisioning (5 endpoints)
+2. ⬜ Phase 2: Performance (4 endpoints) - **Week 1**
+3. ⬜ Phase 5 - Usage Tracking (4 endpoints) - **Week 1**
+4. ⬜ Phase 5 - Provisioning (5 endpoints) - **Week 1**
 
-**Total MVP: 25 endpoints**
+**Total MVP: 25 endpoints (48% complete)**
 
-### **Production Ready - Full Billing System**
-**Target: Semua Phase 1-5**
+### **Full System (Later)**
+- Phase 3: Advanced provisioning
+- Phase 4: Advanced features
+- Phase 5: Additional features if needed
 
-**Total Production: 45 endpoints**
+**Target: After all brand APIs ready**
 
 ---
 
