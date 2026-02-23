@@ -27,11 +27,15 @@ type OLTSummary struct {
 
 // BoardInfo merepresentasikan informasi kartu/slot
 type BoardInfo struct {
-	BoardID  int    `json:"board_id"`
-	Type     string `json:"type"`
-	Status   string `json:"status"`
-	CpuLoad  int    `json:"cpu_load"`
-	MemUsage int    `json:"mem_usage"`
+	BoardID   int    `json:"board_id"`
+	Type      string `json:"type"`
+	RealType  string `json:"real_type"`
+	Status    string `json:"status"`
+	PortCount int    `json:"port_count"`
+	CpuLoad   int    `json:"cpu_load"`
+	MemUsage  int    `json:"mem_usage"`
+	HardVer   string `json:"hard_ver"`
+	SoftVer   string `json:"soft_ver"`
 }
 
 // PONInfo merepresentasikan informasi port PON

@@ -27,10 +27,14 @@ const (
 	OnuGponOpticalDistancePrefix = ".500.10.2.3.10.1.2"
 
 	// OID untuk Board/Card (di bawah BaseOID3)
-	CardTypePrefix     = ".2.1.1.3.1.2"
-	CardStatusPrefix   = ".2.1.1.3.1.5"
-	CardCpuLoadPrefix  = ".2.1.1.3.1.9"
-	CardMemUsagePrefix = ".2.1.1.3.1.11"
+	CardTypePrefix     = ".2.1.1.3.1.2"       // Configured Type (Integer)
+	CardRealTypePrefix = ".2.1.1.3.1.4.1.1"  // Actual Type (String) - Use this
+	CardStatusPrefix   = ".2.1.1.3.1.5.1.1"
+	CardPortCountPrefix = ".2.1.1.3.1.7.1.1"
+	CardCpuLoadPrefix  = ".2.1.1.3.1.9.1.1"
+	CardMemUsagePrefix = ".2.1.1.3.1.11.1.1"
+	CardHardVerPrefix  = ".2.1.2.2.1.1.1.1"  // Hardware Version
+	CardSoftVerPrefix  = ".2.1.2.2.1.4.1.1"  // Software Version
 
 	// OID untuk Port PON
 	PonTxPowerPrefix = ".1010.11.1.1.5"
@@ -68,7 +72,7 @@ const (
 	OnuTypeIncrement = 256
 
 	// Batasan Maksimal
-	MaxBoards       = 2
+	MaxBoards       = 4  // Show all 4 slots including empty
 	MaxPonPerBoard  = 16
 	MaxOnuPerPon    = 128
 )

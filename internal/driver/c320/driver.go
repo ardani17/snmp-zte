@@ -337,41 +337,52 @@ func (d *Driver) GetBoardInfo(ctx context.Context, boardID int) (*model.BoardInf
 
 	info := &model.BoardInfo{BoardID: boardID}
 
-	// Format OID dari hasil snmpwalk:
-	// .1.3.6.1.4.1.3902.1015.2.1.1.3.1.{attr}.1.1.{position}
-	// position 1 = board 1 (GTGO), position 3 = board 2 (PRAM), position 4 = board 3 (SMXA)
+	// OID format: BaseOID3 + CardAttributePrefix + .{slot}
+	// slot is direct mapping (1-4), including empty slots
 
-	// Cari posisi berdasarkan board yang tersedia
-	// Board 1 = position 1, Board 2 = position 3 (skip slot kosong)
-	position := boardID
-	if boardID == 2 {
-		position = 3 // Slot 2 kosong, langsung ke slot 3
+	// Ambil Real Type (String) - Use this as primary type
+	realTypeOID := fmt.Sprintf("%s.%d", BaseOID3+CardRealTypePrefix, boardID)
+	if val, err := d.snmpGet(realTypeOID); err == nil {
+		info.RealType = extractString(val)
+		info.Type = info.RealType // Use RealType as Type display
 	}
 
-	// Ambil Tipe Kartu (attribute 4)
-	typeOID := fmt.Sprintf("%s.2.1.1.3.1.4.1.1.%d", BaseOID3, position)
-	if val, err := d.snmpGet(typeOID); err == nil {
-		info.Type = extractString(val)
-	}
-
-	// Ambil Status Kartu (attribute 5)
-	statusOID := fmt.Sprintf("%s.2.1.1.3.1.5.1.1.%d", BaseOID3, position)
+	// Ambil Status Kartu
+	statusOID := fmt.Sprintf("%s.%d", BaseOID3+CardStatusPrefix, boardID)
 	if val, err := d.snmpGet(statusOID); err == nil {
 		if intVal := extractInt(val); intVal > 0 {
 			info.Status = model.CardStatus(intVal).String()
 		}
 	}
 
-	// Ambil Beban CPU (attribute 9)
-	cpuOID := fmt.Sprintf("%s.2.1.1.3.1.9.1.1.%d", BaseOID3, position)
+	// Ambil Port Count
+	portCountOID := fmt.Sprintf("%s.%d", BaseOID3+CardPortCountPrefix, boardID)
+	if val, err := d.snmpGet(portCountOID); err == nil {
+		info.PortCount = extractInt(val)
+	}
+
+	// Ambil Beban CPU
+	cpuOID := fmt.Sprintf("%s.%d", BaseOID3+CardCpuLoadPrefix, boardID)
 	if val, err := d.snmpGet(cpuOID); err == nil {
 		info.CpuLoad = extractInt(val)
 	}
 
-	// Ambil Penggunaan Memori (attribute 11)
-	memOID := fmt.Sprintf("%s.2.1.1.3.1.11.1.1.%d", BaseOID3, position)
+	// Ambil Penggunaan Memori
+	memOID := fmt.Sprintf("%s.%d", BaseOID3+CardMemUsagePrefix, boardID)
 	if val, err := d.snmpGet(memOID); err == nil {
 		info.MemUsage = extractInt(val)
+	}
+
+	// Ambil Hardware Version
+	hardVerOID := fmt.Sprintf("%s.%d", BaseOID3+CardHardVerPrefix, boardID)
+	if val, err := d.snmpGet(hardVerOID); err == nil {
+		info.HardVer = extractString(val)
+	}
+
+	// Ambil Software Version
+	softVerOID := fmt.Sprintf("%s.%d", BaseOID3+CardSoftVerPrefix, boardID)
+	if val, err := d.snmpGet(softVerOID); err == nil {
+		info.SoftVer = extractString(val)
 	}
 
 	return info, nil
