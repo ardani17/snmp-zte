@@ -8,12 +8,12 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// RateLimiter implements rate limiting per IP
+// RateLimiter mengimplementasikan pembatasan rate (rate limiting) per IP
 type RateLimiter struct {
 	requests map[string]*clientInfo
 	mu       sync.RWMutex
-	rate     int           // requests per window
-	window   time.Duration // time window
+	rate     int           // jumlah request per jendela waktu
+	window   time.Duration // jendela waktu
 }
 
 type clientInfo struct {
@@ -21,9 +21,9 @@ type clientInfo struct {
 	windowEnd time.Time
 }
 
-// NewRateLimiter creates a new rate limiter
-// rate: number of requests allowed per window
-// window: time window duration
+// NewRateLimiter membuat rate limiter baru
+// rate: jumlah request yang diizinkan per jendela waktu
+// window: durasi jendela waktu
 func NewRateLimiter(rate int, window time.Duration) *RateLimiter {
 	rl := &RateLimiter{
 		requests: make(map[string]*clientInfo),
@@ -31,7 +31,7 @@ func NewRateLimiter(rate int, window time.Duration) *RateLimiter {
 		window:   window,
 	}
 
-	// Cleanup old entries every minute
+	// Bersihkan entri lama setiap menit
 	go rl.cleanup()
 
 	return rl
@@ -62,7 +62,7 @@ func (rl *RateLimiter) Middleware(next http.Handler) http.Handler {
 		info, exists := rl.requests[ip]
 
 		if !exists || now.After(info.windowEnd) {
-			// New window
+			// Jendela waktu baru
 			rl.requests[ip] = &clientInfo{
 				count:     1,
 				windowEnd: now.Add(rl.window),
@@ -71,7 +71,7 @@ func (rl *RateLimiter) Middleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// Same window
+		// Jendela waktu yang sama
 		if info.count >= rl.rate {
 			log.Warn().Str("ip", ip).Msg("Rate limit exceeded")
 			http.Error(w, `{"code":429,"status":"ERROR","message":"rate limit exceeded"}`, http.StatusTooManyRequests)
@@ -84,14 +84,14 @@ func (rl *RateLimiter) Middleware(next http.Handler) http.Handler {
 }
 
 func getRealIP(r *http.Request) string {
-	// Check X-Forwarded-For header
+	// Periksa header X-Forwarded-For
 	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
 		return xff
 	}
-	// Check X-Real-IP header
+	// Periksa header X-Real-IP
 	if xri := r.Header.Get("X-Real-IP"); xri != "" {
 		return xri
 	}
-	// Fall back to RemoteAddr
+	// Kembali ke RemoteAddr jika header di atas tidak ada
 	return r.RemoteAddr
 }

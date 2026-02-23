@@ -1,6 +1,6 @@
 package model
 
-// ONUInfo represents basic ONU information (for list view)
+// ONUInfo merepresentasikan informasi dasar ONU (untuk tampilan daftar)
 type ONUInfo struct {
 	OLTID        string `json:"olt_id"`
 	Board        int    `json:"board"`
@@ -15,7 +15,7 @@ type ONUInfo struct {
 	Status       string `json:"status"`
 }
 
-// ONUDetail represents detailed ONU information
+// ONUDetail merepresentasikan informasi rinci ONU
 type ONUDetail struct {
 	ONUInfo
 	TXPower              string `json:"tx_power"`
@@ -29,14 +29,14 @@ type ONUDetail struct {
 	Distance             string `json:"distance"`
 }
 
-// ONUSlot represents an available ONU slot
+// ONUSlot merepresentasikan slot ONU yang tersedia
 type ONUSlot struct {
 	Board  int `json:"board"`
 	PON    int `json:"pon"`
 	ONUID  int `json:"onu_id"`
 }
 
-// ONUStatus represents ONU status codes
+// ONUStatus merepresentasikan kode status ONU
 type ONUStatus int
 
 const (
@@ -70,7 +70,7 @@ func (s ONUStatus) String() string {
 	}
 }
 
-// OfflineReason represents offline reason codes
+// OfflineReason merepresentasikan kode alasan offline
 type OfflineReason int
 
 const (

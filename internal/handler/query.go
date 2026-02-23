@@ -43,7 +43,7 @@ type QueryRequest struct {
 	OnuID int    `json:"onu_id,omitempty" example:"1"`
 }
 
-// QueryResponse represents a query response
+// QueryResponse merepresentasikan respons query
 type QueryResponse struct {
 	Query     string      `json:"query"`
 	Summary   string      `json:"summary,omitempty"`
@@ -85,7 +85,7 @@ func (h *QueryHandler) Query(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate required fields
+	// Validasi field yang wajib diisi
 	if req.IP == "" {
 		response.BadRequest(w, "IP is required")
 		return
@@ -190,7 +190,7 @@ func (h *QueryHandler) Query(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, http.StatusOK, resp)
 }
 
-// OLTInfoRequest represents OLT info request
+// OLTInfoRequest merepresentasikan permintaan info OLT
 type OLTInfoRequest struct {
 	IP        string `json:"ip" example:"192.168.1.1"`
 	Port      int    `json:"port" example:"161"`
@@ -199,12 +199,12 @@ type OLTInfoRequest struct {
 }
 
 // OLTInfo godoc
-// @Summary Get OLT Info
-// @Description Get OLT system information
+// @Summary Ambil Detail Sistem & Model OLT
+// @Description Mengambil informasi lengkap sistem OLT (Nama, Deskripsi, Uptime) serta informasi kapabilitas model perangkat (contoh: Maksimal ONU per PON).
 // @Tags Query
 // @Accept json
 // @Produce json
-// @Param request body OLTInfoRequest true "OLT Info Request"
+// @Param request body OLTInfoRequest true "Detail koneksi OLT"
 // @Success 200 {object} response.Response
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 500 {object} response.ErrorResponse

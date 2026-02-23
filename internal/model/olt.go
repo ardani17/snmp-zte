@@ -1,6 +1,6 @@
 package model
 
-// OLT represents an OLT device
+// OLT merepresentasikan perangkat OLT
 type OLT struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
@@ -12,7 +12,7 @@ type OLT struct {
 	PonPerBoard int    `json:"pon_per_board"`
 }
 
-// OLTSummary represents summary information about an OLT
+// OLTSummary merepresentasikan informasi ringkasan tentang OLT
 type OLTSummary struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
@@ -25,7 +25,7 @@ type OLTSummary struct {
 	OfflineONU  int    `json:"offline_onu"`
 }
 
-// BoardInfo represents board/slot information
+// BoardInfo merepresentasikan informasi kartu/slot
 type BoardInfo struct {
 	BoardID  int    `json:"board_id"`
 	Type     string `json:"type"`
@@ -34,7 +34,7 @@ type BoardInfo struct {
 	MemUsage int    `json:"mem_usage"`
 }
 
-// PONInfo represents PON port information
+// PONInfo merepresentasikan informasi port PON
 type PONInfo struct {
 	BoardID  int     `json:"board_id"`
 	PonID    int     `json:"pon_id"`
@@ -44,7 +44,7 @@ type PONInfo struct {
 	ONUCount int     `json:"onu_count"`
 }
 
-// ONUTraffic represents ONU traffic statistics
+// ONUTraffic merepresentasikan statistik trafik ONU
 type ONUTraffic struct {
 	Board     int    `json:"board"`
 	PON       int    `json:"pon"`
@@ -56,7 +56,7 @@ type ONUTraffic struct {
 	Timestamp string `json:"timestamp"`
 }
 
-// InterfaceStats represents interface statistics
+// InterfaceStats merepresentasikan statistik interface
 type InterfaceStats struct {
 	Index       int    `json:"index"`
 	Description string `json:"description"`
@@ -65,14 +65,14 @@ type InterfaceStats struct {
 	TxBytes     int64  `json:"tx_bytes"`
 }
 
-// TemperatureInfo represents temperature sensor information
+// TemperatureInfo merepresentasikan informasi sensor suhu
 type TemperatureInfo struct {
 	System    int `json:"system"`     // Ambient/System temperature (°C)
 	CPU       int `json:"cpu"`        // CPU/Board temperature (°C)
 	Timestamp string `json:"timestamp"`
 }
 
-// CardStatus represents card status codes
+// CardStatus merepresentasikan kode status kartu
 type CardStatus int
 
 const (

@@ -442,7 +442,7 @@ func (d *Driver) GetONUTraffic(ctx context.Context, boardID, ponID, onuID int) (
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
 	}
 
-	// Calculate interface index
+	// Hitung indeks interface
 	var baseOnuID int
 	if boardID == 1 {
 		baseOnuID = Board1OnuIDBase
@@ -450,8 +450,8 @@ func (d *Driver) GetONUTraffic(ctx context.Context, boardID, ponID, onuID int) (
 		baseOnuID = Board2OnuIDBase
 	}
 
-	// Interface index formula: base + ponOffset + onuID
-	// Each PON has 256 indices allocated
+	// Rumus indeks interface: base + ponOffset + onuID
+	// Setiap PON memiliki 256 indeks yang dialokasikan
 	ponOffset := (ponID - 1) * 256
 	interfaceIndex := baseOnuID + ponOffset + onuID
 
@@ -459,12 +459,12 @@ func (d *Driver) GetONUTraffic(ctx context.Context, boardID, ponID, onuID int) (
 	ifInOctetsOID := fmt.Sprintf(".1.3.6.1.2.1.2.2.1.10.%d", interfaceIndex)
 	ifOutOctetsOID := fmt.Sprintf(".1.3.6.1.2.1.2.2.1.16.%d", interfaceIndex)
 
-	// Get RX bytes
+	// Ambil byte RX
 	if val, err := d.snmpGet(ifInOctetsOID); err == nil {
 		traffic.RxBytes = extractCounter64(val)
 	}
 
-	// Get TX bytes
+	// Ambil byte TX
 	if val, err := d.snmpGet(ifOutOctetsOID); err == nil {
 		traffic.TxBytes = extractCounter64(val)
 	}
@@ -547,9 +547,9 @@ func (d *Driver) GetFanInfo(ctx context.Context) ([]map[string]interface{}, erro
 	var fans []map[string]interface{}
 	fanMap := make(map[int]map[string]interface{})
 
-	// Walk fan table to get indices
+	// Walk tabel fan untuk mendapatkan indeks
 	err := d.client.Walk(FanTableOID, func(pdu gosnmp.SnmpPDU) error {
-		// Extract fan index from OID
+		// Ekstrak indeks fan dari OID
 		parts := strings.Split(pdu.Name, ".")
 		if len(parts) < 1 {
 			return nil
@@ -558,7 +558,7 @@ func (d *Driver) GetFanInfo(ctx context.Context) ([]map[string]interface{}, erro
 		idxStr := parts[len(parts)-1]
 		idx, err := strconv.Atoi(idxStr)
 		if err != nil {
-			// Try second to last
+			// Coba bagian kedua dari belakang
 			if len(parts) >= 2 {
 				idxStr = parts[len(parts)-2]
 				idx, _ = strconv.Atoi(idxStr)
@@ -582,18 +582,18 @@ func (d *Driver) GetFanInfo(ctx context.Context) ([]map[string]interface{}, erro
 		return nil, err
 	}
 
-	// Get details for each fan
+	// Ambil detail untuk setiap fan
 	for idx := range fanMap {
 		fan := map[string]interface{}{
 			"index": idx,
 		}
 
-		// Get speed level
+		// Ambil tingkat kecepatan
 		speedOID := fmt.Sprintf("%s.%d", FanSpeedLevelOID, idx)
 		if val, err := d.snmpGet(speedOID); err == nil {
 			if intVal := extractInt(val); intVal > 0 {
 				fan["speed_level"] = intVal
-				// Convert to string
+				// Konversi ke string
 				switch intVal {
 				case 1:
 					fan["speed"] = "Low"
@@ -609,7 +609,7 @@ func (d *Driver) GetFanInfo(ctx context.Context) ([]map[string]interface{}, erro
 			}
 		}
 
-		// Get status
+		// Ambil status
 		statusOID := fmt.Sprintf("%s.%d", FanStatusOID, idx)
 		if val, err := d.snmpGet(statusOID); err == nil {
 			if intVal := extractInt(val); intVal == 1 {
@@ -619,7 +619,7 @@ func (d *Driver) GetFanInfo(ctx context.Context) ([]map[string]interface{}, erro
 			}
 		}
 
-		// Get present
+		// Ambil status keberadaan (present)
 		presentOID := fmt.Sprintf("%s.%d", FanPresentOID, idx)
 		if val, err := d.snmpGet(presentOID); err == nil {
 			if extractInt(val) == 1 {
@@ -647,12 +647,12 @@ func (d *Driver) GetTemperatureInfo(ctx context.Context) (*model.TemperatureInfo
 		Timestamp: time.Now().Format(time.RFC3339),
 	}
 
-	// Get system/ambient temperature
+	// Ambil suhu sistem/ambient
 	if val, err := d.snmpGet(TempSystemOID); err == nil {
 		info.System = extractInt(val)
 	}
 
-	// Get CPU/board temperature
+	// Ambil suhu CPU/board
 	if val, err := d.snmpGet(TempCPUOID); err == nil {
 		info.CPU = extractInt(val)
 	}

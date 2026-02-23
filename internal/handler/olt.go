@@ -21,13 +21,28 @@ func NewOLTHandler(service *service.OLTService) *OLTHandler {
 	return &OLTHandler{service: service}
 }
 
-// List mengembalikan daftar semua OLT yang terkonfigurasi.
+// List godoc
+// @Summary List semua OLT
+// @Description Mengambil daftar semua perangkat OLT yang terkonfigurasi di server.
+// @Tags OLT
+// @Produce json
+// @Success 200 {array} model.OLT
+// @Router /api/v1/olts [get]
 func (h *OLTHandler) List(w http.ResponseWriter, r *http.Request) {
 	olts := h.service.List()
 	response.JSON(w, http.StatusOK, olts)
 }
 
-// Get mengambil data OLT berdasarkan ID.
+// Get godoc
+// @Summary Ambil Detail OLT
+// @Description Mengambil data konfigurasi lengkap satu OLT berdasarkan ID.
+// @Tags OLT
+// @Accept json
+// @Produce json
+// @Param olt_id path string true "ID OLT"
+// @Success 200 {object} model.OLT
+// @Failure 404 {object} response.ErrorResponse
+// @Router /api/v1/olts/{olt_id} [get]
 func (h *OLTHandler) Get(w http.ResponseWriter, r *http.Request) {
 	oltID := chi.URLParam(r, "olt_id")
 	if oltID == "" {
@@ -44,8 +59,17 @@ func (h *OLTHandler) Get(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, http.StatusOK, olt)
 }
 
-// Create menangani pendaftaran OLT baru.
-// Data ini AKAN DISIMPAN di server agar nantinya bisa dipanggil cukup dengan ID saja.
+// Create godoc
+// @Summary Daftarkan OLT Baru
+// @Description Menambahkan perangkat OLT baru ke dalam konfigurasi server.
+// @Tags OLT
+// @Accept json
+// @Produce json
+// @Param request body model.OLT true "Data OLT Baru"
+// @Success 201 {object} model.OLT
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Router /api/v1/olts [post]
 func (h *OLTHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		ID          string `json:"id"`
@@ -115,7 +139,18 @@ func (h *OLTHandler) Create(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, http.StatusCreated, olt)
 }
 
-// Update memperbarui konfigurasi OLT yang sudah ada.
+// Update godoc
+// @Summary Perbarui Data OLT
+// @Description Memperbarui informasi konfigurasi OLT yang sudah ada.
+// @Tags OLT
+// @Accept json
+// @Produce json
+// @Param olt_id path string true "ID OLT yang akan diupdate"
+// @Param request body model.OLT true "Data OLT Baru"
+// @Success 200 {object} model.OLT
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Router /api/v1/olts/{olt_id} [put]
 func (h *OLTHandler) Update(w http.ResponseWriter, r *http.Request) {
 	oltID := chi.URLParam(r, "olt_id")
 	if oltID == "" {
@@ -157,7 +192,14 @@ func (h *OLTHandler) Update(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, http.StatusOK, olt)
 }
 
-// Delete menghapus konfigurasi OLT.
+// Delete godoc
+// @Summary Hapus OLT
+// @Description Menghapus konfigurasi OLT dari server.
+// @Tags OLT
+// @Param olt_id path string true "ID OLT yang akan dihapus"
+// @Success 200 {object} response.Response
+// @Failure 404 {object} response.ErrorResponse
+// @Router /api/v1/olts/{olt_id} [delete]
 func (h *OLTHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	oltID := chi.URLParam(r, "olt_id")
 	if oltID == "" {

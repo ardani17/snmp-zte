@@ -20,7 +20,7 @@ func NewOLTService(cfg *config.Config) *OLTService {
 	}
 }
 
-// List returns all configured OLTs
+// List mengembalikan semua OLT yang terkonfigurasi
 func (s *OLTService) List() []model.OLT {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -41,7 +41,7 @@ func (s *OLTService) List() []model.OLT {
 	return olts
 }
 
-// Get returns an OLT by ID
+// Get mengembalikan data OLT berdasarkan ID
 func (s *OLTService) Get(id string) (*model.OLT, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -88,7 +88,7 @@ func (s *OLTService) Create(olt model.OLT) error {
 	return config.Save(s.cfg)
 }
 
-// Update updates an existing OLT
+// Update memperbarui OLT yang sudah ada
 func (s *OLTService) Update(id string, olt model.OLT) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -111,7 +111,7 @@ func (s *OLTService) Update(id string, olt model.OLT) error {
 	return config.Save(s.cfg)
 }
 
-// Delete removes an OLT
+// Delete menghapus OLT
 func (s *OLTService) Delete(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -123,10 +123,10 @@ func (s *OLTService) Delete(id string) error {
 	return config.Save(s.cfg)
 }
 
-// ErrOLTNotFound is returned when OLT is not found
+// ErrOLTNotFound dikembalikan saat OLT tidak ditemukan
 var ErrOLTNotFound = &ServiceError{Message: "OLT not found"}
 
-// ServiceError represents a service error
+// ServiceError merepresentasikan error service
 type ServiceError struct {
 	Message string
 }

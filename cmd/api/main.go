@@ -25,7 +25,7 @@ import (
 
 // @title SNMP-ZTE API
 // @version 2.1
-// @description Multi-OLT SNMP monitoring system for ZTE devices
+// @description Sistem pemantauan SNMP Multi-OLT untuk perangkat ZTE
 // @host 185.122.165.206:8080
 // @BasePath /
 func main() {

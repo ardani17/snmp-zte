@@ -6,19 +6,19 @@ import (
 	"github.com/ardani/snmp-zte/internal/model"
 )
 
-// Driver interface defines methods that all OLT drivers must implement
+// Interface Driver mendefinisikan metode yang harus diimplementasikan oleh semua driver OLT
 type Driver interface {
 	// Metadata
 	GetModelName() string
 	GetModelInfo() ModelInfo
 
-	// ONU Operations
+	// Operasi ONU
 	GetONUList(ctx context.Context, boardID, ponID int) ([]model.ONUInfo, error)
 	GetONUDetail(ctx context.Context, boardID, ponID, onuID int) (*model.ONUDetail, error)
 	GetEmptySlots(ctx context.Context, boardID, ponID int) ([]model.ONUSlot, error)
 	GetONUTraffic(ctx context.Context, boardID, ponID, onuID int) (*model.ONUTraffic, error)
 
-	// OLT Info
+	// Info OLT
 	GetSystemInfo(ctx context.Context) (*SystemInfo, error)
 	GetBoardInfo(ctx context.Context, boardID int) (*model.BoardInfo, error)
 	GetPONInfo(ctx context.Context, boardID, ponID int) (*model.PONInfo, error)
@@ -27,17 +27,17 @@ type Driver interface {
 	GetFanInfo(ctx context.Context) ([]map[string]interface{}, error)
 	GetTemperatureInfo(ctx context.Context) (*model.TemperatureInfo, error)
 
-	// Validation
+	// Validasi
 	ValidateBoardID(boardID int) bool
 	ValidatePonID(ponID int) bool
 	ValidateOnuID(onuID int) bool
 
-	// Connection
+	// Koneksi
 	Connect() error
 	Close() error
 }
 
-// ModelInfo represents OLT model information
+// ModelInfo merepresentasikan informasi model OLT
 type ModelInfo struct {
 	Name           string `json:"name"`
 	Vendor         string `json:"vendor"`
@@ -46,7 +46,7 @@ type ModelInfo struct {
 	MaxOnuPerPon   int    `json:"max_onu_per_pon"`
 }
 
-// SystemInfo represents OLT system information
+// SystemInfo merepresentasikan informasi sistem OLT
 type SystemInfo struct {
 	Description string `json:"description"`
 	Name        string `json:"name"`
@@ -55,7 +55,7 @@ type SystemInfo struct {
 	Location    string `json:"location"`
 }
 
-// BoardPonConfig represents OID configuration for a specific Board/PON combination
+// BoardPonConfig merepresentasikan konfigurasi OID untuk kombinasi Board/PON tertentu
 type BoardPonConfig struct {
 	OnuIDNameOID              string
 	OnuTypeOID                string

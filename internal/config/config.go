@@ -15,7 +15,7 @@ type Config struct {
 	OLTs    []OLTConfig   `json:"olts"`
 }
 
-// ServerConfig represents HTTP server configuration
+// ServerConfig merepresentasikan konfigurasi server HTTP
 type ServerConfig struct {
 	Host string `json:"host"`
 	Port int    `json:"port"`
@@ -25,7 +25,7 @@ func (c ServerConfig) Addr() string {
 	return fmt.Sprintf("%s:%d", c.Host, c.Port)
 }
 
-// RedisConfig represents Redis connection configuration
+// RedisConfig merepresentasikan konfigurasi koneksi Redis
 type RedisConfig struct {
 	Host     string `json:"host"`
 	Port     int    `json:"port"`
@@ -37,7 +37,7 @@ func (c RedisConfig) Addr() string {
 	return fmt.Sprintf("%s:%d", c.Host, c.Port)
 }
 
-// OLTConfig represents an OLT device configuration
+// OLTConfig merepresentasikan konfigurasi perangkat OLT
 type OLTConfig struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
@@ -55,7 +55,7 @@ var (
 	cfgPath string
 )
 
-// SetConfigPath sets the configuration file path
+// SetConfigPath mengatur jalur file konfigurasi
 func SetConfigPath(path string) {
 	cfgPath = path
 }
@@ -70,18 +70,18 @@ func Load() (*Config, error) {
 }
 
 func loadConfig() (*Config, error) {
-	// Default config path
+	// Jalur konfigurasi default
 	if cfgPath == "" {
 		cfgPath = "config/olts.json"
 	}
 
-	// Check if config file exists
+	// Periksa apakah file konfigurasi ada
 	if _, err := os.Stat(cfgPath); os.IsNotExist(err) {
-		// Create default config
+		// Buat konfigurasi default
 		return createDefaultConfig()
 	}
 
-	// Read config file
+	// Baca file konfigurasi
 	data, err := os.ReadFile(cfgPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
@@ -92,7 +92,7 @@ func loadConfig() (*Config, error) {
 		return nil, fmt.Errorf("failed to parse config file: %w", err)
 	}
 
-	// Set defaults
+	// Atur nilai default
 	if cfg.Server.Port == 0 {
 		cfg.Server.Port = 8080
 	}
@@ -114,13 +114,13 @@ func createDefaultConfig() (*Config, error) {
 		OLTs: []OLTConfig{},
 	}
 
-	// Ensure directory exists
+	// Pastikan direktori ada
 	dir := filepath.Dir(cfgPath)
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return nil, fmt.Errorf("failed to create config directory: %w", err)
 	}
 
-	// Write default config
+	// Tulis konfigurasi default
 	data, err := json.MarshalIndent(cfg, "", "  ")
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal default config: %w", err)
@@ -148,7 +148,7 @@ func Save(cfg *Config) error {
 	return nil
 }
 
-// GetOLT returns OLT configuration by ID
+// GetOLT mengembalikan konfigurasi OLT berdasarkan ID
 func (c *Config) GetOLT(id string) (*OLTConfig, error) {
 	for _, olt := range c.OLTs {
 		if olt.ID == id {
@@ -158,9 +158,9 @@ func (c *Config) GetOLT(id string) (*OLTConfig, error) {
 	return nil, fmt.Errorf("OLT not found: %s", id)
 }
 
-// AddOLT adds a new OLT configuration
+// AddOLT menambah konfigurasi OLT baru
 func (c *Config) AddOLT(olt OLTConfig) error {
-	// Check if ID already exists
+	// Periksa apakah ID sudah ada
 	for _, existing := range c.OLTs {
 		if existing.ID == olt.ID {
 			return fmt.Errorf("OLT ID already exists: %s", olt.ID)
@@ -170,7 +170,7 @@ func (c *Config) AddOLT(olt OLTConfig) error {
 	return nil
 }
 
-// UpdateOLT updates an existing OLT configuration
+// UpdateOLT memperbarui konfigurasi OLT yang sudah ada
 func (c *Config) UpdateOLT(id string, olt OLTConfig) error {
 	for i, existing := range c.OLTs {
 		if existing.ID == id {
@@ -181,7 +181,7 @@ func (c *Config) UpdateOLT(id string, olt OLTConfig) error {
 	return fmt.Errorf("OLT not found: %s", id)
 }
 
-// DeleteOLT removes an OLT configuration
+// DeleteOLT menghapus konfigurasi OLT
 func (c *Config) DeleteOLT(id string) error {
 	for i, olt := range c.OLTs {
 		if olt.ID == id {

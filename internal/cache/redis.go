@@ -22,13 +22,13 @@ type Cache interface {
 	Exists(ctx context.Context, key string) (bool, error) // Cek apakah data ada
 }
 
-// RedisCache implements Cache using Redis
+// RedisCache mengimplementasikan Cache menggunakan Redis
 type RedisCache struct {
 	client *redis.Client
 	ttl    time.Duration
 }
 
-// NewRedisCache creates a new Redis cache
+// NewRedisCache membuat cache Redis baru
 func NewRedisCache(client *redis.Client, ttl time.Duration) *RedisCache {
 	if ttl == 0 {
 		ttl = DefaultTTL
@@ -39,7 +39,7 @@ func NewRedisCache(client *redis.Client, ttl time.Duration) *RedisCache {
 	}
 }
 
-// Get retrieves a value from cache
+// Get mengambil nilai dari cache
 func (c *RedisCache) Get(ctx context.Context, key string, dest interface{}) error {
 	val, err := c.client.Get(ctx, key).Result()
 	if err != nil {
@@ -48,7 +48,7 @@ func (c *RedisCache) Get(ctx context.Context, key string, dest interface{}) erro
 	return json.Unmarshal([]byte(val), dest)
 }
 
-// Set stores a value in cache
+// Set menyimpan nilai dalam cache
 func (c *RedisCache) Set(ctx context.Context, key string, value interface{}, ttl time.Duration) error {
 	if ttl == 0 {
 		ttl = c.ttl
@@ -60,49 +60,49 @@ func (c *RedisCache) Set(ctx context.Context, key string, value interface{}, ttl
 	return c.client.Set(ctx, key, data, ttl).Err()
 }
 
-// Delete removes a key from cache
+// Delete menghapus kunci dari cache
 func (c *RedisCache) Delete(ctx context.Context, key string) error {
 	return c.client.Del(ctx, key).Err()
 }
 
-// Exists checks if a key exists
+// Exists memeriksa apakah kunci ada
 func (c *RedisCache) Exists(ctx context.Context, key string) (bool, error) {
 	n, err := c.client.Exists(ctx, key).Result()
 	return n > 0, err
 }
 
-// NoOpCache is a no-op cache for when Redis is not available
+// NoOpCache adalah cache no-op (tidak melakukan apa-apa) untuk saat Redis tidak tersedia
 type NoOpCache struct{}
 
-// NewNoOpCache creates a new no-op cache
+// NewNoOpCache membuat cache no-op baru
 func NewNoOpCache() *NoOpCache {
 	return &NoOpCache{}
 }
 
-// Get always returns an error
+// Get selalu mengembalikan error
 func (c *NoOpCache) Get(ctx context.Context, key string, dest interface{}) error {
 	return ErrCacheMiss
 }
 
-// Set does nothing
+// Set tidak melakukan apa-apa
 func (c *NoOpCache) Set(ctx context.Context, key string, value interface{}, ttl time.Duration) error {
 	return nil
 }
 
-// Delete does nothing
+// Delete tidak melakukan apa-apa
 func (c *NoOpCache) Delete(ctx context.Context, key string) error {
 	return nil
 }
 
-// Exists always returns false
+// Exists selalu mengembalikan false
 func (c *NoOpCache) Exists(ctx context.Context, key string) (bool, error) {
 	return false, nil
 }
 
-// ErrCacheMiss is returned when cache key is not found
+// ErrCacheMiss dikembalikan saat kunci cache tidak ditemukan
 var ErrCacheMiss = &CacheError{Message: "cache miss"}
 
-// CacheError represents a cache error
+// CacheError merepresentasikan error cache
 type CacheError struct {
 	Message string
 }
@@ -111,7 +111,7 @@ func (e *CacheError) Error() string {
 	return e.Message
 }
 
-// Key generators for consistent key naming
+// Pembuat kunci (key generator) untuk penamaan kunci yang konsisten
 func ONUListKey(oltID string, boardID, ponID int) string {
 	return "onu_list:" + oltID + ":" + intToString(boardID) + ":" + intToString(ponID)
 }

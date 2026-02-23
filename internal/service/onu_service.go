@@ -47,7 +47,7 @@ func NewONUService(cfg *config.Config, redisClient *redis.Client) *ONUService {
 	return s
 }
 
-// createDriver creates a driver for the given OLT config
+// createDriver membuat driver untuk konfigurasi OLT yang diberikan
 func (s *ONUService) createDriver(cfg config.OLTConfig) driver.Driver {
 	switch cfg.Model {
 	case "C320", "c320":
@@ -62,7 +62,7 @@ func (s *ONUService) createDriver(cfg config.OLTConfig) driver.Driver {
 	}
 }
 
-// getDriver returns driver for the given OLT ID
+// getDriver mengembalikan driver untuk ID OLT yang diberikan
 func (s *ONUService) getDriver(oltID string) (driver.Driver, error) {
 	d, ok := s.drivers[oltID]
 	if !ok {
@@ -110,7 +110,7 @@ func (s *ONUService) GetONUList(ctx context.Context, oltID string, boardID, ponI
 	return onuList, nil
 }
 
-// GetONUDetail returns detailed information for a single ONU
+// GetONUDetail mengembalikan informasi rinci untuk satu ONU tunggal
 func (s *ONUService) GetONUDetail(ctx context.Context, oltID string, boardID, ponID, onuID int) (*model.ONUDetail, error) {
 	d, err := s.getDriver(oltID)
 	if err != nil {
@@ -150,7 +150,7 @@ func (s *ONUService) GetONUDetail(ctx context.Context, oltID string, boardID, po
 	return detail, nil
 }
 
-// GetEmptySlots returns available ONU slots
+// GetEmptySlots mengembalikan slot ONU yang tersedia
 func (s *ONUService) GetEmptySlots(ctx context.Context, oltID string, boardID, ponID int) ([]model.ONUSlot, error) {
 	d, err := s.getDriver(oltID)
 	if err != nil {
@@ -184,7 +184,7 @@ func (s *ONUService) GetEmptySlots(ctx context.Context, oltID string, boardID, p
 	return slots, nil
 }
 
-// ClearCache clears cache for a Board/PON
+// ClearCache menghapus cache untuk Board/PON
 func (s *ONUService) ClearCache(ctx context.Context, oltID string, boardID, ponID int) error {
 	// Clear all related cache keys
 	keys := []string{

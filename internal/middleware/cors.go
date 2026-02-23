@@ -5,13 +5,13 @@ import (
 	"strings"
 )
 
-// CORS middleware for cross-origin requests
+// Middleware CORS untuk permintaan lintas asal (cross-origin)
 func CORS(allowedOrigins []string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			origin := r.Header.Get("Origin")
 			
-			// Check if origin is allowed
+			// Periksa apakah asal (origin) diizinkan
 			allowed := false
 			for _, ao := range allowedOrigins {
 				if ao == "*" || ao == origin {
@@ -28,7 +28,7 @@ func CORS(allowedOrigins []string) func(http.Handler) http.Handler {
 				w.Header().Set("Access-Control-Max-Age", "86400") // 24 hours
 			}
 
-			// Handle preflight
+			// Tangani permintaan preflight
 			if r.Method == http.MethodOptions {
 				w.WriteHeader(http.StatusOK)
 				return
@@ -39,12 +39,12 @@ func CORS(allowedOrigins []string) func(http.Handler) http.Handler {
 	}
 }
 
-// DefaultCORS returns CORS middleware that allows all origins
+// DefaultCORS mengembalikan middleware CORS yang mengizinkan semua asal
 func DefaultCORS() func(http.Handler) http.Handler {
 	return CORS([]string{"*"})
 }
 
-// StrictCORS returns CORS middleware that only allows specific origins
+// StrictCORS mengembalikan middleware CORS yang hanya mengizinkan asal tertentu
 func StrictCORS(origins string) func(http.Handler) http.Handler {
 	allowedOrigins := strings.Split(origins, ",")
 	for i, o := range allowedOrigins {

@@ -5,21 +5,21 @@ import (
 	"net/http"
 )
 
-// Response represents a standard API response
+// Response merepresentasikan respons standar API
 type Response struct {
 	Code   int         `json:"code"`
 	Status string      `json:"status"`
 	Data   interface{} `json:"data,omitempty"`
 }
 
-// ErrorResponse represents an error response
+// ErrorResponse merepresentasikan respons error
 type ErrorResponse struct {
 	Code    int    `json:"code"`
 	Status  string `json:"status"`
 	Message string `json:"message"`
 }
 
-// JSON sends a JSON response
+// JSON mengirimkan respons JSON
 func JSON(w http.ResponseWriter, status int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
@@ -30,7 +30,7 @@ func JSON(w http.ResponseWriter, status int, data interface{}) {
 	})
 }
 
-// Error sends an error response
+// Error mengirimkan respons error
 func Error(w http.ResponseWriter, status int, message string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
@@ -41,17 +41,17 @@ func Error(w http.ResponseWriter, status int, message string) {
 	})
 }
 
-// BadRequest sends a 400 error
+// BadRequest mengirimkan error 400
 func BadRequest(w http.ResponseWriter, message string) {
 	Error(w, http.StatusBadRequest, message)
 }
 
-// NotFound sends a 404 error
+// NotFound mengirimkan error 404
 func NotFound(w http.ResponseWriter, message string) {
 	Error(w, http.StatusNotFound, message)
 }
 
-// InternalError sends a 500 error
+// InternalError mengirimkan error 500
 func InternalError(w http.ResponseWriter, message string) {
 	Error(w, http.StatusInternalServerError, message)
 }
