@@ -63,7 +63,7 @@ const docTemplate = `{
         },
         "/api/v1/query": {
             "post": {
-                "description": "Melakukan query SNMP ke OLT tanpa menyimpan data login.\nList 'query' yang didukung:\n- onu_list: Daftar semua ONU di Port PON tertentu\n- onu_detail: Detail lengkap satu ONU (WAJIB isi onu_id)\n- empty_slots: Cari ID ONU yang masih kosong/tersedia\n- system_info: Informasi sistem OLT (Nama, Deskripsi, Uptime)\n- board_info: Status kartu/board (CPU, Memori, Tipe)\n- all_boards: Status semua kartu yang ada di OLT\n- pon_info: Statistik port PON (TX/RX Power)\n- interface_stats: Statistik lalu lintas interface (semua port)\n- fan_info: Informasi status fan/kipas",
+                "description": "Melakukan query SNMP ke OLT tanpa menyimpan data login.\nList 'query' yang didukung:\n- onu_list: Daftar semua ONU di Port PON tertentu\n- onu_detail: Detail lengkap satu ONU (WAJIB isi onu_id)\n- empty_slots: Cari ID ONU yang masih kosong/tersedia\n- system_info: Informasi sistem OLT (Nama, Deskripsi, Uptime)\n- board_info: Status kartu/board (CPU, Memori, Tipe)\n- all_boards: Status semua kartu yang ada di OLT\n- pon_info: Statistik port PON (TX/RX Power)\n- interface_stats: Statistik lalu lintas interface (semua port)\n- fan_info: Informasi status fan/kipas\n- temperature_info: Informasi suhu sistem dan CPU (°C)",
                 "consumes": [
                     "application/json"
                 ],
@@ -202,8 +202,19 @@ const docTemplate = `{
                     "example": 161
                 },
                 "query": {
-                    "description": "Parameter Query (Apa yang ingin ditanyakan ke OLT)",
+                    "description": "Parameter Query (Apa yang ingin ditanyakan ke OLT)\nEnum: onu_list, onu_detail, empty_slots, system_info, board_info, all_boards, pon_info, interface_stats, fan_info",
                     "type": "string",
+                    "enum": [
+                        "onu_list",
+                        "onu_detail",
+                        "empty_slots",
+                        "system_info",
+                        "board_info",
+                        "all_boards",
+                        "pon_info",
+                        "interface_stats",
+                        "fan_info"
+                    ],
                     "example": "onu_list"
                 }
             }
@@ -258,7 +269,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "2.1",
-	Host:             "localhost:8080",
+	Host:             "185.122.165.206:8080",
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "SNMP-ZTE API",

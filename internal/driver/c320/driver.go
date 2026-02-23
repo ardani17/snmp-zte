@@ -610,6 +610,31 @@ func (d *Driver) GetFanInfo(ctx context.Context) ([]map[string]interface{}, erro
 	return fans, nil
 }
 
+// GetTemperatureInfo mengambil informasi suhu OLT
+func (d *Driver) GetTemperatureInfo(ctx context.Context) (*model.TemperatureInfo, error) {
+	if !d.connected {
+		if err := d.Connect(); err != nil {
+			return nil, err
+		}
+	}
+
+	info := &model.TemperatureInfo{
+		Timestamp: time.Now().Format(time.RFC3339),
+	}
+
+	// Get system/ambient temperature
+	if val, err := d.snmpGet(TempSystemOID); err == nil {
+		info.System = extractInt(val)
+	}
+
+	// Get CPU/board temperature
+	if val, err := d.snmpGet(TempCPUOID); err == nil {
+		info.CPU = extractInt(val)
+	}
+
+	return info, nil
+}
+
 // snmpGet melakukan permintaan SNMP GET.
 func (d *Driver) snmpGet(oid string) (interface{}, error) {
 	result, err := d.client.Get([]string{oid})

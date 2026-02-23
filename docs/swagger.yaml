@@ -41,7 +41,19 @@ definitions:
         example: 161
         type: integer
       query:
-        description: Parameter Query (Apa yang ingin ditanyakan ke OLT)
+        description: |-
+          Parameter Query (Apa yang ingin ditanyakan ke OLT)
+          Enum: onu_list, onu_detail, empty_slots, system_info, board_info, all_boards, pon_info, interface_stats, fan_info
+        enum:
+        - onu_list
+        - onu_detail
+        - empty_slots
+        - system_info
+        - board_info
+        - all_boards
+        - pon_info
+        - interface_stats
+        - fan_info
         example: onu_list
         type: string
     type: object
@@ -74,7 +86,7 @@ definitions:
       status:
         type: string
     type: object
-host: localhost:8080
+host: 185.122.165.206:8080
 info:
   contact: {}
   description: Multi-OLT SNMP monitoring system for ZTE devices
@@ -127,6 +139,7 @@ paths:
         - pon_info: Statistik port PON (TX/RX Power)
         - interface_stats: Statistik lalu lintas interface (semua port)
         - fan_info: Informasi status fan/kipas
+        - temperature_info: Informasi suhu sistem dan CPU (°C)
       parameters:
       - description: Detail Query (IP, Community, Model, dan Jenis Query)
         in: body

@@ -50,8 +50,8 @@ const (
 	FanPresentOID     = ".1.3.6.1.4.1.3902.1015.2.1.3.10.10.10.1.6"
 
 	// OID untuk Temperature
-	TempTableOID      = ".1.3.6.1.4.1.3902.1015.2.1.3.10.10.11"
-	TempValueOID      = ".1.3.6.1.4.1.3902.1015.2.1.3.10.10.11.1.3"
+	TempSystemOID = ".1.3.6.1.4.1.3902.1015.2.1.3.10.10.11.0" // Sistem/Ambient
+	TempCPUOID    = ".1.3.6.1.4.1.3902.1015.2.1.3.10.10.12.0" // CPU/Board
 
 	// Konstanta ID Board-PON
 	Board1OnuIDBase   = 285278464

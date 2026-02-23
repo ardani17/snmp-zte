@@ -65,6 +65,7 @@ type QueryResponse struct {
 // @Description - pon_info: Statistik port PON (TX/RX Power)
 // @Description - interface_stats: Statistik lalu lintas interface (semua port)
 // @Description - fan_info: Informasi status fan/kipas
+// @Description - temperature_info: Informasi suhu sistem dan CPU (°C)
 // @Tags Query
 // @Accept json
 // @Produce json
@@ -148,6 +149,8 @@ func (h *QueryHandler) Query(w http.ResponseWriter, r *http.Request) {
 		result, err = drv.GetInterfaceStats(ctx)
 	case "fan_info":
 		result, err = drv.GetFanInfo(ctx)
+	case "temperature_info":
+		result, err = drv.GetTemperatureInfo(ctx)
 	default:
 		response.BadRequest(w, "Unknown query: "+req.Query)
 		return

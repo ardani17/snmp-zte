@@ -24,6 +24,7 @@ type Driver interface {
 	GetAllBoards(ctx context.Context) ([]model.BoardInfo, error)
 	GetInterfaceStats(ctx context.Context) ([]model.InterfaceStats, error)
 	GetFanInfo(ctx context.Context) ([]map[string]interface{}, error)
+	GetTemperatureInfo(ctx context.Context) (*model.TemperatureInfo, error)
 
 	// Validation
 	ValidateBoardID(boardID int) bool

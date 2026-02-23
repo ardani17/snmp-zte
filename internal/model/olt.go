@@ -65,6 +65,13 @@ type InterfaceStats struct {
 	TxBytes     int64  `json:"tx_bytes"`
 }
 
+// TemperatureInfo represents temperature sensor information
+type TemperatureInfo struct {
+	System    int `json:"system"`     // Ambient/System temperature (°C)
+	CPU       int `json:"cpu"`        // CPU/Board temperature (°C)
+	Timestamp string `json:"timestamp"`
+}
+
 // CardStatus represents card status codes
 type CardStatus int
 

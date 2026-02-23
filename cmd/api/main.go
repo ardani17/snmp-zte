@@ -26,7 +26,7 @@ import (
 // @title SNMP-ZTE API
 // @version 2.1
 // @description Multi-OLT SNMP monitoring system for ZTE devices
-// @host localhost:8080
+// @host 185.122.165.206:8080
 // @BasePath /
 func main() {
 	// 1. Inisialisasi Logger untuk mencetak log ke konsol
