@@ -41,6 +41,9 @@ type QueryRequest struct {
 	Board int    `json:"board" example:"1"`
 	Pon   int    `json:"pon" example:"1"`
 	OnuID int    `json:"onu_id,omitempty" example:"1"`
+	
+	// Parameter Provisioning (untuk create/rename)
+	Name string `json:"name,omitempty" example:"customer-john"`
 }
 
 // QueryResponse merepresentasikan respons query
@@ -183,6 +186,78 @@ func (h *QueryHandler) Query(w http.ResponseWriter, r *http.Request) {
 		result, err = drv.GetONUErrors(ctx, req.Board, req.Pon, req.OnuID)
 	case "voltage_info":
 		result, err = drv.GetVoltageInfo(ctx)
+	// Phase 3: Provisioning (SNMP SET - requires write community)
+	case "onu_create":
+		if req.OnuID == 0 {
+			response.BadRequest(w, "onu_id is required for onu_create")
+			return
+		}
+		err = drv.CreateONU(ctx, req.Board, req.Pon, req.OnuID, req.Name)
+		if err == nil {
+			result = map[string]interface{}{
+				"success": true,
+				"message": fmt.Sprintf("ONU %d created on Board %d PON %d", req.OnuID, req.Board, req.Pon),
+				"board":   req.Board,
+				"pon":     req.Pon,
+				"onu_id":  req.OnuID,
+				"name":    req.Name,
+			}
+		}
+	case "onu_delete":
+		if req.OnuID == 0 {
+			response.BadRequest(w, "onu_id is required for onu_delete")
+			return
+		}
+		err = drv.DeleteONU(ctx, req.Board, req.Pon, req.OnuID)
+		if err == nil {
+			result = map[string]interface{}{
+				"success": true,
+				"message": fmt.Sprintf("ONU %d deleted from Board %d PON %d", req.OnuID, req.Board, req.Pon),
+				"board":   req.Board,
+				"pon":     req.Pon,
+				"onu_id":  req.OnuID,
+			}
+		}
+	case "onu_rename":
+		if req.OnuID == 0 {
+			response.BadRequest(w, "onu_id is required for onu_rename")
+			return
+		}
+		if req.Name == "" {
+			response.BadRequest(w, "name is required for onu_rename")
+			return
+		}
+		err = drv.RenameONU(ctx, req.Board, req.Pon, req.OnuID, req.Name)
+		if err == nil {
+			result = map[string]interface{}{
+				"success": true,
+				"message": fmt.Sprintf("ONU %d renamed to '%s'", req.OnuID, req.Name),
+				"board":   req.Board,
+				"pon":     req.Pon,
+				"onu_id":  req.OnuID,
+				"name":    req.Name,
+			}
+		}
+	case "onu_status":
+		if req.OnuID == 0 {
+			response.BadRequest(w, "onu_id is required for onu_status")
+			return
+		}
+		var status int
+		status, err = drv.GetONUStatus(ctx, req.Board, req.Pon, req.OnuID)
+		if err == nil {
+			statusStr := "offline"
+			if status == 2 {
+				statusStr = "online"
+			}
+			result = map[string]interface{}{
+				"board":      req.Board,
+				"pon":        req.Pon,
+				"onu_id":     req.OnuID,
+				"status":     status,
+				"status_str": statusStr,
+			}
+		}
 	default:
 		response.BadRequest(w, "Unknown query: "+req.Query)
 		return

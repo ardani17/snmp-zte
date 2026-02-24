@@ -30,6 +30,12 @@ type Driver interface {
 	GetONUErrors(ctx context.Context, boardID, ponID, onuID int) (*model.ONUErrors, error)
 	GetVoltageInfo(ctx context.Context) (*model.VoltageInfo, error)
 
+	// Provisioning ONU
+	CreateONU(ctx context.Context, boardID, ponID, onuID int, name string) error
+	DeleteONU(ctx context.Context, boardID, ponID, onuID int) error
+	RenameONU(ctx context.Context, boardID, ponID, onuID int, name string) error
+	GetONUStatus(ctx context.Context, boardID, ponID, onuID int) (int, error)
+
 	// Validasi
 	ValidateBoardID(boardID int) bool
 	ValidatePonID(ponID int) bool

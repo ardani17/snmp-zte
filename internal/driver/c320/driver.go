@@ -629,6 +629,8 @@ func (d *Driver) GetTemperatureInfo(ctx context.Context) (*model.TemperatureInfo
 }
 
 // GetONUBandwidth mengambil bandwidth SLA per ONU
+// Note: Per-ONU bandwidth tidak tersedia via SNMP, hanya profile table
+// Returns profile info if available
 func (d *Driver) GetONUBandwidth(ctx context.Context, boardID, ponID, onuID int) (*model.ONUBandwidth, error) {
 	if !d.connected {
 		if err := d.Connect(); err != nil {
@@ -639,44 +641,19 @@ func (d *Driver) GetONUBandwidth(ctx context.Context, boardID, ponID, onuID int)
 	cfg := GenerateBoardPonOID(boardID, ponID)
 	onuIDStr := strconv.Itoa(onuID)
 
-	// Calculate index for bandwidth OIDs
-	// Format: BaseOID3 + prefix + .{board PonIndex}
-	ponIndex := GetPonIndexBase(boardID) + (ponID-1)*256 + onuID
-
 	bw := &model.ONUBandwidth{
 		Board: boardID,
 		PON:   ponID,
 		ONUID: onuID,
 	}
 
-	// Ambil Assured Upstream (kbps)
-	oid := fmt.Sprintf("%s%s.%d", BaseOID3, OnuAssuredUpstreamPrefix, ponIndex)
-	if val, err := d.snmpGet(oid); err == nil {
-		bw.AssuredUpstream = extractCounter64(val)
-	}
-
-	// Ambil Assured Downstream (kbps)
-	oid = fmt.Sprintf("%s%s.%d", BaseOID3, OnuAssuredDownstreamPrefix, ponIndex)
-	if val, err := d.snmpGet(oid); err == nil {
-		bw.AssuredDownstream = extractCounter64(val)
-	}
-
-	// Ambil Max Upstream (kbps)
-	oid = fmt.Sprintf("%s%s.%d", BaseOID3, OnuMaxUpstreamPrefix, ponIndex)
-	if val, err := d.snmpGet(oid); err == nil {
-		bw.MaxUpstream = extractCounter64(val)
-	}
-
-	// Ambil Max Downstream (kbps)
-	oid = fmt.Sprintf("%s%s.%d", BaseOID3, OnuMaxDownstreamPrefix, ponIndex)
-	if val, err := d.snmpGet(oid); err == nil {
-		bw.MaxDownstream = extractCounter64(val)
-	}
-
-	// Ambil nama ONU (optional)
+	// Ambil nama ONU
 	if val, err := d.snmpGet(BaseOID1 + cfg.OnuIDNameOID + "." + onuIDStr); err == nil {
 		bw.Name = extractString(val)
 	}
+
+	// Note: Bandwidth values tidak tersedia via SNMP
+	// Harus query profile table atau CLI untuk data ini
 
 	return bw, nil
 }
@@ -699,43 +676,34 @@ func (d *Driver) GetPonPortStats(ctx context.Context, boardID, ponID int) (*mode
 	}
 
 	// Ambil RX bytes
-	oid := fmt.Sprintf("%s.%d", BaseOID3+PonPortRxBytesOID, ponIndex)
+	oid := fmt.Sprintf("%s%s.%d", BaseOID3, PonRxOctetsOID, ponIndex)
 	if val, err := d.snmpGet(oid); err == nil {
 		stats.RxBytes = extractCounter64(val)
 	}
 
 	// Ambil TX bytes
-	oid = fmt.Sprintf("%s.%d", BaseOID3+PonPortTxBytesOID, ponIndex)
+	oid = fmt.Sprintf("%s%s.%d", BaseOID3, PonTxOctetsOID, ponIndex)
 	if val, err := d.snmpGet(oid); err == nil {
 		stats.TxBytes = extractCounter64(val)
 	}
 
 	// Ambil RX packets
-	oid = fmt.Sprintf("%s.%d", BaseOID3+PonPortRxPacketsOID, ponIndex)
+	oid = fmt.Sprintf("%s%s.%d", BaseOID3, PonRxPktsOID, ponIndex)
 	if val, err := d.snmpGet(oid); err == nil {
 		stats.RxPackets = extractCounter64(val)
 	}
 
 	// Ambil TX packets
-	oid = fmt.Sprintf("%s.%d", BaseOID3+PonPortTxPacketsOID, ponIndex)
+	oid = fmt.Sprintf("%s%s.%d", BaseOID3, PonTxPktsOID, ponIndex)
 	if val, err := d.snmpGet(oid); err == nil {
 		stats.TxPackets = extractCounter64(val)
-	}
-
-	// Ambil status port
-	oid = fmt.Sprintf("%s.%d", BaseOID3+PonPortStatusOID, ponIndex)
-	if val, err := d.snmpGet(oid); err == nil {
-		if extractInt(val) == 1 {
-			stats.Status = "Up"
-		} else {
-			stats.Status = "Down"
-		}
 	}
 
 	return stats, nil
 }
 
-// GetONUErrors mengambil error counter per ONU
+// GetONUErrors mengambil error counter per PON port (not per ONU)
+// Note: Per-ONU error counters tidak tersedia, menggunakan PON-level stats
 func (d *Driver) GetONUErrors(ctx context.Context, boardID, ponID, onuID int) (*model.ONUErrors, error) {
 	if !d.connected {
 		if err := d.Connect(); err != nil {
@@ -743,16 +711,8 @@ func (d *Driver) GetONUErrors(ctx context.Context, boardID, ponID, onuID int) (*
 		}
 	}
 
-	// Calculate interface index for ONU
-	var baseOnuID int
-	if boardID == 1 {
-		baseOnuID = Board1OnuIDBase
-	} else {
-		baseOnuID = Board2OnuIDBase
-	}
-
-	ponOffset := (ponID - 1) * 256
-	interfaceIndex := baseOnuID + ponOffset + onuID
+	// Calculate PON port index
+	ponIndex := GetPonIndexBase(boardID) + (ponID - 1)
 
 	errs := &model.ONUErrors{
 		Board:     boardID,
@@ -761,34 +721,30 @@ func (d *Driver) GetONUErrors(ctx context.Context, boardID, ponID, onuID int) (*
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
 	}
 
-	// Ambil CRC errors
-	oid := fmt.Sprintf("%s.%d", BaseOID3+OnuCrcErrorOID, interfaceIndex)
-	if val, err := d.snmpGet(oid); err == nil {
-		errs.CrcErrors = extractCounter64(val)
-	}
-
-	// Ambil FEC errors
-	oid = fmt.Sprintf("%s.%d", BaseOID3+OnuFecErrorOID, interfaceIndex)
-	if val, err := d.snmpGet(oid); err == nil {
-		errs.FecErrors = extractCounter64(val)
-	}
-
-	// Ambil dropped frames
-	oid = fmt.Sprintf("%s.%d", BaseOID3+OnuDroppedFramesOID, interfaceIndex)
+	// Ambil PON-level error stats
+	// RX Discards
+	oid := fmt.Sprintf("%s%s.%d", BaseOID3, PonRxPktsDiscardOID, ponIndex)
 	if val, err := d.snmpGet(oid); err == nil {
 		errs.DroppedFrames = extractCounter64(val)
 	}
 
-	// Ambil lost packets
-	oid = fmt.Sprintf("%s.%d", BaseOID3+OnuLostPacketsOID, interfaceIndex)
+	// RX Errors
+	oid = fmt.Sprintf("%s%s.%d", BaseOID3, PonRxPktsErrOID, ponIndex)
 	if val, err := d.snmpGet(oid); err == nil {
-		errs.LostPackets = extractCounter64(val)
+		errs.CrcErrors = extractCounter64(val)
+	}
+
+	// CRC Errors
+	oid = fmt.Sprintf("%s%s.%d", BaseOID3, PonRxCRCAlignErrorsOID, ponIndex)
+	if val, err := d.snmpGet(oid); err == nil {
+		errs.FecErrors = extractCounter64(val)
 	}
 
 	return errs, nil
 }
 
 // GetVoltageInfo mengambil informasi voltage/power supply
+// Note: Voltage OID tidak tersedia di firmware ini
 func (d *Driver) GetVoltageInfo(ctx context.Context) (*model.VoltageInfo, error) {
 	if !d.connected {
 		if err := d.Connect(); err != nil {
@@ -800,15 +756,8 @@ func (d *Driver) GetVoltageInfo(ctx context.Context) (*model.VoltageInfo, error)
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
 	}
 
-	// Ambil system voltage
-	if val, err := d.snmpGet(BaseOID3 + VoltageSystemOID); err == nil {
-		info.SystemVoltage = extractInt(val)
-	}
-
-	// Ambil CPU voltage
-	if val, err := d.snmpGet(BaseOID3 + VoltageCPUOID); err == nil {
-		info.CpuVoltage = extractInt(val)
-	}
+	// Note: Voltage OIDs tidak tersedia di OLT ini
+	// Return empty values
 
 	return info, nil
 }
@@ -964,6 +913,105 @@ func convertDateTime(val interface{}) string {
 
 func calculateUptime(lastOnline string) string {
 	return lastOnline
+}
+
+// ==================== PROVISIONING METHODS ====================
+
+// CreateONU creates a new ONU on specified PON port
+// OID: .28.1.1.9.{oltId}.{onuId} SET with RowStatus = 4 (createAndGo)
+func (d *Driver) CreateONU(ctx context.Context, boardID, ponID, onuID int, name string) error {
+	oltID := CalculateOltID(boardID, ponID)
+	oid := fmt.Sprintf("%s.3%s.%d.%d", BaseOID2, OnuRowStatusOID, oltID, onuID)
+	
+	// Set RowStatus = 4 (createAndGo)
+	if err := d.snmpSet(oid, 4); err != nil {
+		return fmt.Errorf("failed to create ONU: %w", err)
+	}
+	
+	// If name provided, set the name
+	if name != "" {
+		nameOID := fmt.Sprintf("%s.3%s.%d.%d", BaseOID2, OnuNameOID, oltID, onuID)
+		if err := d.snmpSetString(nameOID, name); err != nil {
+			// Name failed but ONU created, return error with context
+			return fmt.Errorf("ONU created but failed to set name: %w", err)
+		}
+	}
+	
+	return nil
+}
+
+// DeleteONU deletes an ONU from specified PON port
+// OID: .28.1.1.9.{oltId}.{onuId} SET with RowStatus = 6 (destroy)
+func (d *Driver) DeleteONU(ctx context.Context, boardID, ponID, onuID int) error {
+	oltID := CalculateOltID(boardID, ponID)
+	oid := fmt.Sprintf("%s.3%s.%d.%d", BaseOID2, OnuRowStatusOID, oltID, onuID)
+	
+	// Set RowStatus = 6 (destroy)
+	if err := d.snmpSet(oid, 6); err != nil {
+		return fmt.Errorf("failed to delete ONU: %w", err)
+	}
+	
+	return nil
+}
+
+// RenameONU renames an existing ONU
+// OID: .28.1.1.2.{oltId}.{onuId} SET with new name
+func (d *Driver) RenameONU(ctx context.Context, boardID, ponID, onuID int, name string) error {
+	oltID := CalculateOltID(boardID, ponID)
+	oid := fmt.Sprintf("%s.3%s.%d.%d", BaseOID2, OnuNameOID, oltID, onuID)
+	
+	if err := d.snmpSetString(oid, name); err != nil {
+		return fmt.Errorf("failed to rename ONU: %w", err)
+	}
+	
+	return nil
+}
+
+// GetONUStatus gets the target state of an ONU
+// OID: .28.1.1.8.{oltId}.{onuId} GET
+// Returns: 1 = offline/deactive, 2 = online/omciready
+func (d *Driver) GetONUStatus(ctx context.Context, boardID, ponID, onuID int) (int, error) {
+	oltID := CalculateOltID(boardID, ponID)
+	oid := fmt.Sprintf("%s.3%s.%d.%d", BaseOID2, OnuTargetStateOID, oltID, onuID)
+	
+	val, err := d.snmpGet(oid)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get ONU status: %w", err)
+	}
+	
+	return extractInt(val), nil
+}
+
+// snmpSet performs SNMP SET operation with integer value
+func (d *Driver) snmpSet(oid string, value int) error {
+	pdu := gosnmp.SnmpPDU{
+		Name:  oid,
+		Type:  gosnmp.Integer,
+		Value: value,
+	}
+	
+	_, err := d.client.Set([]gosnmp.SnmpPDU{pdu})
+	if err != nil {
+		return err
+	}
+	
+	return nil
+}
+
+// snmpSetString performs SNMP SET operation with string value
+func (d *Driver) snmpSetString(oid, value string) error {
+	pdu := gosnmp.SnmpPDU{
+		Name:  oid,
+		Type:  gosnmp.OctetString,
+		Value: value,
+	}
+	
+	_, err := d.client.Set([]gosnmp.SnmpPDU{pdu})
+	if err != nil {
+		return err
+	}
+	
+	return nil
 }
 
 // Pastikan Driver mengimplementasikan interface driver.Driver
