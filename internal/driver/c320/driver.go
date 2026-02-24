@@ -1074,6 +1074,105 @@ func (d *Driver) GetVLANInfo(ctx context.Context, vlanID int) (*model.VLANInfo, 
 	}, nil
 }
 
+// GetProfileList gets list of all bandwidth profiles
+// OID: .26.1.1.* (under BaseOID2.3)
+func (d *Driver) GetProfileList(ctx context.Context) (*model.ProfileList, error) {
+	if !d.connected {
+		if err := d.Connect(); err != nil {
+			return nil, err
+		}
+	}
+
+	profileList := &model.ProfileList{
+		Profiles: []model.ProfileInfo{},
+	}
+
+	// Walk profile name table
+	oid := BaseOID2 + ".3" + ProfileNameOID
+	err := d.client.Walk(oid, func(pdu gosnmp.SnmpPDU) error {
+		if pdu.Value != nil {
+			// Extract profile index from OID
+			profileIndex := extractLastOIDPart(pdu.Name)
+			name := extractString(pdu.Value)
+			
+			profile := model.ProfileInfo{
+				Index: profileIndex,
+				Name:  name,
+			}
+			
+			// Get other fields
+			fixedOid := fmt.Sprintf("%s.3%s.%d", BaseOID2, ProfileFixedBWOID, profileIndex)
+			if val, err := d.snmpGet(fixedOid); err == nil {
+				profile.FixedBW = extractInt(val)
+			}
+			
+			assuredOid := fmt.Sprintf("%s.3%s.%d", BaseOID2, ProfileAssuredBWOID, profileIndex)
+			if val, err := d.snmpGet(assuredOid); err == nil {
+				profile.AssuredBW = extractInt(val)
+			}
+			
+			maxOid := fmt.Sprintf("%s.3%s.%d", BaseOID2, ProfileMaxBWOID, profileIndex)
+			if val, err := d.snmpGet(maxOid); err == nil {
+				profile.MaxBW = extractInt(val)
+			}
+			
+			profileList.Profiles = append(profileList.Profiles, profile)
+		}
+		return nil
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get profile list: %w", err)
+	}
+
+	profileList.Count = len(profileList.Profiles)
+	return profileList, nil
+}
+
+// GetPONInfo gets PON port information
+// Uses legacy OIDs from Phase 1
+func (d *Driver) GetPONInfo(ctx context.Context, boardID, ponID int) (*model.PONInfo, error) {
+	if !d.connected {
+		if err := d.Connect(); err != nil {
+			return nil, err
+		}
+	}
+
+	cfg := GenerateBoardPonOID(boardID, ponID)
+	
+	ponInfo := &model.PONInfo{
+		BoardID: boardID,
+		PonID:   ponID,
+	}
+
+	// Get ONU count by walking ONU list
+	onuCount := 0
+	err := d.client.Walk(BaseOID1+cfg.OnuIDNameOID, func(pdu gosnmp.SnmpPDU) error {
+		if pdu.Value != nil && extractString(pdu.Value) != "" {
+			onuCount++
+		}
+		return nil
+	})
+	if err == nil {
+		ponInfo.ONUCount = onuCount
+	}
+
+	// Get PON port stats if available
+	ponIndex := GetPonIndexBase(boardID) + (ponID - 1)
+	
+	rxOid := fmt.Sprintf("%s%s.%d", BaseOID3, PonRxOctetsOID, ponIndex)
+	if val, err := d.snmpGet(rxOid); err == nil {
+		ponInfo.RxBytes = extractCounter64(val)
+	}
+	
+	txOid := fmt.Sprintf("%s%s.%d", BaseOID3, PonTxOctetsOID, ponIndex)
+	if val, err := d.snmpGet(txOid); err == nil {
+		ponInfo.TxBytes = extractCounter64(val)
+	}
+
+	return ponInfo, nil
+}
+
 // snmpSet performs SNMP SET operation with integer value
 func (d *Driver) snmpSet(oid string, value int) error {
 	pdu := gosnmp.SnmpPDU{

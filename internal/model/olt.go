@@ -45,6 +45,8 @@ type PONInfo struct {
 	TxPower  float64 `json:"tx_power"`
 	RxPower  float64 `json:"rx_power"`
 	ONUCount int     `json:"onu_count"`
+	RxBytes  int64   `json:"rx_bytes"`
+	TxBytes  int64   `json:"tx_bytes"`
 }
 
 // ONUTraffic merepresentasikan statistik trafik ONU
@@ -153,4 +155,19 @@ type VLANList struct {
 type VLANInfo struct {
 	VLANID int    `json:"vlan_id"`
 	Name   string `json:"name"`
+}
+
+// ProfileList represents list of bandwidth profiles
+type ProfileList struct {
+	Count    int          `json:"count"`
+	Profiles []ProfileInfo `json:"profiles"`
+}
+
+// ProfileInfo represents bandwidth profile information
+type ProfileInfo struct {
+	Index       int    `json:"index"`
+	Name        string `json:"name"`
+	FixedBW     int    `json:"fixed_bw"`
+	AssuredBW   int    `json:"assured_bw"`
+	MaxBW       int    `json:"max_bw"`
 }

@@ -42,6 +42,10 @@ type Driver interface {
 	// VLAN
 	GetVLANList(ctx context.Context) (*model.VLANList, error)
 	GetVLANInfo(ctx context.Context, vlanID int) (*model.VLANInfo, error)
+	
+	// Additional
+	GetProfileList(ctx context.Context) (*model.ProfileList, error)
+	GetPONInfo(ctx context.Context, boardID, ponID int) (*model.PONInfo, error)
 
 	// Validasi
 	ValidateBoardID(boardID int) bool

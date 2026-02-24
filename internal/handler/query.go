@@ -274,6 +274,11 @@ func (h *QueryHandler) Query(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		result, err = drv.GetVLANInfo(ctx, req.OnuID) // OnuID used as VLAN ID
+	// Additional
+	case "profile_list":
+		result, err = drv.GetProfileList(ctx)
+	case "pon_info":
+		result, err = drv.GetPONInfo(ctx, req.Board, req.Pon)
 	default:
 		response.BadRequest(w, "Unknown query: "+req.Query)
 		return
