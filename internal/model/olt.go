@@ -133,3 +133,24 @@ func (s CardStatus) String() string {
 		return "Unknown"
 	}
 }
+
+// ONUDistance represents ONU distance information
+type ONUDistance struct {
+	Board    int    `json:"board"`
+	PON      int    `json:"pon"`
+	ONUID    int    `json:"onu_id"`
+	Distance int    `json:"distance"` // Distance in meters
+	EQD      int    `json:"eqd"`      // Equalized Delay
+}
+
+// VLANList represents list of VLANs
+type VLANList struct {
+	Count int        `json:"count"`
+	VLANs []VLANInfo `json:"vlans"`
+}
+
+// VLANInfo represents VLAN information
+type VLANInfo struct {
+	VLANID int    `json:"vlan_id"`
+	Name   string `json:"name"`
+}

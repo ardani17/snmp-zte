@@ -258,6 +258,22 @@ func (h *QueryHandler) Query(w http.ResponseWriter, r *http.Request) {
 				"status_str": statusStr,
 			}
 		}
+	// Phase 4: Statistics
+	case "distance_info":
+		if req.OnuID == 0 {
+			response.BadRequest(w, "onu_id is required for distance_info")
+			return
+		}
+		result, err = drv.GetDistance(ctx, req.Board, req.Pon, req.OnuID)
+	// Phase 5: VLAN
+	case "vlan_list":
+		result, err = drv.GetVLANList(ctx)
+	case "vlan_info":
+		if req.OnuID == 0 {
+			response.BadRequest(w, "onu_id (vlan_id) is required for vlan_info")
+			return
+		}
+		result, err = drv.GetVLANInfo(ctx, req.OnuID) // OnuID used as VLAN ID
 	default:
 		response.BadRequest(w, "Unknown query: "+req.Query)
 		return

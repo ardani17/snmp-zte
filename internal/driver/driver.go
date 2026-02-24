@@ -35,6 +35,13 @@ type Driver interface {
 	DeleteONU(ctx context.Context, boardID, ponID, onuID int) error
 	RenameONU(ctx context.Context, boardID, ponID, onuID int, name string) error
 	GetONUStatus(ctx context.Context, boardID, ponID, onuID int) (int, error)
+	
+	// Statistics
+	GetDistance(ctx context.Context, boardID, ponID, onuID int) (*model.ONUDistance, error)
+	
+	// VLAN
+	GetVLANList(ctx context.Context) (*model.VLANList, error)
+	GetVLANInfo(ctx context.Context, vlanID int) (*model.VLANInfo, error)
 
 	// Validasi
 	ValidateBoardID(boardID int) bool

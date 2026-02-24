@@ -982,6 +982,98 @@ func (d *Driver) GetONUStatus(ctx context.Context, boardID, ponID, onuID int) (i
 	return extractInt(val), nil
 }
 
+// GetDistance gets ONU distance information
+// OID: .11.4.1.2.{oltId}.{onuId} GET
+func (d *Driver) GetDistance(ctx context.Context, boardID, ponID, onuID int) (*model.ONUDistance, error) {
+	if !d.connected {
+		if err := d.Connect(); err != nil {
+			return nil, err
+		}
+	}
+
+	oltID := CalculateOltID(boardID, ponID)
+	
+	distance := &model.ONUDistance{
+		Board: boardID,
+		PON:   ponID,
+		ONUID: onuID,
+	}
+
+	// Get Distance (meters)
+	oid := fmt.Sprintf("%s.3%s.%d.%d", BaseOID2, OnuDistanceOID, oltID, onuID)
+	if val, err := d.snmpGet(oid); err == nil {
+		distance.Distance = extractInt(val)
+	}
+
+	// Get EQD (Equalized Delay)
+	oid = fmt.Sprintf("%s.3%s.%d.%d", BaseOID2, OnuEQDOID, oltID, onuID)
+	if val, err := d.snmpGet(oid); err == nil {
+		distance.EQD = extractInt(val)
+	}
+
+	return distance, nil
+}
+
+// GetVLANList gets list of all VLANs
+// OID: .1.3.6.1.2.1.17.7.1.4.3.1.1 (Standard IF-MIB)
+func (d *Driver) GetVLANList(ctx context.Context) (*model.VLANList, error) {
+	if !d.connected {
+		if err := d.Connect(); err != nil {
+			return nil, err
+		}
+	}
+
+	vlanList := &model.VLANList{
+		VLANs: []model.VLANInfo{},
+	}
+
+	// Walk VLAN name table
+	err := d.client.Walk(VlanNameBase, func(pdu gosnmp.SnmpPDU) error {
+		if pdu.Value != nil {
+			// Extract VLAN ID from OID
+			oidParts := splitOID(pdu.Name)
+			if len(oidParts) > 0 {
+				vlanID := extractLastOIDPart(pdu.Name)
+				name := extractString(pdu.Value)
+				
+				vlanList.VLANs = append(vlanList.VLANs, model.VLANInfo{
+					VLANID: vlanID,
+					Name:   name,
+				})
+			}
+		}
+		return nil
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get VLAN list: %w", err)
+	}
+
+	vlanList.Count = len(vlanList.VLANs)
+	return vlanList, nil
+}
+
+// GetVLANInfo gets information about a specific VLAN
+// OID: .1.3.6.1.2.1.17.7.1.4.3.1.1.{vlanId}
+func (d *Driver) GetVLANInfo(ctx context.Context, vlanID int) (*model.VLANInfo, error) {
+	if !d.connected {
+		if err := d.Connect(); err != nil {
+			return nil, err
+		}
+	}
+
+	oid := fmt.Sprintf("%s.%d", VlanNameBase, vlanID)
+	val, err := d.snmpGet(oid)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get VLAN info: %w", err)
+	}
+
+	return &model.VLANInfo{
+		VLANID: vlanID,
+		Name:   extractString(val),
+	}, nil
+}
+
 // snmpSet performs SNMP SET operation with integer value
 func (d *Driver) snmpSet(oid string, value int) error {
 	pdu := gosnmp.SnmpPDU{
