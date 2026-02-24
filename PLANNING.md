@@ -252,7 +252,13 @@ type OLTDriver interface {
 - [x] Implement SNMP client wrapper
 - [x] Implement extractor & converter utils
 - [x] Complete C320 driver
-- [ ] Test all C320 endpoints (need OLT access)
+- [x] Test all C320 endpoints ✅ (23 Feb 2026)
+  - GET /api/v1/olts - List OLTs ✅
+  - GET /api/v1/olts/{olt_id} - Get OLT detail ✅
+  - GET /api/v1/olts/{olt_id}/board/{board_id}/pon/{pon_id} - List ONU ✅
+  - GET /api/v1/olts/{olt_id}/board/{board_id}/pon/{pon_id}/onu/{onu_id} - ONU Detail ✅
+  - GET /api/v1/olts/{olt_id}/board/{board_id}/pon/{pon_id}/empty - Empty Slots ✅
+  - DELETE /api/v1/olts/{olt_id}/board/{board_id}/pon/{pon_id}/cache - Clear Cache ✅
 - [x] Add Redis caching
 - [ ] Add singleflight (todo)
 

@@ -39,6 +39,29 @@ const (
 	PonTxPowerPrefix = ".1010.11.1.1.5"
 	PonRxPowerPrefix = ".1010.11.2.1.2"
 
+	// OID untuk Bandwidth ONU (SLA) - Corrected from ANALISIS.md
+	OnuAssuredUpstreamPrefix   = ".1010.1.7.7.1.2"   // Assured upstream (kbps)
+	OnuAssuredDownstreamPrefix = ".1010.1.7.8.1.1"   // Assured downstream (kbps)
+	OnuMaxUpstreamPrefix       = ".1010.1.7.7.1.3"   // Max upstream (kbps)
+	OnuMaxDownstreamPrefix     = ".1010.1.7.8.1.2"   // Max downstream (kbps)
+
+	// OID untuk Statistik PON Port
+	PonPortRxBytesOID   = ".1010.1.9.1.8.1.3"   // RX bytes per PON port
+	PonPortTxBytesOID   = ".1010.1.9.1.8.1.4"   // TX bytes per PON port
+	PonPortRxPacketsOID = ".1010.1.9.1.8.1.5"   // RX packets per PON port
+	PonPortTxPacketsOID = ".1010.1.9.1.8.1.6"   // TX packets per PON port
+	PonPortStatusOID    = ".1010.11.1.1.6"      // Admin status per PON port
+
+	// OID untuk Error Counter ONU
+	OnuCrcErrorOID        = ".1010.1.9.1.4.1.3"   // CRC errors
+	OnuFecErrorOID        = ".1010.1.9.1.4.1.4"   // FEC errors
+	OnuDroppedFramesOID   = ".1010.1.9.1.4.1.5"   // Dropped frames
+	OnuLostPacketsOID     = ".1010.1.9.1.4.1.6"   // Lost packets
+
+	// OID untuk Voltage/Power Supply
+	VoltageSystemOID = ".1010.11.1.1.3"   // System voltage
+	VoltageCPUOID    = ".1010.11.1.2.3"   // CPU voltage
+
 	// OID System (RFC 1213)
 	SysDescrOID   = ".1.3.6.1.2.1.1.1.0"
 	SysNameOID    = ".1.3.6.1.2.1.1.5.0"

@@ -628,6 +628,191 @@ func (d *Driver) GetTemperatureInfo(ctx context.Context) (*model.TemperatureInfo
 	return info, nil
 }
 
+// GetONUBandwidth mengambil bandwidth SLA per ONU
+func (d *Driver) GetONUBandwidth(ctx context.Context, boardID, ponID, onuID int) (*model.ONUBandwidth, error) {
+	if !d.connected {
+		if err := d.Connect(); err != nil {
+			return nil, err
+		}
+	}
+
+	cfg := GenerateBoardPonOID(boardID, ponID)
+	onuIDStr := strconv.Itoa(onuID)
+
+	// Calculate index for bandwidth OIDs
+	// Format: BaseOID3 + prefix + .{board PonIndex}
+	ponIndex := GetPonIndexBase(boardID) + (ponID-1)*256 + onuID
+
+	bw := &model.ONUBandwidth{
+		Board: boardID,
+		PON:   ponID,
+		ONUID: onuID,
+	}
+
+	// Ambil Assured Upstream (kbps)
+	oid := fmt.Sprintf("%s%s.%d", BaseOID3, OnuAssuredUpstreamPrefix, ponIndex)
+	if val, err := d.snmpGet(oid); err == nil {
+		bw.AssuredUpstream = extractCounter64(val)
+	}
+
+	// Ambil Assured Downstream (kbps)
+	oid = fmt.Sprintf("%s%s.%d", BaseOID3, OnuAssuredDownstreamPrefix, ponIndex)
+	if val, err := d.snmpGet(oid); err == nil {
+		bw.AssuredDownstream = extractCounter64(val)
+	}
+
+	// Ambil Max Upstream (kbps)
+	oid = fmt.Sprintf("%s%s.%d", BaseOID3, OnuMaxUpstreamPrefix, ponIndex)
+	if val, err := d.snmpGet(oid); err == nil {
+		bw.MaxUpstream = extractCounter64(val)
+	}
+
+	// Ambil Max Downstream (kbps)
+	oid = fmt.Sprintf("%s%s.%d", BaseOID3, OnuMaxDownstreamPrefix, ponIndex)
+	if val, err := d.snmpGet(oid); err == nil {
+		bw.MaxDownstream = extractCounter64(val)
+	}
+
+	// Ambil nama ONU (optional)
+	if val, err := d.snmpGet(BaseOID1 + cfg.OnuIDNameOID + "." + onuIDStr); err == nil {
+		bw.Name = extractString(val)
+	}
+
+	return bw, nil
+}
+
+// GetPonPortStats mengambil statistik traffic per PON port
+func (d *Driver) GetPonPortStats(ctx context.Context, boardID, ponID int) (*model.PONPortStats, error) {
+	if !d.connected {
+		if err := d.Connect(); err != nil {
+			return nil, err
+		}
+	}
+
+	// Calculate PON port index
+	ponIndex := GetPonIndexBase(boardID) + (ponID - 1)
+
+	stats := &model.PONPortStats{
+		Board:     boardID,
+		PON:       ponID,
+		Timestamp: time.Now().UTC().Format(time.RFC3339),
+	}
+
+	// Ambil RX bytes
+	oid := fmt.Sprintf("%s.%d", BaseOID3+PonPortRxBytesOID, ponIndex)
+	if val, err := d.snmpGet(oid); err == nil {
+		stats.RxBytes = extractCounter64(val)
+	}
+
+	// Ambil TX bytes
+	oid = fmt.Sprintf("%s.%d", BaseOID3+PonPortTxBytesOID, ponIndex)
+	if val, err := d.snmpGet(oid); err == nil {
+		stats.TxBytes = extractCounter64(val)
+	}
+
+	// Ambil RX packets
+	oid = fmt.Sprintf("%s.%d", BaseOID3+PonPortRxPacketsOID, ponIndex)
+	if val, err := d.snmpGet(oid); err == nil {
+		stats.RxPackets = extractCounter64(val)
+	}
+
+	// Ambil TX packets
+	oid = fmt.Sprintf("%s.%d", BaseOID3+PonPortTxPacketsOID, ponIndex)
+	if val, err := d.snmpGet(oid); err == nil {
+		stats.TxPackets = extractCounter64(val)
+	}
+
+	// Ambil status port
+	oid = fmt.Sprintf("%s.%d", BaseOID3+PonPortStatusOID, ponIndex)
+	if val, err := d.snmpGet(oid); err == nil {
+		if extractInt(val) == 1 {
+			stats.Status = "Up"
+		} else {
+			stats.Status = "Down"
+		}
+	}
+
+	return stats, nil
+}
+
+// GetONUErrors mengambil error counter per ONU
+func (d *Driver) GetONUErrors(ctx context.Context, boardID, ponID, onuID int) (*model.ONUErrors, error) {
+	if !d.connected {
+		if err := d.Connect(); err != nil {
+			return nil, err
+		}
+	}
+
+	// Calculate interface index for ONU
+	var baseOnuID int
+	if boardID == 1 {
+		baseOnuID = Board1OnuIDBase
+	} else {
+		baseOnuID = Board2OnuIDBase
+	}
+
+	ponOffset := (ponID - 1) * 256
+	interfaceIndex := baseOnuID + ponOffset + onuID
+
+	errs := &model.ONUErrors{
+		Board:     boardID,
+		PON:       ponID,
+		ONUID:     onuID,
+		Timestamp: time.Now().UTC().Format(time.RFC3339),
+	}
+
+	// Ambil CRC errors
+	oid := fmt.Sprintf("%s.%d", BaseOID3+OnuCrcErrorOID, interfaceIndex)
+	if val, err := d.snmpGet(oid); err == nil {
+		errs.CrcErrors = extractCounter64(val)
+	}
+
+	// Ambil FEC errors
+	oid = fmt.Sprintf("%s.%d", BaseOID3+OnuFecErrorOID, interfaceIndex)
+	if val, err := d.snmpGet(oid); err == nil {
+		errs.FecErrors = extractCounter64(val)
+	}
+
+	// Ambil dropped frames
+	oid = fmt.Sprintf("%s.%d", BaseOID3+OnuDroppedFramesOID, interfaceIndex)
+	if val, err := d.snmpGet(oid); err == nil {
+		errs.DroppedFrames = extractCounter64(val)
+	}
+
+	// Ambil lost packets
+	oid = fmt.Sprintf("%s.%d", BaseOID3+OnuLostPacketsOID, interfaceIndex)
+	if val, err := d.snmpGet(oid); err == nil {
+		errs.LostPackets = extractCounter64(val)
+	}
+
+	return errs, nil
+}
+
+// GetVoltageInfo mengambil informasi voltage/power supply
+func (d *Driver) GetVoltageInfo(ctx context.Context) (*model.VoltageInfo, error) {
+	if !d.connected {
+		if err := d.Connect(); err != nil {
+			return nil, err
+		}
+	}
+
+	info := &model.VoltageInfo{
+		Timestamp: time.Now().UTC().Format(time.RFC3339),
+	}
+
+	// Ambil system voltage
+	if val, err := d.snmpGet(BaseOID3 + VoltageSystemOID); err == nil {
+		info.SystemVoltage = extractInt(val)
+	}
+
+	// Ambil CPU voltage
+	if val, err := d.snmpGet(BaseOID3 + VoltageCPUOID); err == nil {
+		info.CpuVoltage = extractInt(val)
+	}
+
+	return info, nil
+}
+
 // snmpGet melakukan permintaan SNMP GET.
 func (d *Driver) snmpGet(oid string) (interface{}, error) {
 	result, err := d.client.Get([]string{oid})

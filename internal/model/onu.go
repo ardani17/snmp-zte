@@ -29,6 +29,18 @@ type ONUDetail struct {
 	Distance             string `json:"distance"`
 }
 
+// ONUBandwidth merepresentasikan bandwidth SLA per ONU
+type ONUBandwidth struct {
+	Board           int    `json:"board"`
+	PON             int    `json:"pon"`
+	ONUID           int    `json:"onu_id"`
+	Name            string `json:"name,omitempty"`
+	AssuredUpstream   int64 `json:"assured_upstream"`   // kbps
+	AssuredDownstream int64 `json:"assured_downstream"` // kbps
+	MaxUpstream       int64 `json:"max_upstream"`       // kbps
+	MaxDownstream     int64 `json:"max_downstream"`     // kbps
+}
+
 // ONUSlot merepresentasikan slot ONU yang tersedia
 type ONUSlot struct {
 	Board  int `json:"board"`

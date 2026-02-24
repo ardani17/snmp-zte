@@ -73,6 +73,10 @@ type OLTInfoResponse struct {
 // @Description - fan_info: Informasi status fan/kipas
 // @Description - temperature_info: Informasi suhu sistem dan CPU (°C)
 // @Description - onu_traffic: Statistik traffic ONU (RX/TX bytes, WAJIB isi onu_id)
+// @Description - onu_bandwidth: Bandwidth SLA per ONU (assured/max kbps, WAJIB isi onu_id)
+// @Description - pon_port_stats: Statistik traffic per PON port
+// @Description - onu_errors: Error counter per ONU (CRC, FEC, dropped, WAJIB isi onu_id)
+// @Description - voltage_info: Informasi voltage/power supply OLT
 // @Tags Query
 // @Accept json
 // @Produce json
@@ -162,6 +166,23 @@ func (h *QueryHandler) Query(w http.ResponseWriter, r *http.Request) {
 		result, err = drv.GetFanInfo(ctx)
 	case "temperature_info":
 		result, err = drv.GetTemperatureInfo(ctx)
+	// Phase 2: Bandwidth & Performance
+	case "onu_bandwidth":
+		if req.OnuID == 0 {
+			response.BadRequest(w, "onu_id is required for onu_bandwidth query")
+			return
+		}
+		result, err = drv.GetONUBandwidth(ctx, req.Board, req.Pon, req.OnuID)
+	case "pon_port_stats":
+		result, err = drv.GetPonPortStats(ctx, req.Board, req.Pon)
+	case "onu_errors":
+		if req.OnuID == 0 {
+			response.BadRequest(w, "onu_id is required for onu_errors query")
+			return
+		}
+		result, err = drv.GetONUErrors(ctx, req.Board, req.Pon, req.OnuID)
+	case "voltage_info":
+		result, err = drv.GetVoltageInfo(ctx)
 	default:
 		response.BadRequest(w, "Unknown query: "+req.Query)
 		return

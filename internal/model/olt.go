@@ -75,6 +75,37 @@ type TemperatureInfo struct {
 	Timestamp string `json:"timestamp"`
 }
 
+// PONPortStats merepresentasikan statistik traffic per PON port
+type PONPortStats struct {
+	Board     int    `json:"board"`
+	PON       int    `json:"pon"`
+	RxBytes   int64  `json:"rx_bytes"`
+	TxBytes   int64  `json:"tx_bytes"`
+	RxPackets int64  `json:"rx_packets"`
+	TxPackets int64  `json:"tx_packets"`
+	Status    string `json:"status"`
+	Timestamp string `json:"timestamp"`
+}
+
+// ONUErrors merepresentasikan error counter per ONU
+type ONUErrors struct {
+	Board          int    `json:"board"`
+	PON            int    `json:"pon"`
+	ONUID          int    `json:"onu_id"`
+	CrcErrors      int64  `json:"crc_errors"`
+	FecErrors      int64  `json:"fec_errors"`
+	DroppedFrames  int64  `json:"dropped_frames"`
+	LostPackets    int64  `json:"lost_packets"`
+	Timestamp      string `json:"timestamp"`
+}
+
+// VoltageInfo merepresentasikan informasi voltage/power supply
+type VoltageInfo struct {
+	SystemVoltage int    `json:"system_voltage"` // mV
+	CpuVoltage    int    `json:"cpu_voltage"`    // mV
+	Timestamp     string `json:"timestamp"`
+}
+
 // CardStatus merepresentasikan kode status kartu
 type CardStatus int
 

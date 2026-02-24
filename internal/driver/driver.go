@@ -17,6 +17,7 @@ type Driver interface {
 	GetONUDetail(ctx context.Context, boardID, ponID, onuID int) (*model.ONUDetail, error)
 	GetEmptySlots(ctx context.Context, boardID, ponID int) ([]model.ONUSlot, error)
 	GetONUTraffic(ctx context.Context, boardID, ponID, onuID int) (*model.ONUTraffic, error)
+	GetONUBandwidth(ctx context.Context, boardID, ponID, onuID int) (*model.ONUBandwidth, error)
 
 	// Info OLT
 	GetSystemInfo(ctx context.Context) (*SystemInfo, error)
@@ -25,6 +26,9 @@ type Driver interface {
 	GetInterfaceStats(ctx context.Context) ([]model.InterfaceStats, error)
 	GetFanInfo(ctx context.Context) ([]map[string]interface{}, error)
 	GetTemperatureInfo(ctx context.Context) (*model.TemperatureInfo, error)
+	GetPonPortStats(ctx context.Context, boardID, ponID int) (*model.PONPortStats, error)
+	GetONUErrors(ctx context.Context, boardID, ponID, onuID int) (*model.ONUErrors, error)
+	GetVoltageInfo(ctx context.Context) (*model.VoltageInfo, error)
 
 	// Validasi
 	ValidateBoardID(boardID int) bool
