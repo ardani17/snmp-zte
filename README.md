@@ -1,70 +1,130 @@
 # SNMP-ZTE
 
-Multi-OLT SNMP monitoring system for ZTE devices (C320, C300, C600).
+API SNMP stateless untuk ZTE OLT (C320, C300, C600) - bagian dari Billing Management System.
 
-**Version: 2.0** - Now with stateless queries for public use!
+## 🎯 Fitur
 
-## Features
+- ✅ **23 Endpoint SNMP** - Monitoring & Provisioning
+- ✅ **Stateless API** - Tidak menyimpan data kredensial
+- ✅ **Multi-Model Support** - ZTE C320, C300, C600
+- ✅ **SNMPv2c** - Read-Only & Read-Write support
+- ✅ **Swagger Documentation** - API docs otomatis
+- ✅ **Docker Ready** - Container deployment
 
-- **Multi-OLT support** (C320, C300, C600)
-- **Stateless queries** - No credentials stored, perfect for public use
-- **Rate limiting** - 20 requests/minute per IP
-- **Connection pooling** - Max 100 concurrent SNMP connections
-- **CORS enabled** - Ready for frontend integration
-- **REST API** for ONU queries
-- **Redis caching** (5-minute TTL, optional)
-- **JSON-based configuration**
-- **Docker-ready**
+## 📋 Endpoints
 
-## Quick Start
+### Phase 1: Core (12 endpoints)
+| Endpoint | Fungsi |
+|----------|--------|
+| `health` | Health check API |
+| `onu_list` | Daftar semua ONU di PON |
+| `onu_detail` | Detail lengkap ONU |
+| `empty_slots` | Cari slot ONU kosong |
+| `system_info` | Info sistem OLT |
+| `board_info` | Status board (CPU, Memory) |
+| `all_boards` | Semua board |
+| `pon_info` | Info PON port |
+| `interface_stats` | Traffic semua interface |
+| `fan_info` | Status fan |
+| `temperature_info` | Suhu OLT |
+| `onu_traffic` | Traffic per ONU |
 
-### Using Docker
+### Phase 2: Bandwidth (4 endpoints)
+| Endpoint | Fungsi |
+|----------|--------|
+| `onu_bandwidth` | Bandwidth SLA per ONU |
+| `pon_port_stats` | Traffic per PON port |
+| `onu_errors` | Error counter per ONU |
+| `voltage_info` | Voltage OLT |
+
+### Phase 3: Provisioning (4 endpoints)
+| Endpoint | Fungsi | Method |
+|----------|--------|--------|
+| `onu_create` | Buat ONU baru | SNMP SET |
+| `onu_delete` | Hapus ONU | SNMP SET |
+| `onu_rename` | Rename ONU | SNMP SET |
+| `onu_status` | Status ONU (online/offline) | SNMP GET |
+
+### Phase 4 & 5: Statistics & VLAN (3 endpoints)
+| Endpoint | Fungsi |
+|----------|--------|
+| `distance_info` | Jarak ONU (meter) |
+| `vlan_list` | Daftar semua VLAN |
+| `vlan_info` | Info VLAN by ID |
+
+## 🚀 Instalasi
+
+### Prasyarat
+- Go 1.21+
+- ZTE OLT (C320/C300/C600)
+- SNMP community string (public/globalrw)
+
+### 1. Clone Repository
 
 ```bash
-docker-compose up -d
+git clone https://github.com/ardani17/snmp-zte.git
+cd snmp-zte
 ```
 
-### Manual Build
+### 2. Build
 
 ```bash
-go mod download
-go run ./cmd/api
+go build -o snmp-zte ./cmd/api
 ```
 
-## API Endpoints
+### 3. Run
 
-### Health & Stats
+```bash
+./snmp-zte
+```
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/` | API info |
-| GET | `/health` | Health check |
-| GET | `/stats` | Connection pool statistics |
+Server akan berjalan di `http://localhost:8080`
 
-### Stateless Query (v2.0 - Public Use)
+### 4. Docker (Opsional)
 
-**POST** `/api/v1/query`
+```bash
+# Build image
+docker build -t snmp-zte .
 
-Query OLT without storing credentials. Perfect for public dashboards.
+# Run container
+docker run -p 8080:8080 snmp-zte
+```
 
-**Request:**
+## 📖 Penggunaan
+
+### Health Check
+
+```bash
+curl http://localhost:8080/health
+```
+
+Response:
 ```json
 {
-  "ip": "192.168.1.1",
-  "port": 161,
-  "community": "public",
-  "model": "C320",
-  "query": "onu_list",
-  "board": 1,
-  "pon": 1
+  "code": 200,
+  "status": "OK",
+  "data": {
+    "status": "healthy"
+  }
 }
 ```
 
-**Query Types:**
-- `onu_list` - List all ONUs
-- `onu_detail` - Get ONU detail (requires `onu_id`)
-- `empty_slots` - Get available ONU slots
-- `system_info` - Get OLT system info
+### Query OLT
+
+**Request:**
+```bash
+curl -X POST http://localhost:8080/api/v1/query \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ip": "192.168.1.1",
+    "port": 161,
+    "community": "public",
+    "model": "C320",
+    "query": "onu_list",
+    "board": 1,
+    "pon": 1
+  }'
+```
 
 **Response:**
 ```json
@@ -73,121 +133,224 @@ Query OLT without storing credentials. Perfect for public dashboards.
   "status": "OK",
   "data": {
     "query": "onu_list",
-    "data": [...],
-    "timestamp": "2026-02-21T11:00:00Z",
-    "duration": "5.123s"
+    "data": [
+      {
+        "onu_id": 1,
+        "name": "customer-1",
+        "status": "online"
+      }
+    ],
+    "timestamp": "2026-02-24T10:00:00Z",
+    "duration": "265ms"
   }
 }
 ```
 
-**POST** `/api/v1/olt-info`
+### Provisioning ONU
 
-Get OLT info without storing credentials.
-
-### OLT Management (Legacy - Requires Config)
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/v1/olts` | List all OLTs |
-| POST | `/api/v1/olts` | Add new OLT |
-| GET | `/api/v1/olts/{olt_id}` | Get OLT detail |
-| PUT | `/api/v1/olts/{olt_id}` | Update OLT |
-| DELETE | `/api/v1/olts/{olt_id}` | Delete OLT |
-
-### ONU Operations (Legacy - Requires Config)
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/v1/olts/{olt_id}/board/{board_id}/pon/{pon_id}` | ONU list |
-| GET | `/api/v1/olts/{olt_id}/board/{board_id}/pon/{pon_id}/onu/{onu_id}` | ONU detail |
-| GET | `/api/v1/olts/{olt_id}/board/{board_id}/pon/{pon_id}/empty` | Available slots |
-| DELETE | `/api/v1/olts/{olt_id}/board/{board_id}/pon/{pon_id}/cache` | Clear cache |
-
-## Security Features
-
-- **No credential storage** - Stateless queries don't store any data
-- **Rate limiting** - 20 requests/minute per IP client
-- **Connection pooling** - Max 100 concurrent connections
-- **CORS** - Configurable for frontend access
-- **Timeout protection** - 10s query timeout
-
-## Configuration
-
-Edit `config/olts.json` (for legacy endpoints):
-
-```json
-{
-  "server": {
-    "host": "0.0.0.0",
-    "port": 8080
-  },
-  "redis": {
-    "host": "localhost",
-    "port": 6379
-  },
-  "olts": [
-    {
-      "id": "olt-001",
-      "name": "OLT C320 - Site A",
-      "model": "C320",
-      "ip_address": "192.168.1.1",
-      "port": 161,
-      "community": "public",
-      "board_count": 2,
-      "pon_per_board": 16
-    }
-  ]
-}
+**Create ONU:**
+```bash
+curl -X POST http://localhost:8080/api/v1/query \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ip": "192.168.1.1",
+    "port": 161,
+    "community": "globalrw",
+    "model": "C320",
+    "query": "onu_create",
+    "board": 1,
+    "pon": 1,
+    "onu_id": 50,
+    "name": "customer-new"
+  }'
 ```
 
-## Supported OLT Models
+**Delete ONU:**
+```bash
+curl -X POST http://localhost:8080/api/v1/query \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ip": "192.168.1.1",
+    "port": 161,
+    "community": "globalrw",
+    "model": "C320",
+    "query": "onu_delete",
+    "board": 1,
+    "pon": 1,
+    "onu_id": 50
+  }'
+```
 
-| Model | Status |
-|-------|--------|
-| C320 | ✅ Implemented |
-| C300 | 🚧 Pending OID data |
-| C600 | 🚧 Pending OID data |
+**Rename ONU:**
+```bash
+curl -X POST http://localhost:8080/api/v1/query \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ip": "192.168.1.1",
+    "port": 161,
+    "community": "globalrw",
+    "model": "C320",
+    "query": "onu_rename",
+    "board": 1,
+    "pon": 1,
+    "onu_id": 50,
+    "name": "customer-renamed"
+  }'
+```
 
-## Project Structure
+## 🔐 Community Strings
+
+| Community | Akses | Penggunaan |
+|-----------|-------|------------|
+| `public` | Read-Only | Monitoring |
+| `globalrw` | Read-Write | Provisioning |
+
+⚠️ **Penting:** Untuk provisioning (create/delete/rename), gunakan community `globalrw` atau community write lainnya.
+
+## 📊 Swagger Documentation
+
+Akses dokumentasi API di:
+```
+http://localhost:8080/swagger/index.html
+```
+
+## 🔧 Konfigurasi
+
+### Environment Variables
+
+| Variable | Default | Deskripsi |
+|----------|---------|-----------|
+| `PORT` | 8080 | Port server |
+| `GIN_MODE` | debug | Mode gin (debug/release) |
+
+### Docker Compose
+
+```yaml
+version: '3.8'
+services:
+  snmp-zte:
+    image: snmp-zte:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - GIN_MODE=release
+    restart: unless-stopped
+```
+
+## 📁 Struktur Proyek
 
 ```
-SNMP-ZTE/
-├── cmd/api/main.go          # Entry point
+snmp-zte/
+├── cmd/
+│   └── api/
+│       └── main.go          # Entry point
 ├── internal/
-│   ├── config/              # Configuration
-│   ├── handler/             # HTTP handlers
-│   │   ├── query.go         # Stateless query handler (v2.0)
-│   │   ├── olt.go           # OLT CRUD handler
-│   │   └── onu.go           # ONU handler
-│   ├── middleware/          # HTTP middleware
-│   │   ├── cors.go          # CORS middleware (v2.0)
-│   │   └── ratelimit.go     # Rate limiter (v2.0)
-│   ├── service/             # Business logic
-│   ├── driver/              # OLT drivers
-│   │   ├── driver.go        # Interface
-│   │   └── c320/            # C320 implementation
-│   ├── snmp/
-│   │   ├── client.go        # SNMP client
-│   │   └── pool.go          # Connection pool (v2.0)
-│   ├── cache/               # Redis cache
-│   └── model/               # Data models
-├── pkg/response/            # API response helpers
-├── config/                  # Config files
+│   ├── driver/
+│   │   ├── driver.go        # Interface driver
+│   │   └── c320/
+│   │       ├── driver.go    # Implementasi C320
+│   │       └── oids.go      # OID definitions
+│   ├── handler/
+│   │   └── query.go         # HTTP handlers
+│   ├── model/
+│   │   ├── olt.go           # Model OLT
+│   │   └── onu.go           # Model ONU
+│   └── snmp/
+│       └── pool.go          # SNMP connection pool
+├── docs/
+│   ├── MIB_DATABASE.md      # OID database
+│   ├── PROVISIONING_CAPABILITIES.md
+│   └── ...
+├── pkg/
+│   └── response/
+│       └── response.go      # Response helper
+├── go.mod
+├── go.sum
 ├── Dockerfile
-└── docker-compose.yaml
+└── README.md
 ```
 
-## Use Cases
+## 🔬 OID Research
 
-1. **Public Dashboard** - Users input their OLT credentials, no data stored
-2. **ISP Monitoring** - Centralized monitoring for multiple OLTs
-3. **NOC Dashboard** - Real-time ONU status monitoring
-4. **Customer Portal** - Let customers check their ONU status
+Semua OID yang digunakan telah diteliti dan didokumentasikan:
 
-## Frontend
+- **598 OID** ditemukan via SNMP walk
+- **23 OID** diimplementasikan dalam API
+- Dokumentasi lengkap: `docs/MIB_DATABASE.md`
 
-See [snmp-zte-web](https://github.com/ardani17/snmp-zte-web) for Next.js frontend.
+## ⚠️ Limitations
 
-## License
+### Tidak Tersedia via SNMP (Gunakan CLI)
 
-MIT
+| Fitur | Status |
+|-------|--------|
+| ONU Reset/Reboot | ❌ CLI only |
+| MAC Address Table | ❌ CLI only |
+| Active Alarms | ❌ CLI only |
+| VLAN Configuration | ❌ CLI only |
+| Service Ports | ❌ CLI only |
+
+Untuk fitur-fitur di atas, gunakan CLI-ZTE (project terpisah).
+
+## 🧪 Testing
+
+### Test dengan OLT Real
+
+```bash
+# Health check
+curl http://localhost:8080/health
+
+# ONU list
+curl -X POST http://localhost:8080/api/v1/query \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ip": "YOUR_OLT_IP",
+    "port": 161,
+    "community": "public",
+    "model": "C320",
+    "query": "onu_list",
+    "board": 1,
+    "pon": 1
+  }'
+```
+
+### Test Results (91.192.81.36:2161 - ZTE C320)
+
+| Endpoint | Duration | Status |
+|----------|----------|--------|
+| onu_list | 265ms | ✅ |
+| onu_status | 261ms | ✅ |
+| onu_create | 519ms | ✅ |
+| onu_delete | 264ms | ✅ |
+| vlan_list | 263ms | ✅ |
+| profile_list | 5.6s | ✅ |
+| pon_info | 3.9s | ✅ |
+
+## 📚 Dokumentasi
+
+- [MIB Database](docs/MIB_DATABASE.md) - Database 598 OID
+- [Provisioning Capabilities](docs/PROVISIONING_CAPABILITIES.md) - SNMP provisioning
+- [VLAN OID Discovery](docs/VLAN_OID_DISCOVERY.md) - VLAN findings
+- [Research Summary](docs/RISET_SUMMARY.md) - Ringkasan riset (Indonesia)
+
+## 🤝 Contributing
+
+1. Fork repository
+2. Buat branch fitur (`git checkout -b feature/AmazingFeature`)
+3. Commit perubahan (`git commit -m 'Add some AmazingFeature'`)
+4. Push ke branch (`git push origin feature/AmazingFeature`)
+5. Buat Pull Request
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) file.
+
+## 👤 Author
+
+- **Ardani** - [github.com/ardani17](https://github.com/ardani17)
+
+## 🙏 Acknowledgments
+
+- ZTE Corporation - Hardware documentation
+- go-snmp library - SNMP implementation
+- All contributors and testers
