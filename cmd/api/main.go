@@ -12,7 +12,7 @@ import (
 	"github.com/ardani/snmp-zte/internal/config"
 	_ "github.com/ardani/snmp-zte/docs"
 	"github.com/ardani/snmp-zte/internal/handler"
-	// "github.com/ardani/snmp-zte/internal/middleware"
+	"github.com/ardani/snmp-zte/internal/middleware"
 	"github.com/ardani/snmp-zte/internal/service"
 	"github.com/ardani/snmp-zte/pkg/response"
 	"github.com/go-chi/chi/v5"
@@ -96,8 +96,9 @@ func setupRouter(oltHandler *handler.OLTHandler, onuHandler *handler.ONUHandler,
 	r.Use(chiMiddleware.RealIP)       // Mendapatkan IP asli client
 	r.Use(chiMiddleware.Logger)       // Mencatat log setiap request HTTP
 	r.Use(chiMiddleware.Recoverer)    // Mencegah aplikasi crash jika ada panic
+	r.Use(middleware.DefaultCORS())   // Mengizinkan akses dari domain luar (Cross-Origin Resource Sharing)
+	r.Use(middleware.BasicAuth())     // Autentikasi Basic Auth
 	// r.Use(middleware.NewRateLimiter(20, time.Minute).Middleware) // Batasan 20 request per menit per IP
-	// r.Use(middleware.DefaultCORS())   // Mengizinkan akses dari domain luar (Cross-Origin Resource Sharing)
 	// r.Use(chiMiddleware.Timeout(90 * time.Second)) // Batas waktu request maksimal 90 detik
 
 	// Endpoint Dasar
