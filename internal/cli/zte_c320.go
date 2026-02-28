@@ -537,16 +537,373 @@ func (z *ZTEC320Client) SaveConfig(ctx context.Context) error {
 	return err
 }
 
-// RawCommand menjalankan command mentah
-func (z *ZTEC320Client) RawCommand(ctx context.Context, cmd string) (string, error) {
-	return z.client.Execute(ctx, cmd)
+// ============================================================
+// WRITE OPERATIONS - ONU PROVISIONING
+// ============================================================
+
+// RenameONU mengubah nama ONU
+// Command: onu {id} name {name}
+func (z *ZTEC320Client) RenameONU(ctx context.Context, rack, shelf, slot, onuID int, newName string) error {
+	commands := []string{
+		"configure terminal",
+		fmt.Sprintf("interface gpon-olt_%d/%d/%d", rack, shelf, slot),
+		fmt.Sprintf("onu %d name %s", onuID, newName),
+		"exit",
+		"exit",
+	}
+
+	for _, cmd := range commands {
+		_, err := z.client.Execute(ctx, cmd)
+		if err != nil {
+			return fmt.Errorf("command '%s' failed: %w", cmd, err)
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+
+	return nil
 }
 
-// ValidateSN memvalidasi format Serial Number ONU
-func ValidateSN(sn string) bool {
-	// ZTE SN format: ZTEG00000002 (4 letters + 8 hex)
-	matched, _ := regexp.MatchString(`^[A-Z]{4}[0-9A-Fa-f]{8}$`, sn)
-	return matched
+// ResetONU mereset/reboot ONU
+// Command: reset onu {id}
+func (z *ZTEC320Client) ResetONU(ctx context.Context, rack, shelf, slot, onuID int) error {
+	commands := []string{
+		"configure terminal",
+		fmt.Sprintf("interface gpon-olt_%d/%d/%d", rack, shelf, slot),
+		fmt.Sprintf("reset onu %d", onuID),
+		"exit",
+		"exit",
+	}
+
+	for _, cmd := range commands {
+		_, err := z.client.Execute(ctx, cmd)
+		if err != nil {
+			return fmt.Errorf("command '%s' failed: %w", cmd, err)
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+
+	return nil
+}
+
+// ============================================================
+// WRITE OPERATIONS - T-CONT & GEM PORT
+// ============================================================
+
+// CreateTCONT membuat T-CONT baru
+// Command: tcont {id} name {name} profile {profile}
+func (z *ZTEC320Client) CreateTCONT(ctx context.Context, rack, shelf, slot, onuID, tcontID int, name, profile string) error {
+	commands := []string{
+		"configure terminal",
+		fmt.Sprintf("interface gpon-onu_%d/%d/%d:%d", rack, shelf, slot, onuID),
+		fmt.Sprintf("tcont %d name %s profile %s", tcontID, name, profile),
+		"exit",
+		"exit",
+	}
+
+	for _, cmd := range commands {
+		_, err := z.client.Execute(ctx, cmd)
+		if err != nil {
+			return fmt.Errorf("command '%s' failed: %w", cmd, err)
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+
+	return nil
+}
+
+// CreateGEMPort membuat GEM port baru
+// Command: gemport {id} unicast tcont {tcont_id}
+func (z *ZTEC320Client) CreateGEMPort(ctx context.Context, rack, shelf, slot, onuID, gemportID, tcontID int, name string) error {
+	commands := []string{
+		"configure terminal",
+		fmt.Sprintf("interface gpon-onu_%d/%d/%d:%d", rack, shelf, slot, onuID),
+		fmt.Sprintf("gemport %d name %s unicast tcont %d", gemportID, name, tcontID),
+		"exit",
+		"exit",
+	}
+
+	for _, cmd := range commands {
+		_, err := z.client.Execute(ctx, cmd)
+		if err != nil {
+			return fmt.Errorf("command '%s' failed: %w", cmd, err)
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+
+	return nil
+}
+
+// ============================================================
+// WRITE OPERATIONS - SERVICE PORT
+// ============================================================
+
+// CreateServicePort membuat service port baru
+// Command: service-port {id} vport {vport} user-vlan {vlan} vlan {vlan}
+func (z *ZTEC320Client) CreateServicePort(ctx context.Context, rack, shelf, slot, onuID, servicePortID, vport, vlan int) error {
+	commands := []string{
+		"configure terminal",
+		fmt.Sprintf("interface gpon-onu_%d/%d/%d:%d", rack, shelf, slot, onuID),
+		fmt.Sprintf("service-port %d vport %d user-vlan %d vlan %d", servicePortID, vport, vlan, vlan),
+		"exit",
+		"exit",
+	}
+
+	for _, cmd := range commands {
+		_, err := z.client.Execute(ctx, cmd)
+		if err != nil {
+			return fmt.Errorf("command '%s' failed: %w", cmd, err)
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+
+	return nil
+}
+
+// DeleteServicePort menghapus service port
+// Command: no service-port {id}
+func (z *ZTEC320Client) DeleteServicePort(ctx context.Context, rack, shelf, slot, onuID, servicePortID int) error {
+	commands := []string{
+		"configure terminal",
+		fmt.Sprintf("interface gpon-onu_%d/%d/%d:%d", rack, shelf, slot, onuID),
+		fmt.Sprintf("no service-port %d", servicePortID),
+		"exit",
+		"exit",
+	}
+
+	for _, cmd := range commands {
+		_, err := z.client.Execute(ctx, cmd)
+		if err != nil {
+			return fmt.Errorf("command '%s' failed: %w", cmd, err)
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+
+	return nil
+}
+
+// ============================================================
+// WRITE OPERATIONS - VLAN
+// ============================================================
+
+// CreateVLAN membuat VLAN baru
+// Command: vlan {id}
+func (z *ZTEC320Client) CreateVLAN(ctx context.Context, vlanID int, name string) error {
+	commands := []string{
+		"configure terminal",
+		fmt.Sprintf("vlan %d", vlanID),
+	}
+
+	if name != "" {
+		commands = append(commands, fmt.Sprintf("name %s", name))
+	}
+
+	commands = append(commands, "exit", "exit")
+
+	for _, cmd := range commands {
+		_, err := z.client.Execute(ctx, cmd)
+		if err != nil {
+			return fmt.Errorf("command '%s' failed: %w", cmd, err)
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+
+	return nil
+}
+
+// DeleteVLAN menghapus VLAN
+// Command: no vlan {id}
+func (z *ZTEC320Client) DeleteVLAN(ctx context.Context, vlanID int) error {
+	commands := []string{
+		"configure terminal",
+		fmt.Sprintf("no vlan %d", vlanID),
+		"exit",
+	}
+
+	for _, cmd := range commands {
+		_, err := z.client.Execute(ctx, cmd)
+		if err != nil {
+			return fmt.Errorf("command '%s' failed: %w", cmd, err)
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+
+	return nil
+}
+
+// AddPortToVLAN menambahkan port ke VLAN
+// Command: switchport vlan {vlan_id} tag/untag
+func (z *ZTEC320Client) AddPortToVLAN(ctx context.Context, interfaceName string, vlanID int, mode string) error {
+	commands := []string{
+		"configure terminal",
+		fmt.Sprintf("interface %s", interfaceName),
+		fmt.Sprintf("switchport vlan %d %s", vlanID, mode),
+		"exit",
+		"exit",
+	}
+
+	for _, cmd := range commands {
+		_, err := z.client.Execute(ctx, cmd)
+		if err != nil {
+			return fmt.Errorf("command '%s' failed: %w", cmd, err)
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+
+	return nil
+}
+
+// ============================================================
+// WRITE OPERATIONS - PROFILE CREATION
+// ============================================================
+
+// CreateLineProfile membuat line profile baru
+// Command: onu-profile gpon line {name}
+func (z *ZTEC320Client) CreateLineProfile(ctx context.Context, name string) error {
+	commands := []string{
+		"configure terminal",
+		fmt.Sprintf("onu-profile gpon line %s", name),
+		"commit",
+		"exit",
+		"exit",
+	}
+
+	for _, cmd := range commands {
+		_, err := z.client.Execute(ctx, cmd)
+		if err != nil {
+			return fmt.Errorf("command '%s' failed: %w", cmd, err)
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+
+	return nil
+}
+
+// CreateRemoteProfile membuat remote profile baru
+// Command: onu-profile gpon remote {name}
+func (z *ZTEC320Client) CreateRemoteProfile(ctx context.Context, name string) error {
+	commands := []string{
+		"configure terminal",
+		fmt.Sprintf("onu-profile gpon remote %s", name),
+		"commit",
+		"exit",
+		"exit",
+	}
+
+	for _, cmd := range commands {
+		_, err := z.client.Execute(ctx, cmd)
+		if err != nil {
+			return fmt.Errorf("command '%s' failed: %w", cmd, err)
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+
+	return nil
+}
+
+// CreateVLANProfile membuat VLAN profile baru
+// Command: onu profile vlan {name}
+func (z *ZTEC320Client) CreateVLANProfile(ctx context.Context, name string, vlanID int) error {
+	commands := []string{
+		"configure terminal",
+		fmt.Sprintf("onu profile vlan %s", name),
+		fmt.Sprintf("vlan %d", vlanID),
+		"exit",
+		"exit",
+	}
+
+	for _, cmd := range commands {
+		_, err := z.client.Execute(ctx, cmd)
+		if err != nil {
+			return fmt.Errorf("command '%s' failed: %w", cmd, err)
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+
+	return nil
+}
+
+// CreateTCONTProfile membuat T-CONT profile baru
+// Command: profile tcont {name} type {type} bandwidth {bandwidth}
+func (z *ZTEC320Client) CreateTCONTProfile(ctx context.Context, name string, profileType string, bandwidth int) error {
+	commands := []string{
+		"configure terminal",
+		fmt.Sprintf("profile tcont %s type %s bandwidth %d", name, profileType, bandwidth),
+		"exit",
+	}
+
+	for _, cmd := range commands {
+		_, err := z.client.Execute(ctx, cmd)
+		if err != nil {
+			return fmt.Errorf("command '%s' failed: %w", cmd, err)
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+
+	return nil
+}
+
+// ============================================================
+// WRITE OPERATIONS - IGMP/MULTICAST
+// ============================================================
+
+// EnableIGMP mengaktifkan IGMP
+// Command: igmp enable
+func (z *ZTEC320Client) EnableIGMP(ctx context.Context) error {
+	commands := []string{
+		"configure terminal",
+		"igmp enable",
+		"exit",
+	}
+
+	for _, cmd := range commands {
+		_, err := z.client.Execute(ctx, cmd)
+		if err != nil {
+			return fmt.Errorf("command '%s' failed: %w", cmd, err)
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+
+	return nil
+}
+
+// CreateMVLAN membuat MVLAN baru
+// Command: igmp mvlan {id}
+func (z *ZTEC320Client) CreateMVLAN(ctx context.Context, mvlanID int) error {
+	commands := []string{
+		"configure terminal",
+		fmt.Sprintf("igmp mvlan %d", mvlanID),
+		"exit",
+	}
+
+	for _, cmd := range commands {
+		_, err := z.client.Execute(ctx, cmd)
+		if err != nil {
+			return fmt.Errorf("command '%s' failed: %w", cmd, err)
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+
+	return nil
+}
+
+// AddMVLANGroup menambahkan group ke MVLAN
+// Command: igmp mvlan {id} group {ip}
+func (z *ZTEC320Client) AddMVLANGroup(ctx context.Context, mvlanID int, groupIP string) error {
+	commands := []string{
+		"configure terminal",
+		fmt.Sprintf("igmp mvlan %d group %s", mvlanID, groupIP),
+		"exit",
+	}
+
+	for _, cmd := range commands {
+		_, err := z.client.Execute(ctx, cmd)
+		if err != nil {
+			return fmt.Errorf("command '%s' failed: %w", cmd, err)
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+
+	return nil
 }
 
 // ============================================================

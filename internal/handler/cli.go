@@ -1885,3 +1885,727 @@ func (h *CLIHandler) DeleteONU(w http.ResponseWriter, r *http.Request) {
 		"onu_id":  req.OnuID,
 	}, start)
 }
+
+// ============================================================
+// WRITE OPERATIONS - ONU PROVISIONING
+// ============================================================
+
+// RenameONU godoc
+// @Summary Rename ONU
+// @Tags CLI-ONU-WRITE
+// @Router /api/v1/cli/onu/rename [post]
+func (h *CLIHandler) RenameONU(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, "Invalid request")
+		return
+	}
+
+	if req.Slot == 0 || req.OnuID == 0 || req.Name == "" {
+		response.BadRequest(w, "slot, onu_id, and name are required")
+		return
+	}
+
+	rack := req.Rack
+	shelf := req.Shelf
+	if rack == 0 {
+		rack = 1
+	}
+	if shelf == 0 {
+		shelf = 1
+	}
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	err := client.RenameONU(ctx, rack, shelf, req.Slot, req.OnuID, req.Name)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "onu_rename", map[string]interface{}{
+		"success": true,
+		"message": fmt.Sprintf("ONU %d renamed to %s", req.OnuID, req.Name),
+		"onu_id":  req.OnuID,
+		"name":    req.Name,
+	}, start)
+}
+
+// ResetONU godoc
+// @Summary Reset/Reboot ONU
+// @Tags CLI-ONU-WRITE
+// @Router /api/v1/cli/onu/reset [post]
+func (h *CLIHandler) ResetONU(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, "Invalid request")
+		return
+	}
+
+	if req.Slot == 0 || req.OnuID == 0 {
+		response.BadRequest(w, "slot and onu_id are required")
+		return
+	}
+
+	rack := req.Rack
+	shelf := req.Shelf
+	if rack == 0 {
+		rack = 1
+	}
+	if shelf == 0 {
+		shelf = 1
+	}
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	err := client.ResetONU(ctx, rack, shelf, req.Slot, req.OnuID)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "onu_reset", map[string]interface{}{
+		"success": true,
+		"message": fmt.Sprintf("ONU %d reset/rebooted", req.OnuID),
+		"onu_id":  req.OnuID,
+	}, start)
+}
+
+// ============================================================
+// WRITE OPERATIONS - T-CONT & GEM PORT
+// ============================================================
+
+// CreateTCONT godoc
+// @Summary Create T-CONT
+// @Tags CLI-TCONT-WRITE
+// @Router /api/v1/cli/tcont/create [post]
+func (h *CLIHandler) CreateTCONT(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, "Invalid request")
+		return
+	}
+
+	if req.Slot == 0 || req.OnuID == 0 || req.Name == "" || req.SN == "" {
+		response.BadRequest(w, "slot, onu_id, name (tcont name), and sn (profile name) are required")
+		return
+	}
+
+	rack := req.Rack
+	shelf := req.Shelf
+	tcontID := req.VlanID
+	if tcontID == 0 {
+		tcontID = 1
+	}
+	if rack == 0 {
+		rack = 1
+	}
+	if shelf == 0 {
+		shelf = 1
+	}
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	err := client.CreateTCONT(ctx, rack, shelf, req.Slot, req.OnuID, tcontID, req.Name, req.SN)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "tcont_create", map[string]interface{}{
+		"success":    true,
+		"message":    fmt.Sprintf("T-CONT %d created", tcontID),
+		"tcont_id":   tcontID,
+		"name":       req.Name,
+		"profile":    req.SN,
+		"interface":  fmt.Sprintf("gpon-onu_%d/%d/%d:%d", rack, shelf, req.Slot, req.OnuID),
+	}, start)
+}
+
+// CreateGEMPort godoc
+// @Summary Create GEM Port
+// @Tags CLI-GEMPORT-WRITE
+// @Router /api/v1/cli/gemport/create [post]
+func (h *CLIHandler) CreateGEMPort(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, "Invalid request")
+		return
+	}
+
+	if req.Slot == 0 || req.OnuID == 0 || req.Name == "" {
+		response.BadRequest(w, "slot, onu_id, and name are required")
+		return
+	}
+
+	rack := req.Rack
+	shelf := req.Shelf
+	gemportID := req.VlanID
+	tcontID := req.Port
+	if gemportID == 0 {
+		gemportID = 1
+	}
+	if tcontID == 0 {
+		tcontID = 1
+	}
+	if rack == 0 {
+		rack = 1
+	}
+	if shelf == 0 {
+		shelf = 1
+	}
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	err := client.CreateGEMPort(ctx, rack, shelf, req.Slot, req.OnuID, gemportID, tcontID, req.Name)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "gemport_create", map[string]interface{}{
+		"success":    true,
+		"message":    fmt.Sprintf("GEM Port %d created", gemportID),
+		"gemport_id": gemportID,
+		"tcont_id":   tcontID,
+		"name":       req.Name,
+		"interface":  fmt.Sprintf("gpon-onu_%d/%d/%d:%d", rack, shelf, req.Slot, req.OnuID),
+	}, start)
+}
+
+// ============================================================
+// WRITE OPERATIONS - SERVICE PORT
+// ============================================================
+
+// CreateServicePort godoc
+// @Summary Create Service Port
+// @Tags CLI-SERVICEPORT-WRITE
+// @Router /api/v1/cli/service-port/create [post]
+func (h *CLIHandler) CreateServicePort(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, "Invalid request")
+		return
+	}
+
+	if req.Slot == 0 || req.OnuID == 0 || req.VlanID == 0 {
+		response.BadRequest(w, "slot, onu_id, and vlan_id are required")
+		return
+	}
+
+	rack := req.Rack
+	shelf := req.Shelf
+	servicePortID := req.Port
+	vport := req.VlanID
+	if servicePortID == 0 {
+		servicePortID = 1
+	}
+	if vport == 0 {
+		vport = 1
+	}
+	if rack == 0 {
+		rack = 1
+	}
+	if shelf == 0 {
+		shelf = 1
+	}
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	err := client.CreateServicePort(ctx, rack, shelf, req.Slot, req.OnuID, servicePortID, vport, req.VlanID)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "service-port_create", map[string]interface{}{
+		"success":        true,
+		"message":        fmt.Sprintf("Service Port %d created", servicePortID),
+		"service_port_id": servicePortID,
+		"vport":          vport,
+		"vlan_id":        req.VlanID,
+		"interface":      fmt.Sprintf("gpon-onu_%d/%d/%d:%d", rack, shelf, req.Slot, req.OnuID),
+	}, start)
+}
+
+// DeleteServicePort godoc
+// @Summary Delete Service Port
+// @Tags CLI-SERVICEPORT-WRITE
+// @Router /api/v1/cli/service-port/delete [post]
+func (h *CLIHandler) DeleteServicePort(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, "Invalid request")
+		return
+	}
+
+	if req.Slot == 0 || req.OnuID == 0 || req.Port == 0 {
+		response.BadRequest(w, "slot, onu_id, and port (service_port_id) are required")
+		return
+	}
+
+	rack := req.Rack
+	shelf := req.Shelf
+	if rack == 0 {
+		rack = 1
+	}
+	if shelf == 0 {
+		shelf = 1
+	}
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	err := client.DeleteServicePort(ctx, rack, shelf, req.Slot, req.OnuID, req.Port)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "service-port_delete", map[string]interface{}{
+		"success":         true,
+		"message":         fmt.Sprintf("Service Port %d deleted", req.Port),
+		"service_port_id": req.Port,
+	}, start)
+}
+
+// ============================================================
+// WRITE OPERATIONS - VLAN
+// ============================================================
+
+// CreateVLAN godoc
+// @Summary Create VLAN
+// @Tags CLI-VLAN-WRITE
+// @Router /api/v1/cli/vlan/create [post]
+func (h *CLIHandler) CreateVLAN(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, "Invalid request")
+		return
+	}
+
+	if req.VlanID == 0 {
+		response.BadRequest(w, "vlan_id is required")
+		return
+	}
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	err := client.CreateVLAN(ctx, req.VlanID, req.Name)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "vlan_create", map[string]interface{}{
+		"success": true,
+		"message": fmt.Sprintf("VLAN %d created", req.VlanID),
+		"vlan_id": req.VlanID,
+		"name":    req.Name,
+	}, start)
+}
+
+// DeleteVLAN godoc
+// @Summary Delete VLAN
+// @Tags CLI-VLAN-WRITE
+// @Router /api/v1/cli/vlan/delete [post]
+func (h *CLIHandler) DeleteVLAN(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, "Invalid request")
+		return
+	}
+
+	if req.VlanID == 0 {
+		response.BadRequest(w, "vlan_id is required")
+		return
+	}
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	err := client.DeleteVLAN(ctx, req.VlanID)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "vlan_delete", map[string]interface{}{
+		"success": true,
+		"message": fmt.Sprintf("VLAN %d deleted", req.VlanID),
+		"vlan_id": req.VlanID,
+	}, start)
+}
+
+// AddPortToVLAN godoc
+// @Summary Add Port to VLAN
+// @Tags CLI-VLAN-WRITE
+// @Router /api/v1/cli/vlan/port/add [post]
+func (h *CLIHandler) AddPortToVLAN(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, "Invalid request")
+		return
+	}
+
+	if req.Name == "" || req.VlanID == 0 {
+		response.BadRequest(w, "name (interface name) and vlan_id are required")
+		return
+	}
+
+	mode := req.OnuType
+	if mode == "" {
+		mode = "tag"
+	}
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	err := client.AddPortToVLAN(ctx, req.Name, req.VlanID, mode)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "vlan_port_add", map[string]interface{}{
+		"success":     true,
+		"message":     fmt.Sprintf("Port %s added to VLAN %d", req.Name, req.VlanID),
+		"interface":   req.Name,
+		"vlan_id":     req.VlanID,
+		"mode":        mode,
+	}, start)
+}
+
+// ============================================================
+// WRITE OPERATIONS - PROFILE CREATION
+// ============================================================
+
+// CreateLineProfile godoc
+// @Summary Create Line Profile
+// @Tags CLI-PROFILE-WRITE
+// @Router /api/v1/cli/profile/line/create [post]
+func (h *CLIHandler) CreateLineProfile(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, "Invalid request")
+		return
+	}
+
+	if req.Name == "" {
+		response.BadRequest(w, "name is required")
+		return
+	}
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	err := client.CreateLineProfile(ctx, req.Name)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "profile_line_create", map[string]interface{}{
+		"success": true,
+		"message": fmt.Sprintf("Line Profile %s created", req.Name),
+		"name":    req.Name,
+	}, start)
+}
+
+// CreateRemoteProfile godoc
+// @Summary Create Remote Profile
+// @Tags CLI-PROFILE-WRITE
+// @Router /api/v1/cli/profile/remote/create [post]
+func (h *CLIHandler) CreateRemoteProfile(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, "Invalid request")
+		return
+	}
+
+	if req.Name == "" {
+		response.BadRequest(w, "name is required")
+		return
+	}
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	err := client.CreateRemoteProfile(ctx, req.Name)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "profile_remote_create", map[string]interface{}{
+		"success": true,
+		"message": fmt.Sprintf("Remote Profile %s created", req.Name),
+		"name":    req.Name,
+	}, start)
+}
+
+// CreateVLANProfile godoc
+// @Summary Create VLAN Profile
+// @Tags CLI-PROFILE-WRITE
+// @Router /api/v1/cli/profile/vlan/create [post]
+func (h *CLIHandler) CreateVLANProfile(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, "Invalid request")
+		return
+	}
+
+	if req.Name == "" || req.VlanID == 0 {
+		response.BadRequest(w, "name and vlan_id are required")
+		return
+	}
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	err := client.CreateVLANProfile(ctx, req.Name, req.VlanID)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "profile_vlan_create", map[string]interface{}{
+		"success": true,
+		"message": fmt.Sprintf("VLAN Profile %s created", req.Name),
+		"name":    req.Name,
+		"vlan_id": req.VlanID,
+	}, start)
+}
+
+// CreateTCONTProfile godoc
+// @Summary Create T-CONT Profile
+// @Tags CLI-PROFILE-WRITE
+// @Router /api/v1/cli/profile/tcont/create [post]
+func (h *CLIHandler) CreateTCONTProfile(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, "Invalid request")
+		return
+	}
+
+	if req.Name == "" || req.OnuType == "" {
+		response.BadRequest(w, "name and onu_type (profile type) are required")
+		return
+	}
+
+	bandwidth := req.VlanID
+	if bandwidth == 0 {
+		bandwidth = 10000
+	}
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	err := client.CreateTCONTProfile(ctx, req.Name, req.OnuType, bandwidth)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "profile_tcont_create", map[string]interface{}{
+		"success":    true,
+		"message":    fmt.Sprintf("T-CONT Profile %s created", req.Name),
+		"name":       req.Name,
+		"type":       req.OnuType,
+		"bandwidth":  bandwidth,
+	}, start)
+}
+
+// ============================================================
+// WRITE OPERATIONS - IGMP/MULTICAST
+// ============================================================
+
+// EnableIGMP godoc
+// @Summary Enable IGMP
+// @Tags CLI-IGMP-WRITE
+// @Router /api/v1/cli/igmp/enable [post]
+func (h *CLIHandler) EnableIGMP(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	json.NewDecoder(r.Body).Decode(&req)
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	err := client.EnableIGMP(ctx)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "igmp_enable", map[string]interface{}{
+		"success": true,
+		"message": "IGMP enabled successfully",
+	}, start)
+}
+
+// CreateMVLAN godoc
+// @Summary Create MVLAN
+// @Tags CLI-IGMP-WRITE
+// @Router /api/v1/cli/mvlan/create [post]
+func (h *CLIHandler) CreateMVLAN(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, "Invalid request")
+		return
+	}
+
+	if req.VlanID == 0 {
+		response.BadRequest(w, "vlan_id (mvlan_id) is required")
+		return
+	}
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	err := client.CreateMVLAN(ctx, req.VlanID)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "mvlan_create", map[string]interface{}{
+		"success":  true,
+		"message":  fmt.Sprintf("MVLAN %d created", req.VlanID),
+		"mvlan_id": req.VlanID,
+	}, start)
+}
+
+// AddMVLANGroup godoc
+// @Summary Add MVLAN Group
+// @Tags CLI-IGMP-WRITE
+// @Router /api/v1/cli/mvlan/group/add [post]
+func (h *CLIHandler) AddMVLANGroup(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, "Invalid request")
+		return
+	}
+
+	if req.VlanID == 0 || req.Name == "" {
+		response.BadRequest(w, "vlan_id (mvlan_id) and name (group_ip) are required")
+		return
+	}
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	err := client.AddMVLANGroup(ctx, req.VlanID, req.Name)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "mvlan_group_add", map[string]interface{}{
+		"success":   true,
+		"message":   fmt.Sprintf("Group %s added to MVLAN %d", req.Name, req.VlanID),
+		"mvlan_id":  req.VlanID,
+		"group_ip":  req.Name,
+	}, start)
+}

@@ -215,6 +215,32 @@ func setupRouter(oltHandler *handler.OLTHandler, onuHandler *handler.ONUHandler,
 			// WRITE Operations (Provisioning)
 			r.Post("/onu/auth", cliHandler.AuthenticateONU)
 			r.Post("/onu/delete", cliHandler.DeleteONU)
+			r.Post("/onu/rename", cliHandler.RenameONU)
+			r.Post("/onu/reset", cliHandler.ResetONU)
+			
+			// T-CONT & GEM Port
+			r.Post("/tcont/create", cliHandler.CreateTCONT)
+			r.Post("/gemport/create", cliHandler.CreateGEMPort)
+			
+			// Service Port
+			r.Post("/service-port/create", cliHandler.CreateServicePort)
+			r.Post("/service-port/delete", cliHandler.DeleteServicePort)
+			
+			// VLAN
+			r.Post("/vlan/create", cliHandler.CreateVLAN)
+			r.Post("/vlan/delete", cliHandler.DeleteVLAN)
+			r.Post("/vlan/port/add", cliHandler.AddPortToVLAN)
+			
+			// Profile Creation
+			r.Post("/profile/line/create", cliHandler.CreateLineProfile)
+			r.Post("/profile/remote/create", cliHandler.CreateRemoteProfile)
+			r.Post("/profile/vlan/create", cliHandler.CreateVLANProfile)
+			r.Post("/profile/tcont/create", cliHandler.CreateTCONTProfile)
+			
+			// IGMP/Multicast
+			r.Post("/igmp/enable", cliHandler.EnableIGMP)
+			r.Post("/mvlan/create", cliHandler.CreateMVLAN)
+			r.Post("/mvlan/group/add", cliHandler.AddMVLANGroup)
 		})
 
 		// Pengelolaan Data OLT (CRUD) + Operasi ONU
