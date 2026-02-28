@@ -59,9 +59,10 @@ func main() {
 	onuHandler := handler.NewONUHandler(onuService)
 	oltHandler := handler.NewOLTHandler(oltService)
 	queryHandler := handler.NewQueryHandler()
+	cliHandler := handler.NewCLIHandler()
 
 	// 5. Setup Router menggunakan Chi
-	router := setupRouter(oltHandler, onuHandler, queryHandler)
+	router := setupRouter(oltHandler, onuHandler, queryHandler, cliHandler)
 
 	server := &http.Server{
 		Addr:         cfg.Server.Addr(),
@@ -88,7 +89,7 @@ func main() {
 	}
 }
 
-func setupRouter(oltHandler *handler.OLTHandler, onuHandler *handler.ONUHandler, queryHandler *handler.QueryHandler) http.Handler {
+func setupRouter(oltHandler *handler.OLTHandler, onuHandler *handler.ONUHandler, queryHandler *handler.QueryHandler, cliHandler *handler.CLIHandler) http.Handler {
 	r := chi.NewRouter()
 
 	// Menambahkan Middlewares (Fungsi yang berjalan sebelum handler utama)
@@ -133,6 +134,16 @@ func setupRouter(oltHandler *handler.OLTHandler, onuHandler *handler.ONUHandler,
 		// Endpoint "Stateless" (Tanpa simpan kredensial)
 		r.Post("/query", queryHandler.Query)
 		r.Post("/olt-info", queryHandler.OLTInfo)
+
+		// CLI Commands via SSH
+		r.Route("/cli", func(r chi.Router) {
+			r.Post("/", cliHandler.Execute)           // General CLI endpoint
+			r.Post("/card", cliHandler.ShowCard)      // Show card status
+			r.Post("/onu/state", cliHandler.ShowONUState)    // Show ONU state
+			r.Post("/onu/uncfg", cliHandler.ShowONUUncfg)    // Show unconfigured ONUs
+			r.Post("/onu/auth", cliHandler.AuthenticateONU)  // Authenticate ONU
+			r.Post("/onu/delete", cliHandler.DeleteONU)      // Delete ONU
+		})
 
 		// Pengelolaan Data OLT (CRUD) + Operasi ONU
 		r.Route("/olts", func(r chi.Router) {

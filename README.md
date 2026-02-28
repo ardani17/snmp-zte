@@ -5,9 +5,11 @@ API SNMP stateless untuk ZTE OLT (C320, C300, C600) - bagian dari Billing Manage
 ## 🎯 Fitur
 
 - ✅ **23 Endpoint SNMP** - Monitoring & Provisioning
+- ✅ **12 Endpoint CLI** - SSH Commands
 - ✅ **Stateless API** - Tidak menyimpan data kredensial
 - ✅ **Multi-Model Support** - ZTE C320, C300, C600
 - ✅ **SNMPv2c** - Read-Only & Read-Write support
+- ✅ **SSH/CLI** - Full CLI access via SSH
 - ✅ **Swagger Documentation** - API docs otomatis
 - ✅ **Docker Ready** - Container deployment
 
@@ -245,13 +247,19 @@ snmp-zte/
 │   └── api/
 │       └── main.go          # Entry point
 ├── internal/
+│   ├── cli/
+│   │   ├── client.go        # SSH client
+│   │   └── zte_c320.go      # ZTE C320 CLI commands
 │   ├── driver/
 │   │   ├── driver.go        # Interface driver
 │   │   └── c320/
 │   │       ├── driver.go    # Implementasi C320
 │   │       └── oids.go      # OID definitions
 │   ├── handler/
-│   │   └── query.go         # HTTP handlers
+│   │   ├── query.go         # SNMP HTTP handlers
+│   │   ├── cli.go           # CLI HTTP handlers
+│   │   ├── olt.go           # OLT CRUD handlers
+│   │   └── onu.go           # ONU handlers
 │   ├── model/
 │   │   ├── olt.go           # Model OLT
 │   │   └── onu.go           # Model ONU
@@ -278,19 +286,112 @@ Semua OID yang digunakan telah diteliti dan didokumentasikan:
 - **23 OID** diimplementasikan dalam API
 - Dokumentasi lengkap: `docs/MIB_DATABASE.md`
 
+## 🖥️ CLI Endpoints (SSH)
+
+Selain SNMP, API ini juga mendukung CLI commands via SSH untuk fitur yang tidak tersedia via SNMP.
+
+### Endpoint CLI
+
+| Method | Endpoint | Fungsi |
+|--------|----------|--------|
+| POST | `/api/v1/cli` | General CLI (query-based) |
+| POST | `/api/v1/cli/card` | Show card status |
+| POST | `/api/v1/cli/onu/state` | Show ONU state per slot |
+| POST | `/api/v1/cli/onu/uncfg` | Show unconfigured ONUs |
+| POST | `/api/v1/cli/onu/auth` | Authenticate/register ONU |
+| POST | `/api/v1/cli/onu/delete` | Delete ONU |
+
+### Supported CLI Queries
+
+| Query | Fungsi | CLI Command |
+|-------|--------|-------------|
+| `show_card` | Status semua card | `show card` |
+| `show_card_slot` | Status card tertentu | `show card slotno X` |
+| `show_gpon_onu_uncfg` | ONU belum terdaftar | `show gpon onu uncfg gpon-olt_X/Y/Z` |
+| `show_gpon_onu_state` | State ONU | `show gpon onu state gpon-olt_X/Y/Z` |
+| `show_gpon_profile_tcont` | T-CONT profiles | `show gpon profile tcont` |
+| `show_onu_type` | Tipe ONU | `show onu-type gpon [TYPE]` |
+| `show_fan` | Status fan | `show fan` |
+| `show_version` | Versi sistem | `show version` |
+| `show_clock` | Waktu sistem | `show clock` |
+| `show_running_config` | Running config | `show running-config` |
+| `onu_authenticate` | Daftarkan ONU | `onu X type TYPE sn SN` |
+| `onu_delete` | Hapus ONU | `no onu X` |
+| `save_config` | Simpan konfigurasi | `write` |
+
+### Contoh CLI Request
+
+**Show Card:**
+```bash
+curl -X POST http://localhost:8080/api/v1/cli/card \
+  -H "Content-Type: application/json" \
+  -d '{
+    "host": "192.168.1.1",
+    "port": 22,
+    "username": "zte",
+    "password": "zte"
+  }'
+```
+
+**Show Unconfigured ONUs:**
+```bash
+curl -X POST http://localhost:8080/api/v1/cli/onu/uncfg \
+  -H "Content-Type: application/json" \
+  -d '{
+    "host": "192.168.1.1",
+    "username": "zte",
+    "password": "zte",
+    "slot": 1
+  }'
+```
+
+**Authenticate ONU:**
+```bash
+curl -X POST http://localhost:8080/api/v1/cli/onu/auth \
+  -H "Content-Type: application/json" \
+  -d '{
+    "host": "192.168.1.1",
+    "username": "zte",
+    "password": "zte",
+    "slot": 1,
+    "onu_id": 1,
+    "onu_type": "ZTEG-F620",
+    "sn": "ZTEG00000002"
+  }'
+```
+
+**General CLI Query:**
+```bash
+curl -X POST http://localhost:8080/api/v1/cli \
+  -H "Content-Type: application/json" \
+  -d '{
+    "host": "192.168.1.1",
+    "username": "zte",
+    "password": "zte",
+    "query": "show_gpon_onu_state",
+    "slot": 1
+  }'
+```
+
 ## ⚠️ Limitations
 
-### Tidak Tersedia via SNMP (Gunakan CLI)
+### SNMP vs CLI
 
-| Fitur | Status |
-|-------|--------|
-| ONU Reset/Reboot | ❌ CLI only |
-| MAC Address Table | ❌ CLI only |
-| Active Alarms | ❌ CLI only |
-| VLAN Configuration | ❌ CLI only |
-| Service Ports | ❌ CLI only |
+| Fitur | SNMP | CLI (SSH) |
+|-------|------|-----------|
+| ONU List | ✅ | ✅ |
+| ONU Detail | ✅ | ✅ |
+| ONU Create | ✅ | ✅ |
+| ONU Delete | ✅ | ✅ |
+| ONU Rename | ✅ | ✅ |
+| ONU Reset/Reboot | ❌ | ✅ |
+| MAC Address Table | ❌ | ✅ |
+| Active Alarms | ❌ | ✅ |
+| VLAN Configuration | ❌ | ✅ |
+| Service Ports | ❌ | ✅ |
+| Unconfigured ONUs | ❌ | ✅ |
 
-Untuk fitur-fitur di atas, gunakan CLI-ZTE (project terpisah).
+Untuk fitur yang tidak tersedia via SNMP, gunakan CLI endpoints.
 
 ## 🧪 Testing
 
