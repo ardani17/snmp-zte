@@ -135,14 +135,44 @@ func setupRouter(oltHandler *handler.OLTHandler, onuHandler *handler.ONUHandler,
 		r.Post("/query", queryHandler.Query)
 		r.Post("/olt-info", queryHandler.OLTInfo)
 
-		// CLI Commands via SSH
+		// CLI Commands via Telnet
 		r.Route("/cli", func(r chi.Router) {
-			r.Post("/", cliHandler.Execute)           // General CLI endpoint
-			r.Post("/card", cliHandler.ShowCard)      // Show card status
-			r.Post("/onu/state", cliHandler.ShowONUState)    // Show ONU state
-			r.Post("/onu/uncfg", cliHandler.ShowONUUncfg)    // Show unconfigured ONUs
-			r.Post("/onu/auth", cliHandler.AuthenticateONU)  // Authenticate ONU
-			r.Post("/onu/delete", cliHandler.DeleteONU)      // Delete ONU
+			// System
+			r.Post("/system/clock", cliHandler.ShowClock)
+			
+			// Hardware
+			r.Post("/card", cliHandler.ShowCard)
+			r.Post("/rack", cliHandler.ShowRack)
+			r.Post("/shelf", cliHandler.ShowShelf)
+			r.Post("/fan", cliHandler.ShowFan)
+			
+			// GPON Profiles
+			r.Post("/gpon/tcont", cliHandler.ShowTcontProfile)
+			r.Post("/gpon/onu-type", cliHandler.ShowOnuType)
+			r.Post("/gpon/vlan-profile", cliHandler.ShowVlanProfile)
+			
+			// GPON ONU
+			r.Post("/onu/state", cliHandler.ShowONUState)
+			r.Post("/onu/uncfg", cliHandler.ShowONUUncfg)
+			r.Post("/onu/config", cliHandler.ShowONUConfig)
+			r.Post("/onu/running", cliHandler.ShowONURunning)
+			
+			// Interface
+			r.Post("/interface", cliHandler.ShowInterface)
+			r.Post("/interface/mng", cliHandler.ShowMgmtInterface)
+			
+			// Service Port
+			r.Post("/service-port", cliHandler.ShowServicePort)
+			
+			// IGMP
+			r.Post("/igmp", cliHandler.ShowIGMP)
+			
+			// Users
+			r.Post("/user/list", cliHandler.ShowUsers)
+			
+			// WRITE Operations (Provisioning)
+			r.Post("/onu/auth", cliHandler.AuthenticateONU)
+			r.Post("/onu/delete", cliHandler.DeleteONU)
 		})
 
 		// Pengelolaan Data OLT (CRUD) + Operasi ONU
