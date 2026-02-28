@@ -661,6 +661,698 @@ func (h *CLIHandler) ShowUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 // ============================================================
+// PRIORITY 1: ONU DETAIL ENDPOINTS
+// ============================================================
+
+// ShowONUDetail godoc
+// @Summary Show ONU Detail Info
+// @Tags CLI-ONU
+// @Router /api/v1/cli/onu/detail [post]
+func (h *CLIHandler) ShowONUDetail(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, "Invalid request")
+		return
+	}
+
+	if req.Slot == 0 || req.OnuID == 0 {
+		response.BadRequest(w, "slot and onu_id are required")
+		return
+	}
+
+	rack := req.Rack
+	shelf := req.Shelf
+	if rack == 0 {
+		rack = 1
+	}
+	if shelf == 0 {
+		shelf = 1
+	}
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	data, err := client.ShowONUDetail(ctx, rack, shelf, req.Slot, req.OnuID)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "show_onu_detail_info", data, start)
+}
+
+// ShowONUDistance godoc
+// @Summary Show ONU Distance
+// @Tags CLI-ONU
+// @Router /api/v1/cli/onu/distance [post]
+func (h *CLIHandler) ShowONUDistance(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, "Invalid request")
+		return
+	}
+
+	if req.Slot == 0 {
+		response.BadRequest(w, "slot is required")
+		return
+	}
+
+	rack := req.Rack
+	shelf := req.Shelf
+	if rack == 0 {
+		rack = 1
+	}
+	if shelf == 0 {
+		shelf = 1
+	}
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	data, err := client.ShowGPONONUDistance(ctx, rack, shelf, req.Slot)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "show_gpon_onu_distance", data, start)
+}
+
+// ShowONUTraffic godoc
+// @Summary Show ONU Traffic
+// @Tags CLI-ONU
+// @Router /api/v1/cli/onu/traffic [post]
+func (h *CLIHandler) ShowONUTraffic(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, "Invalid request")
+		return
+	}
+
+	if req.Slot == 0 || req.OnuID == 0 {
+		response.BadRequest(w, "slot and onu_id are required")
+		return
+	}
+
+	rack := req.Rack
+	shelf := req.Shelf
+	if rack == 0 {
+		rack = 1
+	}
+	if shelf == 0 {
+		shelf = 1
+	}
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	data, err := client.ShowONUTraffic(ctx, rack, shelf, req.Slot, req.OnuID)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "show_onu_traffic", data, start)
+}
+
+// ShowONUOptical godoc
+// @Summary Show ONU Optical Info
+// @Tags CLI-ONU
+// @Router /api/v1/cli/onu/optical [post]
+func (h *CLIHandler) ShowONUOptical(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, "Invalid request")
+		return
+	}
+
+	if req.Slot == 0 || req.OnuID == 0 {
+		response.BadRequest(w, "slot and onu_id are required")
+		return
+	}
+
+	rack := req.Rack
+	shelf := req.Shelf
+	if rack == 0 {
+		rack = 1
+	}
+	if shelf == 0 {
+		shelf = 1
+	}
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	data, err := client.ShowONUOptical(ctx, rack, shelf, req.Slot, req.OnuID)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "show_onu_optical_info", data, start)
+}
+
+// ============================================================
+// PRIORITY 2: HARDWARE DETAIL
+// ============================================================
+
+// ShowCardBySlot godoc
+// @Summary Show Card by Slot
+// @Tags CLI-Hardware
+// @Router /api/v1/cli/card/{slot} [post]
+func (h *CLIHandler) ShowCardBySlot(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, "Invalid request")
+		return
+	}
+
+	if req.Slot == 0 {
+		response.BadRequest(w, "slot is required")
+		return
+	}
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	data, err := client.ShowCardBySlot(ctx, req.Slot)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "show_card_slotno", data, start)
+}
+
+// ShowSubCard godoc
+// @Summary Show SubCard
+// @Tags CLI-Hardware
+// @Router /api/v1/cli/subcard [post]
+func (h *CLIHandler) ShowSubCard(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	json.NewDecoder(r.Body).Decode(&req)
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	data, err := client.ShowSubCard(ctx)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "show_subcard", data, start)
+}
+
+// ============================================================
+// PRIORITY 3: GPON PROFILES
+// ============================================================
+
+// ShowIPProfile godoc
+// @Summary Show IP Profile
+// @Tags CLI-GPON
+// @Router /api/v1/cli/gpon/ip-profile [post]
+func (h *CLIHandler) ShowIPProfile(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, "Invalid request")
+		return
+	}
+
+	if req.Name == "" {
+		response.BadRequest(w, "name is required")
+		return
+	}
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	data, err := client.ShowIPProfile(ctx, req.Name)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "show_gpon_onu_profile_ip", data, start)
+}
+
+// ShowSIPProfile godoc
+// @Summary Show SIP Profile
+// @Tags CLI-GPON
+// @Router /api/v1/cli/gpon/sip-profile [post]
+func (h *CLIHandler) ShowSIPProfile(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, "Invalid request")
+		return
+	}
+
+	if req.Name == "" {
+		response.BadRequest(w, "name is required")
+		return
+	}
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	data, err := client.ShowSIPProfile(ctx, req.Name)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "show_gpon_onu_profile_sip", data, start)
+}
+
+// ShowMGCProfile godoc
+// @Summary Show MGC Profile
+// @Tags CLI-GPON
+// @Router /api/v1/cli/gpon/mgc-profile [post]
+func (h *CLIHandler) ShowMGCProfile(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, "Invalid request")
+		return
+	}
+
+	if req.Name == "" {
+		response.BadRequest(w, "name is required")
+		return
+	}
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	data, err := client.ShowMGCProfile(ctx, req.Name)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "show_gpon_onu_profile_mgc", data, start)
+}
+
+// ============================================================
+// PRIORITY 4: LINE & REMOTE PROFILES
+// ============================================================
+
+// ShowLineProfileList godoc
+// @Summary Show Line Profile List
+// @Tags CLI-Profile
+// @Router /api/v1/cli/profile/line/list [post]
+func (h *CLIHandler) ShowLineProfileList(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	json.NewDecoder(r.Body).Decode(&req)
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	data, err := client.ShowLineProfileList(ctx)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "show_pon_onu-profile_gpon_line", data, start)
+}
+
+// ShowLineProfile godoc
+// @Summary Show Line Profile Detail
+// @Tags CLI-Profile
+// @Router /api/v1/cli/profile/line [post]
+func (h *CLIHandler) ShowLineProfile(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, "Invalid request")
+		return
+	}
+
+	if req.Name == "" {
+		response.BadRequest(w, "name is required")
+		return
+	}
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	data, err := client.ShowLineProfile(ctx, req.Name)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "show_pon_onu-profile_gpon_line_name", data, start)
+}
+
+// ShowRemoteProfileList godoc
+// @Summary Show Remote Profile List
+// @Tags CLI-Profile
+// @Router /api/v1/cli/profile/remote/list [post]
+func (h *CLIHandler) ShowRemoteProfileList(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	json.NewDecoder(r.Body).Decode(&req)
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	data, err := client.ShowRemoteProfileList(ctx)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "show_pon_onu-profile_gpon_remote", data, start)
+}
+
+// ShowRemoteProfile godoc
+// @Summary Show Remote Profile Detail
+// @Tags CLI-Profile
+// @Router /api/v1/cli/profile/remote [post]
+func (h *CLIHandler) ShowRemoteProfile(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, "Invalid request")
+		return
+	}
+
+	if req.Name == "" {
+		response.BadRequest(w, "name is required")
+		return
+	}
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	data, err := client.ShowRemoteProfile(ctx, req.Name)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "show_pon_onu-profile_gpon_remote_name", data, start)
+}
+
+// ============================================================
+// PRIORITY 5: VLAN
+// ============================================================
+
+// ShowVLANList godoc
+// @Summary Show VLAN List
+// @Tags CLI-VLAN
+// @Router /api/v1/cli/vlan/list [post]
+func (h *CLIHandler) ShowVLANList(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	json.NewDecoder(r.Body).Decode(&req)
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	data, err := client.ShowVLANList(ctx)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "show_vlan", data, start)
+}
+
+// ShowVLANByID godoc
+// @Summary Show VLAN by ID
+// @Tags CLI-VLAN
+// @Router /api/v1/cli/vlan/{id} [post]
+func (h *CLIHandler) ShowVLANByID(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, "Invalid request")
+		return
+	}
+
+	if req.VlanID == 0 {
+		response.BadRequest(w, "vlan_id is required")
+		return
+	}
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	data, err := client.ShowVLANByID(ctx, req.VlanID)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "show_vlan_id", data, start)
+}
+
+// ============================================================
+// PRIORITY 6: IGMP/MULTICAST
+// ============================================================
+
+// ShowIGMPMVlan godoc
+// @Summary Show IGMP MVLAN List
+// @Tags CLI-IGMP
+// @Router /api/v1/cli/igmp/mvlan [post]
+func (h *CLIHandler) ShowIGMPMVlan(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	json.NewDecoder(r.Body).Decode(&req)
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	data, err := client.ShowIGMPMVlan(ctx)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "show_igmp_mvlan", data, start)
+}
+
+// ShowIGMPMVlanByID godoc
+// @Summary Show IGMP MVLAN by ID
+// @Tags CLI-IGMP
+// @Router /api/v1/cli/igmp/mvlan/{id} [post]
+func (h *CLIHandler) ShowIGMPMVlanByID(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, "Invalid request")
+		return
+	}
+
+	if req.VlanID == 0 {
+		response.BadRequest(w, "vlan_id is required")
+		return
+	}
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	data, err := client.ShowIGMPMVlanByID(ctx, req.VlanID)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "show_igmp_mvlan_id", data, start)
+}
+
+// ShowIGMPGroup godoc
+// @Summary Show IGMP Group
+// @Tags CLI-IGMP
+// @Router /api/v1/cli/igmp/group [post]
+func (h *CLIHandler) ShowIGMPGroup(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	json.NewDecoder(r.Body).Decode(&req)
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	output, err := client.ShowIGMPGroup(ctx)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "show_igmp_group", output, start)
+}
+
+// ============================================================
+// PRIORITY 7: INTERFACE DETAIL
+// ============================================================
+
+// ShowInterfaceByType godoc
+// @Summary Show Interface by Type
+// @Tags CLI-Interface
+// @Router /api/v1/cli/interface/detail [post]
+func (h *CLIHandler) ShowInterfaceByType(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, "Invalid request")
+		return
+	}
+
+	if req.Name == "" {
+		response.BadRequest(w, "name is required (e.g., gpon-olt_1/1/1, gei_1/4/1)")
+		return
+	}
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	data, err := client.ShowInterfaceByType(ctx, req.Name)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "show_interface_detail", data, start)
+}
+
+// ============================================================
+// PRIORITY 8: USER MANAGEMENT
+// ============================================================
+
+// ShowOnlineUsers godoc
+// @Summary Show Online Users
+// @Tags CLI-User
+// @Router /api/v1/cli/user/online [post]
+func (h *CLIHandler) ShowOnlineUsers(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	json.NewDecoder(r.Body).Decode(&req)
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	data, err := client.ShowOnlineUsers(ctx)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "show_users", data, start)
+}
+
+// ============================================================
 // WRITE ENDPOINTS (Provisioning)
 // ============================================================
 

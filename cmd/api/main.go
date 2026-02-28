@@ -142,23 +142,43 @@ func setupRouter(oltHandler *handler.OLTHandler, onuHandler *handler.ONUHandler,
 			
 			// Hardware
 			r.Post("/card", cliHandler.ShowCard)
+			r.Post("/card/slot", cliHandler.ShowCardBySlot)
 			r.Post("/rack", cliHandler.ShowRack)
 			r.Post("/shelf", cliHandler.ShowShelf)
+			r.Post("/subcard", cliHandler.ShowSubCard)
 			r.Post("/fan", cliHandler.ShowFan)
 			
 			// GPON Profiles
 			r.Post("/gpon/tcont", cliHandler.ShowTcontProfile)
 			r.Post("/gpon/onu-type", cliHandler.ShowOnuType)
 			r.Post("/gpon/vlan-profile", cliHandler.ShowVlanProfile)
+			r.Post("/gpon/ip-profile", cliHandler.ShowIPProfile)
+			r.Post("/gpon/sip-profile", cliHandler.ShowSIPProfile)
+			r.Post("/gpon/mgc-profile", cliHandler.ShowMGCProfile)
+			
+			// Line & Remote Profiles
+			r.Post("/profile/line/list", cliHandler.ShowLineProfileList)
+			r.Post("/profile/line", cliHandler.ShowLineProfile)
+			r.Post("/profile/remote/list", cliHandler.ShowRemoteProfileList)
+			r.Post("/profile/remote", cliHandler.ShowRemoteProfile)
 			
 			// GPON ONU
 			r.Post("/onu/state", cliHandler.ShowONUState)
 			r.Post("/onu/uncfg", cliHandler.ShowONUUncfg)
 			r.Post("/onu/config", cliHandler.ShowONUConfig)
 			r.Post("/onu/running", cliHandler.ShowONURunning)
+			r.Post("/onu/detail", cliHandler.ShowONUDetail)
+			r.Post("/onu/distance", cliHandler.ShowONUDistance)
+			r.Post("/onu/traffic", cliHandler.ShowONUTraffic)
+			r.Post("/onu/optical", cliHandler.ShowONUOptical)
+			
+			// VLAN
+			r.Post("/vlan/list", cliHandler.ShowVLANList)
+			r.Post("/vlan/id", cliHandler.ShowVLANByID)
 			
 			// Interface
 			r.Post("/interface", cliHandler.ShowInterface)
+			r.Post("/interface/detail", cliHandler.ShowInterfaceByType)
 			r.Post("/interface/mng", cliHandler.ShowMgmtInterface)
 			
 			// Service Port
@@ -166,9 +186,13 @@ func setupRouter(oltHandler *handler.OLTHandler, onuHandler *handler.ONUHandler,
 			
 			// IGMP
 			r.Post("/igmp", cliHandler.ShowIGMP)
+			r.Post("/igmp/mvlan", cliHandler.ShowIGMPMVlan)
+			r.Post("/igmp/mvlan/id", cliHandler.ShowIGMPMVlanByID)
+			r.Post("/igmp/group", cliHandler.ShowIGMPGroup)
 			
 			// Users
 			r.Post("/user/list", cliHandler.ShowUsers)
+			r.Post("/user/online", cliHandler.ShowOnlineUsers)
 			
 			// WRITE Operations (Provisioning)
 			r.Post("/onu/auth", cliHandler.AuthenticateONU)

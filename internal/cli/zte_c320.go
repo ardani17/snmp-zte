@@ -548,3 +548,788 @@ func ValidateSN(sn string) bool {
 	matched, _ := regexp.MatchString(`^[A-Z]{4}[0-9A-Fa-f]{8}$`, sn)
 	return matched
 }
+
+// ============================================================
+// PRIORITY 1: ONU DETAIL ENDPOINTS
+// ============================================================
+
+// ONUDetail informasi detail ONU
+type ONUDetail struct {
+	ONUName          string `json:"onu_name"`
+	ONUType          string `json:"onu_type"`
+	ONUSN            string `json:"onu_sn"`
+	AdminState       string `json:"admin_state"`
+	PhaseState       string `json:"phase_state"`
+	ChannelState     string `json:"channel_state"`
+	Authentication   string `json:"authentication"`
+	Omcc             string `json:"omcc"`
+	VoipState        string `json:"voip_state,omitempty"`
+	VoipPortNum      string `json:"voip_port_num,omitempty"`
+	FecUp            string `json:"fec_up"`
+	FecDown          string `json:"fec_down"`
+	LineProfile      string `json:"line_profile"`
+	RemoteProfile    string `json:"remote_profile"`
+	Description      string `json:"description,omitempty"`
+	LastDownReason   string `json:"last_down_reason,omitempty"`
+	LastDownTime     string `json:"last_down_time,omitempty"`
+	DyingGasp        string `json:"dying_gasp,omitempty"`
+	BatteryBackup    string `json:"battery_backup,omitempty"`
+	ONUVersion       string `json:"onu_version,omitempty"`
+	EquipmentID      string `json:"equipment_id,omitempty"`
+	TrafficScheduling string `json:"traffic_scheduling,omitempty"`
+}
+
+// ShowONUDetail menampilkan detail ONU
+// Command: show onu detail-info gpon-onu_{rack}/{shelf}/{slot}:{onu_id}
+func (z *ZTEC320Client) ShowONUDetail(ctx context.Context, rack, shelf, slot, onuID int) (*ONUDetail, error) {
+	cmd := fmt.Sprintf("show onu detail-info gpon-onu_%d/%d/%d:%d", rack, shelf, slot, onuID)
+	output, err := z.client.Execute(ctx, cmd)
+	if err != nil {
+		return nil, err
+	}
+	return z.parseONUDetail(output), nil
+}
+
+// ONUDistance informasi distance ONU
+type ONUDistance struct {
+	ONUID     string `json:"onu_id"`
+	ONUType   string `json:"onu_type"`
+	Distance  string `json:"distance"`
+	Equalizer string `json:"equalizer_delay"`
+}
+
+// ShowGPONONUDistance menampilkan distance ONU
+// Command: show gpon onu distance gpon-olt_{rack}/{shelf}/{slot}
+func (z *ZTEC320Client) ShowGPONONUDistance(ctx context.Context, rack, shelf, slot int) ([]ONUDistance, error) {
+	cmd := fmt.Sprintf("show gpon onu distance gpon-olt_%d/%d/%d", rack, shelf, slot)
+	output, err := z.client.Execute(ctx, cmd)
+	if err != nil {
+		return nil, err
+	}
+	return z.parseONUDistance(output), nil
+}
+
+// ONUTraffic informasi traffic ONU
+type ONUTraffic struct {
+	Interface string `json:"interface"`
+	TxRate    string `json:"tx_rate"`
+	RxRate    string `json:"rx_rate"`
+	TxPkts    string `json:"tx_pkts"`
+	RxPkts    string `json:"rx_pkts"`
+	TxBytes   string `json:"tx_bytes"`
+	RxBytes   string `json:"rx_bytes"`
+}
+
+// ShowONUTraffic menampilkan traffic ONU
+// Command: show onu traffic gpon-onu_{rack}/{shelf}/{slot}:{onu_id}
+func (z *ZTEC320Client) ShowONUTraffic(ctx context.Context, rack, shelf, slot, onuID int) (*ONUTraffic, error) {
+	cmd := fmt.Sprintf("show onu traffic gpon-onu_%d/%d/%d:%d", rack, shelf, slot, onuID)
+	output, err := z.client.Execute(ctx, cmd)
+	if err != nil {
+		return nil, err
+	}
+	return z.parseONUTraffic(output), nil
+}
+
+// ONUOptical informasi optical ONU
+type ONUOptical struct {
+	ONUName      string `json:"onu_name"`
+	ONUType      string `json:"onu_type"`
+	ONUSN        string `json:"onu_sn"`
+	OpticalPower string `json:"optical_power"`
+	TxPower      string `json:"tx_power"`
+	RxPower      string `json:"rx_power"`
+	ONUTemp      string `json:"onu_temp"`
+	Voltage      string `json:"voltage"`
+	BiasCurrent  string `json:"bias_current"`
+}
+
+// ShowONUOptical menampilkan optical info ONU
+// Command: show onu optical-info gpon-onu_{rack}/{shelf}/{slot}:{onu_id}
+func (z *ZTEC320Client) ShowONUOptical(ctx context.Context, rack, shelf, slot, onuID int) (*ONUOptical, error) {
+	cmd := fmt.Sprintf("show onu optical-info gpon-onu_%d/%d/%d:%d", rack, shelf, slot, onuID)
+	output, err := z.client.Execute(ctx, cmd)
+	if err != nil {
+		return nil, err
+	}
+	return z.parseONUOptical(output), nil
+}
+
+// ============================================================
+// PRIORITY 2: HARDWARE DETAIL
+// ============================================================
+
+// ShowCardBySlot menampilkan card by slot
+// Command: show card slotno {slot}
+func (z *ZTEC320Client) ShowCardBySlot(ctx context.Context, slot int) (*CardInfo, error) {
+	cmd := fmt.Sprintf("show card slotno %d", slot)
+	output, err := z.client.Execute(ctx, cmd)
+	if err != nil {
+		return nil, err
+	}
+	cards := z.parseCardDetail(output)
+	if len(cards) > 0 {
+		return &cards[0], nil
+	}
+	return nil, fmt.Errorf("card not found")
+}
+
+// SubCardInfo informasi subcard
+type SubCardInfo struct {
+	Rack    int    `json:"rack"`
+	Shelf   int    `json:"shelf"`
+	Slot    int    `json:"slot"`
+	SubSlot int    `json:"sub_slot"`
+	Type    string `json:"type"`
+	Status  string `json:"status"`
+}
+
+// ShowSubCard menampilkan subcard
+// Command: show subcard
+func (z *ZTEC320Client) ShowSubCard(ctx context.Context) ([]SubCardInfo, error) {
+	output, err := z.client.Execute(ctx, "show subcard")
+	if err != nil {
+		return nil, err
+	}
+	return z.parseSubCard(output), nil
+}
+
+// ============================================================
+// PRIORITY 3: GPON PROFILES
+// ============================================================
+
+// IPProfile informasi IP profile
+type IPProfile struct {
+	Name      string `json:"name"`
+	IPAddress string `json:"ip_address"`
+	Mask      string `json:"mask"`
+	Gateway   string `json:"gateway"`
+}
+
+// ShowIPProfile menampilkan IP profile
+// Command: show gpon onu profile ip {name}
+func (z *ZTEC320Client) ShowIPProfile(ctx context.Context, name string) (*IPProfile, error) {
+	cmd := fmt.Sprintf("show gpon onu profile ip %s", name)
+	output, err := z.client.Execute(ctx, cmd)
+	if err != nil {
+		return nil, err
+	}
+	return z.parseIPProfile(output), nil
+}
+
+// SIPProfile informasi SIP profile
+type SIPProfile struct {
+	Name        string `json:"name"`
+	ProxyServer string `json:"proxy_server"`
+	Registrar   string `json:"registrar"`
+	Outbound    string `json:"outbound"`
+}
+
+// ShowSIPProfile menampilkan SIP profile
+// Command: show gpon onu profile sip {name}
+func (z *ZTEC320Client) ShowSIPProfile(ctx context.Context, name string) (*SIPProfile, error) {
+	cmd := fmt.Sprintf("show gpon onu profile sip %s", name)
+	output, err := z.client.Execute(ctx, cmd)
+	if err != nil {
+		return nil, err
+	}
+	return z.parseSIPProfile(output), nil
+}
+
+// MGCProfile informasi MGC profile
+type MGCProfile struct {
+	Name     string `json:"name"`
+	MGC1IP   string `json:"mgc1_ip"`
+	MGC1Port string `json:"mgc1_port"`
+	MGC2IP   string `json:"mgc2_ip"`
+	MGC2Port string `json:"mgc2_port"`
+}
+
+// ShowMGCProfile menampilkan MGC profile
+// Command: show gpon onu profile mgc {name}
+func (z *ZTEC320Client) ShowMGCProfile(ctx context.Context, name string) (*MGCProfile, error) {
+	cmd := fmt.Sprintf("show gpon onu profile mgc %s", name)
+	output, err := z.client.Execute(ctx, cmd)
+	if err != nil {
+		return nil, err
+	}
+	return z.parseMGCProfile(output), nil
+}
+
+// ============================================================
+// PRIORITY 4: LINE & REMOTE PROFILES
+// ============================================================
+
+// LineProfile informasi line profile
+type LineProfile struct {
+	Name       string   `json:"name"`
+	TCONTList  []string `json:"tcont_list,omitempty"`
+	GEMPortList []string `json:"gemport_list,omitempty"`
+}
+
+// ShowLineProfileList menampilkan list line profile
+// Command: show pon onu-profile gpon line
+func (z *ZTEC320Client) ShowLineProfileList(ctx context.Context) ([]string, error) {
+	output, err := z.client.Execute(ctx, "show pon onu-profile gpon line")
+	if err != nil {
+		return nil, err
+	}
+	return z.parseProfileList(output), nil
+}
+
+// ShowLineProfile menampilkan detail line profile
+// Command: show pon onu-profile gpon line {name}
+func (z *ZTEC320Client) ShowLineProfile(ctx context.Context, name string) (*LineProfile, error) {
+	cmd := fmt.Sprintf("show pon onu-profile gpon line %s", name)
+	output, err := z.client.Execute(ctx, cmd)
+	if err != nil {
+		return nil, err
+	}
+	return z.parseLineProfile(output), nil
+}
+
+// RemoteProfile informasi remote profile
+type RemoteProfile struct {
+	Name        string   `json:"name"`
+	VLANList    []string `json:"vlan_list,omitempty"`
+	ServiceList []string `json:"service_list,omitempty"`
+}
+
+// ShowRemoteProfileList menampilkan list remote profile
+// Command: show pon onu-profile gpon remote
+func (z *ZTEC320Client) ShowRemoteProfileList(ctx context.Context) ([]string, error) {
+	output, err := z.client.Execute(ctx, "show pon onu-profile gpon remote")
+	if err != nil {
+		return nil, err
+	}
+	return z.parseProfileList(output), nil
+}
+
+// ShowRemoteProfile menampilkan detail remote profile
+// Command: show pon onu-profile gpon remote {name}
+func (z *ZTEC320Client) ShowRemoteProfile(ctx context.Context, name string) (*RemoteProfile, error) {
+	cmd := fmt.Sprintf("show pon onu-profile gpon remote %s", name)
+	output, err := z.client.Execute(ctx, cmd)
+	if err != nil {
+		return nil, err
+	}
+	return z.parseRemoteProfile(output), nil
+}
+
+// ============================================================
+// PRIORITY 5: VLAN
+// ============================================================
+
+// VLANInfo informasi VLAN
+type VLANInfo struct {
+	ID          int      `json:"id"`
+	Name        string   `json:"name,omitempty"`
+	Type        string   `json:"type"`
+	Ports       []string `json:"ports,omitempty"`
+	Description string   `json:"description,omitempty"`
+}
+
+// ShowVLANList menampilkan list VLAN
+// Command: show vlan
+func (z *ZTEC320Client) ShowVLANList(ctx context.Context) ([]VLANInfo, error) {
+	output, err := z.client.Execute(ctx, "show vlan")
+	if err != nil {
+		return nil, err
+	}
+	return z.parseVLANList(output), nil
+}
+
+// ShowVLANByID menampilkan detail VLAN by ID
+// Command: show vlan id {id}
+func (z *ZTEC320Client) ShowVLANByID(ctx context.Context, id int) (*VLANInfo, error) {
+	cmd := fmt.Sprintf("show vlan id %d", id)
+	output, err := z.client.Execute(ctx, cmd)
+	if err != nil {
+		return nil, err
+	}
+	vlans := z.parseVLANList(output)
+	if len(vlans) > 0 {
+		return &vlans[0], nil
+	}
+	return nil, fmt.Errorf("vlan not found")
+}
+
+// ============================================================
+// PRIORITY 6: IGMP/MULTICAST
+// ============================================================
+
+// IGMPMVlanInfo informasi MVLAN
+type IGMPMVlanInfo struct {
+	MVLANID   int      `json:"mvlan_id"`
+	SourceIP  string   `json:"source_ip,omitempty"`
+	WorkMode  string   `json:"work_mode,omitempty"`
+	GroupList []string `json:"group_list,omitempty"`
+}
+
+// ShowIGMPMVlan menampilkan list MVLAN
+// Command: show igmp mvlan
+func (z *ZTEC320Client) ShowIGMPMVlan(ctx context.Context) ([]IGMPMVlanInfo, error) {
+	output, err := z.client.Execute(ctx, "show igmp mvlan")
+	if err != nil {
+		return nil, err
+	}
+	return z.parseIGMPMVlan(output), nil
+}
+
+// ShowIGMPMVlanByID menampilkan detail MVLAN by ID
+// Command: show igmp mvlan {id}
+func (z *ZTEC320Client) ShowIGMPMVlanByID(ctx context.Context, id int) (*IGMPMVlanInfo, error) {
+	cmd := fmt.Sprintf("show igmp mvlan %d", id)
+	output, err := z.client.Execute(ctx, cmd)
+	if err != nil {
+		return nil, err
+	}
+	mvlan := z.parseIGMPMVlanDetail(output)
+	if mvlan != nil {
+		return mvlan, nil
+	}
+	return nil, fmt.Errorf("mvlan not found")
+}
+
+// ShowIGMPGroup menampilkan IGMP group
+// Command: show igmp group
+func (z *ZTEC320Client) ShowIGMPGroup(ctx context.Context) (string, error) {
+	return z.client.Execute(ctx, "show igmp group")
+}
+
+// ============================================================
+// PRIORITY 7: INTERFACE DETAIL
+// ============================================================
+
+// InterfaceStats statistik interface
+type InterfaceStats struct {
+	Name      string `json:"name"`
+	Status    string `json:"status"`
+	TxRate    string `json:"tx_rate"`
+	RxRate    string `json:"rx_rate"`
+	TxPackets string `json:"tx_packets"`
+	RxPackets string `json:"rx_packets"`
+	TxBytes   string `json:"tx_bytes"`
+	RxBytes   string `json:"rx_bytes"`
+	TxErrors  string `json:"tx_errors"`
+	RxErrors  string `json:"rx_errors"`
+}
+
+// ShowInterfaceByType menampilkan interface by type
+// Command: show interface {interface_name}
+func (z *ZTEC320Client) ShowInterfaceByType(ctx context.Context, ifName string) (*InterfaceStats, error) {
+	cmd := fmt.Sprintf("show interface %s", ifName)
+	output, err := z.client.Execute(ctx, cmd)
+	if err != nil {
+		return nil, err
+	}
+	return z.parseInterfaceStats(output), nil
+}
+
+// ============================================================
+// PRIORITY 8: USER MANAGEMENT
+// ============================================================
+
+// OnlineUser informasi user online
+type OnlineUser struct {
+	Username  string `json:"username"`
+	IP        string `json:"ip"`
+	LoginTime string `json:"login_time"`
+	From      string `json:"from"`
+}
+
+// ShowOnlineUsers menampilkan user yang sedang online
+// Command: show users
+func (z *ZTEC320Client) ShowOnlineUsers(ctx context.Context) ([]OnlineUser, error) {
+	output, err := z.client.Execute(ctx, "show users")
+	if err != nil {
+		return nil, err
+	}
+	return z.parseOnlineUsers(output), nil
+}
+
+// ============================================================
+// PARSER FUNCTIONS - PRIORITY 1
+// ============================================================
+
+func (z *ZTEC320Client) parseONUDetail(output string) *ONUDetail {
+	detail := &ONUDetail{}
+	lines := strings.Split(output, "\n")
+	
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if strings.Contains(line, "ONU Name") {
+			detail.ONUName = z.extractValue(line)
+		} else if strings.Contains(line, "ONU Type") {
+			detail.ONUType = z.extractValue(line)
+		} else if strings.Contains(line, "SN") && !strings.Contains(line, "Serial") {
+			detail.ONUSN = z.extractValue(line)
+		} else if strings.Contains(line, "Admin State") {
+			detail.AdminState = z.extractValue(line)
+		} else if strings.Contains(line, "Phase State") {
+			detail.PhaseState = z.extractValue(line)
+		} else if strings.Contains(line, "Channel") {
+			detail.ChannelState = z.extractValue(line)
+		} else if strings.Contains(line, "Authentication") {
+			detail.Authentication = z.extractValue(line)
+		} else if strings.Contains(line, "OMCC") {
+			detail.Omcc = z.extractValue(line)
+		} else if strings.Contains(line, "FEC Up") {
+			detail.FecUp = z.extractValue(line)
+		} else if strings.Contains(line, "FEC Down") {
+			detail.FecDown = z.extractValue(line)
+		} else if strings.Contains(line, "Line Profile") {
+			detail.LineProfile = z.extractValue(line)
+		} else if strings.Contains(line, "Remote Profile") {
+			detail.RemoteProfile = z.extractValue(line)
+		} else if strings.Contains(line, "Description") {
+			detail.Description = z.extractValue(line)
+		} else if strings.Contains(line, "Last Down Reason") {
+			detail.LastDownReason = z.extractValue(line)
+		} else if strings.Contains(line, "Last Down Time") {
+			detail.LastDownTime = z.extractValue(line)
+		}
+	}
+	
+	return detail
+}
+
+func (z *ZTEC320Client) parseONUDistance(output string) []ONUDistance {
+	var distances []ONUDistance
+	lines := strings.Split(output, "\n")
+	
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "ONU") || strings.HasPrefix(line, "---") {
+			continue
+		}
+		fields := strings.Fields(line)
+		if len(fields) >= 4 {
+			distances = append(distances, ONUDistance{
+				ONUID:     fields[0],
+				ONUType:   fields[1],
+				Distance:  fields[2],
+				Equalizer: fields[3],
+			})
+		}
+	}
+	
+	return distances
+}
+
+func (z *ZTEC320Client) parseONUTraffic(output string) *ONUTraffic {
+	traffic := &ONUTraffic{}
+	lines := strings.Split(output, "\n")
+	
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if strings.Contains(line, "gpon-onu") {
+			traffic.Interface = strings.Fields(line)[0]
+		} else if strings.Contains(line, "Tx-rate") {
+			traffic.TxRate = z.extractValue(line)
+		} else if strings.Contains(line, "Rx-rate") {
+			traffic.RxRate = z.extractValue(line)
+		}
+	}
+	
+	return traffic
+}
+
+func (z *ZTEC320Client) parseONUOptical(output string) *ONUOptical {
+	optical := &ONUOptical{}
+	lines := strings.Split(output, "\n")
+	
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if strings.Contains(line, "ONU Name") {
+			optical.ONUName = z.extractValue(line)
+		} else if strings.Contains(line, "ONU Type") {
+			optical.ONUType = z.extractValue(line)
+		} else if strings.Contains(line, "SN") && !strings.Contains(line, "Serial") {
+			optical.ONUSN = z.extractValue(line)
+		} else if strings.Contains(line, "Optical Power") || strings.Contains(line, "Tx Power") {
+			optical.OpticalPower = z.extractValue(line)
+		} else if strings.Contains(line, "Rx Power") {
+			optical.RxPower = z.extractValue(line)
+		} else if strings.Contains(line, "Temperature") {
+			optical.ONUTemp = z.extractValue(line)
+		} else if strings.Contains(line, "Voltage") {
+			optical.Voltage = z.extractValue(line)
+		} else if strings.Contains(line, "Bias Current") {
+			optical.BiasCurrent = z.extractValue(line)
+		}
+	}
+	
+	return optical
+}
+
+// ============================================================
+// PARSER FUNCTIONS - PRIORITY 2
+// ============================================================
+
+func (z *ZTEC320Client) parseSubCard(output string) []SubCardInfo {
+	var subcards []SubCardInfo
+	lines := strings.Split(output, "\n")
+	
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "Rack") || strings.HasPrefix(line, "---") {
+			continue
+		}
+		fields := strings.Fields(line)
+		if len(fields) >= 5 {
+			rack, _ := strconv.Atoi(fields[0])
+			shelf, _ := strconv.Atoi(fields[1])
+			slot, _ := strconv.Atoi(fields[2])
+			subslot, _ := strconv.Atoi(fields[3])
+			subcards = append(subcards, SubCardInfo{
+				Rack:    rack,
+				Shelf:   shelf,
+				Slot:    slot,
+				SubSlot: subslot,
+				Type:    fields[4],
+				Status:  fields[5],
+			})
+		}
+	}
+	
+	return subcards
+}
+
+// ============================================================
+// PARSER FUNCTIONS - PRIORITY 3
+// ============================================================
+
+func (z *ZTEC320Client) parseIPProfile(output string) *IPProfile {
+	profile := &IPProfile{}
+	lines := strings.Split(output, "\n")
+	
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if strings.Contains(line, "Profile Name") {
+			profile.Name = z.extractValue(line)
+		} else if strings.Contains(line, "IP Address") {
+			profile.IPAddress = z.extractValue(line)
+		} else if strings.Contains(line, "Mask") {
+			profile.Mask = z.extractValue(line)
+		} else if strings.Contains(line, "Gateway") {
+			profile.Gateway = z.extractValue(line)
+		}
+	}
+	
+	return profile
+}
+
+func (z *ZTEC320Client) parseSIPProfile(output string) *SIPProfile {
+	profile := &SIPProfile{}
+	lines := strings.Split(output, "\n")
+	
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if strings.Contains(line, "Profile Name") {
+			profile.Name = z.extractValue(line)
+		} else if strings.Contains(line, "Proxy Server") {
+			profile.ProxyServer = z.extractValue(line)
+		} else if strings.Contains(line, "Registrar") {
+			profile.Registrar = z.extractValue(line)
+		} else if strings.Contains(line, "Outbound") {
+			profile.Outbound = z.extractValue(line)
+		}
+	}
+	
+	return profile
+}
+
+func (z *ZTEC320Client) parseMGCProfile(output string) *MGCProfile {
+	profile := &MGCProfile{}
+	lines := strings.Split(output, "\n")
+	
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if strings.Contains(line, "Profile Name") {
+			profile.Name = z.extractValue(line)
+		} else if strings.Contains(line, "MGC1 IP") {
+			profile.MGC1IP = z.extractValue(line)
+		} else if strings.Contains(line, "MGC1 Port") {
+			profile.MGC1Port = z.extractValue(line)
+		} else if strings.Contains(line, "MGC2 IP") {
+			profile.MGC2IP = z.extractValue(line)
+		} else if strings.Contains(line, "MGC2 Port") {
+			profile.MGC2Port = z.extractValue(line)
+		}
+	}
+	
+	return profile
+}
+
+// ============================================================
+// PARSER FUNCTIONS - PRIORITY 4
+// ============================================================
+
+func (z *ZTEC320Client) parseProfileList(output string) []string {
+	var profiles []string
+	lines := strings.Split(output, "\n")
+	
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "Profile") || strings.HasPrefix(line, "---") {
+			continue
+		}
+		fields := strings.Fields(line)
+		if len(fields) > 0 {
+			profiles = append(profiles, fields[0])
+		}
+	}
+	
+	return profiles
+}
+
+func (z *ZTEC320Client) parseLineProfile(output string) *LineProfile {
+	profile := &LineProfile{}
+	lines := strings.Split(output, "\n")
+	
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if strings.Contains(line, "Profile Name") {
+			profile.Name = z.extractValue(line)
+		}
+	}
+	
+	return profile
+}
+
+func (z *ZTEC320Client) parseRemoteProfile(output string) *RemoteProfile {
+	profile := &RemoteProfile{}
+	lines := strings.Split(output, "\n")
+	
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if strings.Contains(line, "Profile Name") {
+			profile.Name = z.extractValue(line)
+		}
+	}
+	
+	return profile
+}
+
+// ============================================================
+// PARSER FUNCTIONS - PRIORITY 5
+// ============================================================
+
+func (z *ZTEC320Client) parseVLANList(output string) []VLANInfo {
+	var vlans []VLANInfo
+	lines := strings.Split(output, "\n")
+	
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "VLAN") || strings.HasPrefix(line, "---") {
+			continue
+		}
+		fields := strings.Fields(line)
+		if len(fields) >= 2 {
+			id, err := strconv.Atoi(fields[0])
+			if err == nil {
+				vlans = append(vlans, VLANInfo{
+					ID:   id,
+					Type: fields[1],
+				})
+			}
+		}
+	}
+	
+	return vlans
+}
+
+// ============================================================
+// PARSER FUNCTIONS - PRIORITY 6
+// ============================================================
+
+func (z *ZTEC320Client) parseIGMPMVlan(output string) []IGMPMVlanInfo {
+	var mvlan []IGMPMVlanInfo
+	lines := strings.Split(output, "\n")
+	
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "MVLAN") || strings.HasPrefix(line, "---") {
+			continue
+		}
+		fields := strings.Fields(line)
+		if len(fields) >= 1 {
+			id, err := strconv.Atoi(fields[0])
+			if err == nil {
+				mvlan = append(mvlan, IGMPMVlanInfo{
+					MVLANID: id,
+				})
+			}
+		}
+	}
+	
+	return mvlan
+}
+
+func (z *ZTEC320Client) parseIGMPMVlanDetail(output string) *IGMPMVlanInfo {
+	mvlan := &IGMPMVlanInfo{}
+	lines := strings.Split(output, "\n")
+	
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if strings.Contains(line, "MVLAN ID") {
+			mvlan.MVLANID, _ = strconv.Atoi(z.extractValue(line))
+		} else if strings.Contains(line, "Source IP") {
+			mvlan.SourceIP = z.extractValue(line)
+		} else if strings.Contains(line, "Work Mode") {
+			mvlan.WorkMode = z.extractValue(line)
+		}
+	}
+	
+	if mvlan.MVLANID > 0 {
+		return mvlan
+	}
+	return nil
+}
+
+// ============================================================
+// PARSER FUNCTIONS - PRIORITY 7
+// ============================================================
+
+func (z *ZTEC320Client) parseInterfaceStats(output string) *InterfaceStats {
+	stats := &InterfaceStats{}
+	lines := strings.Split(output, "\n")
+	
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if strings.Contains(line, "Interface") && !strings.Contains(line, "Input") {
+			stats.Name = strings.Fields(line)[0]
+		} else if strings.Contains(line, "Status") {
+			stats.Status = z.extractValue(line)
+		}
+	}
+	
+	return stats
+}
+
+// ============================================================
+// PARSER FUNCTIONS - PRIORITY 8
+// ============================================================
+
+func (z *ZTEC320Client) parseOnlineUsers(output string) []OnlineUser {
+	var users []OnlineUser
+	lines := strings.Split(output, "\n")
+	
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "Username") || strings.HasPrefix(line, "---") {
+			continue
+		}
+		fields := strings.Fields(line)
+		if len(fields) >= 3 {
+			users = append(users, OnlineUser{
+				Username:  fields[0],
+				IP:        fields[1],
+				LoginTime: fields[2],
+			})
+		}
+	}
+	
+	return users
+}
