@@ -1,457 +1,377 @@
 # SNMP-ZTE
 
-API SNMP stateless untuk ZTE OLT (C320, C300, C600) - bagian dari Billing Management System.
+API SNMP + CLI untuk ZTE OLT (C320, C300, C600) - Monitoring & Provisioning
 
-## 🎯 Fitur
+## ✨ Fitur
 
-- ✅ **23 Endpoint SNMP** - Monitoring & Provisioning
-- ✅ **12 Endpoint CLI** - SSH Commands
-- ✅ **Stateless API** - Tidak menyimpan data kredensial
-- ✅ **Multi-Model Support** - ZTE C320, C300, C600
-- ✅ **SNMPv2c** - Read-Only & Read-Write support
-- ✅ **SSH/CLI** - Full CLI access via SSH
-- ✅ **Swagger Documentation** - API docs otomatis
+- ✅ **71 Endpoints Total** - 51 READ + 20 WRITE
+- ✅ **SNMPv2c** - Read-Only & Read-Write
+- ✅ **CLI via Telnet** - Full CLI access
+- ✅ **Multi-Model** - ZTE C320, C300, C600
+- ✅ **Swagger Docs** - API documentation
 - ✅ **Docker Ready** - Container deployment
+- ✅ **Keep-Alive Connection** - Reusable connection
 
-## 📋 Endpoints
+## 📊 Endpoints (71 Total)
 
-### Phase 1: Core (12 endpoints)
-| Endpoint | Fungsi |
-|----------|--------|
-| `health` | Health check API |
-| `onu_list` | Daftar semua ONU di PON |
-| `onu_detail` | Detail lengkap ONU |
-| `empty_slots` | Cari slot ONU kosong |
-| `system_info` | Info sistem OLT |
-| `board_info` | Status board (CPU, Memory) |
-| `all_boards` | Semua board |
-| `pon_info` | Info PON port |
-| `interface_stats` | Traffic semua interface |
-| `fan_info` | Status fan |
-| `temperature_info` | Suhu OLT |
-| `onu_traffic` | Traffic per ONU |
+### READ Endpoints (51)
 
-### Phase 2: Bandwidth (4 endpoints)
-| Endpoint | Fungsi |
-|----------|--------|
-| `onu_bandwidth` | Bandwidth SLA per ONU |
-| `pon_port_stats` | Traffic per PON port |
-| `onu_errors` | Error counter per ONU |
-| `voltage_info` | Voltage OLT |
+#### System (1)
+```
+GET  /health
+POST /api/v1/cli/system/clock
+```
 
-### Phase 3: Provisioning (4 endpoints)
-| Endpoint | Fungsi | Method |
-|----------|--------|--------|
-| `onu_create` | Buat ONU baru | SNMP SET |
-| `onu_delete` | Hapus ONU | SNMP SET |
-| `onu_rename` | Rename ONU | SNMP SET |
-| `onu_status` | Status ONU (online/offline) | SNMP GET |
+#### Hardware (8)
+```
+POST /api/v1/cli/card
+POST /api/v1/cli/card/slot
+POST /api/v1/cli/rack
+POST /api/v1/cli/shelf
+POST /api/v1/cli/subcard
+POST /api/v1/cli/fan
+POST /api/v1/cli/power
+POST /api/v1/cli/temperature
+```
 
-### Phase 4 & 5: Statistics & VLAN (3 endpoints)
-| Endpoint | Fungsi |
-|----------|--------|
-| `distance_info` | Jarak ONU (meter) |
-| `vlan_list` | Daftar semua VLAN |
-| `vlan_info` | Info VLAN by ID |
+#### GPON Profiles (9)
+```
+POST /api/v1/cli/gpon/tcont
+POST /api/v1/cli/gpon/onu-type
+POST /api/v1/cli/gpon/vlan-profile
+POST /api/v1/cli/gpon/ip-profile
+POST /api/v1/cli/gpon/sip-profile
+POST /api/v1/cli/gpon/mgc-profile
+POST /api/v1/cli/gpon/dial-plan
+POST /api/v1/cli/gpon/voip-accesscode
+POST /api/v1/cli/gpon/voip-appsrv
+```
+
+#### GPON ONU (8)
+```
+POST /api/v1/cli/onu/state
+POST /api/v1/cli/onu/uncfg
+POST /api/v1/cli/onu/config
+POST /api/v1/cli/onu/running
+POST /api/v1/cli/onu/detail
+POST /api/v1/cli/onu/baseinfo
+POST /api/v1/cli/onu/traffic
+POST /api/v1/cli/onu/optical
+```
+
+#### Line & Remote Profiles (4)
+```
+POST /api/v1/cli/profile/line/list
+POST /api/v1/cli/profile/line
+POST /api/v1/cli/profile/remote/list
+POST /api/v1/cli/profile/remote
+```
+
+#### VLAN (2)
+```
+POST /api/v1/cli/vlan/list
+POST /api/v1/cli/vlan/id
+```
+
+#### Interface (4)
+```
+POST /api/v1/cli/interface
+POST /api/v1/cli/interface/detail
+POST /api/v1/cli/interface/mng
+POST /api/v1/cli/interface/vlan
+```
+
+#### Service Port (1)
+```
+POST /api/v1/cli/service-port
+```
+
+#### IGMP/Multicast (6)
+```
+POST /api/v1/cli/igmp
+POST /api/v1/cli/igmp/mvlan
+POST /api/v1/cli/igmp/mvlan/id
+POST /api/v1/cli/igmp/dynamic-member
+POST /api/v1/cli/igmp/forwarding-table
+POST /api/v1/cli/igmp/interface
+```
+
+#### User Management (2)
+```
+POST /api/v1/cli/user/list
+POST /api/v1/cli/user/online
+```
+
+#### SNMP Configuration (2)
+```
+POST /api/v1/cli/snmp/community
+POST /api/v1/cli/snmp/host
+```
+
+#### Configuration (4)
+```
+POST /api/v1/cli/config/running
+POST /api/v1/cli/config/save
+POST /api/v1/cli/config/backup
+POST /api/v1/cli/config/restore
+```
+
+### WRITE Endpoints (20)
+
+#### ONU Provisioning (4)
+```
+POST /api/v1/cli/onu/auth          ← Authenticate ONU
+POST /api/v1/cli/onu/delete        ← Delete ONU
+POST /api/v1/cli/onu/rename        ← Rename ONU
+POST /api/v1/cli/onu/reset         ← Reset/Reboot ONU
+```
+
+#### T-CONT & GEM Port (2)
+```
+POST /api/v1/cli/tcont/create      ← Create T-CONT
+POST /api/v1/cli/gemport/create    ← Create GEM Port
+```
+
+#### Service Port (2)
+```
+POST /api/v1/cli/service-port/create   ← Create Service Port
+POST /api/v1/cli/service-port/delete   ← Delete Service Port
+```
+
+#### VLAN (3)
+```
+POST /api/v1/cli/vlan/create       ← Create VLAN
+POST /api/v1/cli/vlan/delete       ← Delete VLAN
+POST /api/v1/cli/vlan/port/add     ← Add Port to VLAN
+```
+
+#### Profile Creation (4)
+```
+POST /api/v1/cli/profile/line/create   ← Create Line Profile
+POST /api/v1/cli/profile/remote/create ← Create Remote Profile
+POST /api/v1/cli/profile/vlan/create   ← Create VLAN Profile
+POST /api/v1/cli/profile/tcont/create  ← Create T-CONT Profile
+```
+
+#### IGMP/Multicast (3)
+```
+POST /api/v1/cli/igmp/enable       ← Enable IGMP
+POST /api/v1/cli/mvlan/create      ← Create MVLAN
+POST /api/v1/cli/mvlan/group/add   ← Add MVLAN Group
+```
 
 ## 🚀 Instalasi
 
 ### Prasyarat
 - Go 1.21+
 - ZTE OLT (C320/C300/C600)
-- SNMP community string (public/globalrw)
+- Telnet akses (port 23)
+- SNMP community (optional)
 
-### 1. Clone Repository
+### 1. Clone & Build
 
 ```bash
 git clone https://github.com/ardani17/snmp-zte.git
 cd snmp-zte
-```
-
-### 2. Build
-
-```bash
 go build -o snmp-zte ./cmd/api
 ```
 
-### 3. Run
+### 2. Run
 
 ```bash
 ./snmp-zte
 ```
 
-Server akan berjalan di `http://localhost:8080`
+Server berjalan di `http://localhost:8080`
 
-### 4. Docker (Opsional)
+### 3. Docker
 
 ```bash
-# Build image
 docker build -t snmp-zte .
-
-# Run container
 docker run -p 8080:8080 snmp-zte
 ```
 
 ## 📖 Penggunaan
 
-### Health Check
+### Authentication
 
+Semua request memerlukan Basic Auth:
+- Username: `admin` (default)
+- Password: `testing123` (default)
+
+Set via environment:
 ```bash
-curl http://localhost:8080/health
+export AUTH_USER=admin
+export AUTH_PASS=yourpassword
 ```
 
-Response:
-```json
-{
-  "code": 200,
-  "status": "OK",
-  "data": {
-    "status": "healthy"
-  }
-}
-```
+### Request Format
 
-### Query OLT
-
-**Request:**
 ```bash
-curl -X POST http://localhost:8080/api/v1/query \
+curl -X POST http://localhost:8080/api/v1/cli/ENDPOINT \
   -H "Content-Type: application/json" \
-  -d '{
-    "ip": "192.168.1.1",
-    "port": 161,
-    "community": "public",
-    "model": "C320",
-    "query": "onu_list",
-    "board": 1,
-    "pon": 1
-  }'
-```
-
-**Response:**
-```json
-{
-  "code": 200,
-  "status": "OK",
-  "data": {
-    "query": "onu_list",
-    "data": [
-      {
-        "onu_id": 1,
-        "name": "customer-1",
-        "status": "online"
-      }
-    ],
-    "timestamp": "2026-02-24T10:00:00Z",
-    "duration": "265ms"
-  }
-}
-```
-
-### Provisioning ONU
-
-**Create ONU:**
-```bash
-curl -X POST http://localhost:8080/api/v1/query \
-  -H "Content-Type: application/json" \
-  -d '{
-    "ip": "192.168.1.1",
-    "port": 161,
-    "community": "globalrw",
-    "model": "C320",
-    "query": "onu_create",
-    "board": 1,
-    "pon": 1,
-    "onu_id": 50,
-    "name": "customer-new"
-  }'
-```
-
-**Delete ONU:**
-```bash
-curl -X POST http://localhost:8080/api/v1/query \
-  -H "Content-Type: application/json" \
-  -d '{
-    "ip": "192.168.1.1",
-    "port": 161,
-    "community": "globalrw",
-    "model": "C320",
-    "query": "onu_delete",
-    "board": 1,
-    "pon": 1,
-    "onu_id": 50
-  }'
-```
-
-**Rename ONU:**
-```bash
-curl -X POST http://localhost:8080/api/v1/query \
-  -H "Content-Type: application/json" \
-  -d '{
-    "ip": "192.168.1.1",
-    "port": 161,
-    "community": "globalrw",
-    "model": "C320",
-    "query": "onu_rename",
-    "board": 1,
-    "pon": 1,
-    "onu_id": 50,
-    "name": "customer-renamed"
-  }'
-```
-
-## 🔐 Community Strings
-
-| Community | Akses | Penggunaan |
-|-----------|-------|------------|
-| `public` | Read-Only | Monitoring |
-| `globalrw` | Read-Write | Provisioning |
-
-⚠️ **Penting:** Untuk provisioning (create/delete/rename), gunakan community `globalrw` atau community write lainnya.
-
-## 📊 Swagger Documentation
-
-Akses dokumentasi API di:
-```
-http://localhost:8080/swagger/index.html
-```
-
-## 🔧 Konfigurasi
-
-### Environment Variables
-
-| Variable | Default | Deskripsi |
-|----------|---------|-----------|
-| `PORT` | 8080 | Port server |
-| `GIN_MODE` | debug | Mode gin (debug/release) |
-
-### Docker Compose
-
-```yaml
-version: '3.8'
-services:
-  snmp-zte:
-    image: snmp-zte:latest
-    ports:
-      - "8080:8080"
-    environment:
-      - GIN_MODE=release
-    restart: unless-stopped
-```
-
-## 📁 Struktur Proyek
-
-```
-snmp-zte/
-├── cmd/
-│   └── api/
-│       └── main.go          # Entry point
-├── internal/
-│   ├── cli/
-│   │   ├── client.go        # SSH client
-│   │   └── zte_c320.go      # ZTE C320 CLI commands
-│   ├── driver/
-│   │   ├── driver.go        # Interface driver
-│   │   └── c320/
-│   │       ├── driver.go    # Implementasi C320
-│   │       └── oids.go      # OID definitions
-│   ├── handler/
-│   │   ├── query.go         # SNMP HTTP handlers
-│   │   ├── cli.go           # CLI HTTP handlers
-│   │   ├── olt.go           # OLT CRUD handlers
-│   │   └── onu.go           # ONU handlers
-│   ├── model/
-│   │   ├── olt.go           # Model OLT
-│   │   └── onu.go           # Model ONU
-│   └── snmp/
-│       └── pool.go          # SNMP connection pool
-├── docs/
-│   ├── MIB_DATABASE.md      # OID database
-│   ├── PROVISIONING_CAPABILITIES.md
-│   └── ...
-├── pkg/
-│   └── response/
-│       └── response.go      # Response helper
-├── go.mod
-├── go.sum
-├── Dockerfile
-└── README.md
-```
-
-## 🔬 OID Research
-
-Semua OID yang digunakan telah diteliti dan didokumentasikan:
-
-- **598 OID** ditemukan via SNMP walk
-- **23 OID** diimplementasikan dalam API
-- Dokumentasi lengkap: `docs/MIB_DATABASE.md`
-
-## 🖥️ CLI Endpoints (SSH)
-
-Selain SNMP, API ini juga mendukung CLI commands via SSH untuk fitur yang tidak tersedia via SNMP.
-
-### Endpoint CLI
-
-| Method | Endpoint | Fungsi |
-|--------|----------|--------|
-| POST | `/api/v1/cli` | General CLI (query-based) |
-| POST | `/api/v1/cli/card` | Show card status |
-| POST | `/api/v1/cli/onu/state` | Show ONU state per slot |
-| POST | `/api/v1/cli/onu/uncfg` | Show unconfigured ONUs |
-| POST | `/api/v1/cli/onu/auth` | Authenticate/register ONU |
-| POST | `/api/v1/cli/onu/delete` | Delete ONU |
-
-### Supported CLI Queries
-
-| Query | Fungsi | CLI Command |
-|-------|--------|-------------|
-| `show_card` | Status semua card | `show card` |
-| `show_card_slot` | Status card tertentu | `show card slotno X` |
-| `show_gpon_onu_uncfg` | ONU belum terdaftar | `show gpon onu uncfg gpon-olt_X/Y/Z` |
-| `show_gpon_onu_state` | State ONU | `show gpon onu state gpon-olt_X/Y/Z` |
-| `show_gpon_profile_tcont` | T-CONT profiles | `show gpon profile tcont` |
-| `show_onu_type` | Tipe ONU | `show onu-type gpon [TYPE]` |
-| `show_fan` | Status fan | `show fan` |
-| `show_version` | Versi sistem | `show version` |
-| `show_clock` | Waktu sistem | `show clock` |
-| `show_running_config` | Running config | `show running-config` |
-| `onu_authenticate` | Daftarkan ONU | `onu X type TYPE sn SN` |
-| `onu_delete` | Hapus ONU | `no onu X` |
-| `save_config` | Simpan konfigurasi | `write` |
-
-### Contoh CLI Request
-
-**Show Card:**
-```bash
-curl -X POST http://localhost:8080/api/v1/cli/card \
-  -H "Content-Type: application/json" \
+  -u "admin:testing123" \
   -d '{
     "host": "192.168.1.1",
-    "port": 22,
+    "port": 23,
     "username": "zte",
     "password": "zte"
   }'
 ```
 
-**Show Unconfigured ONUs:**
+### Examples
+
+#### Show ONU State
 ```bash
-curl -X POST http://localhost:8080/api/v1/cli/onu/uncfg \
+curl -X POST http://localhost:8080/api/v1/cli/onu/state \
   -H "Content-Type: application/json" \
+  -u "admin:testing123" \
   -d '{
     "host": "192.168.1.1",
+    "port": 23,
     "username": "zte",
     "password": "zte",
     "slot": 1
   }'
 ```
 
-**Authenticate ONU:**
+#### Authenticate ONU
 ```bash
 curl -X POST http://localhost:8080/api/v1/cli/onu/auth \
   -H "Content-Type: application/json" \
+  -u "admin:testing123" \
   -d '{
     "host": "192.168.1.1",
+    "port": 23,
     "username": "zte",
     "password": "zte",
     "slot": 1,
     "onu_id": 1,
     "onu_type": "ZTEG-F620",
-    "sn": "ZTEG00000002"
+    "sn": "ZTEG00000001"
   }'
 ```
 
-**General CLI Query:**
+#### Create VLAN
 ```bash
-curl -X POST http://localhost:8080/api/v1/cli \
+curl -X POST http://localhost:8080/api/v1/cli/vlan/create \
   -H "Content-Type: application/json" \
+  -u "admin:testing123" \
   -d '{
     "host": "192.168.1.1",
+    "port": 23,
     "username": "zte",
     "password": "zte",
-    "query": "show_gpon_onu_state",
-    "slot": 1
+    "vlan_id": 100,
+    "name": "VLAN_100"
   }'
 ```
 
-## ⚠️ Limitations
+## 📚 API Documentation
 
-### SNMP vs CLI
+Swagger UI: `http://localhost:8080/swagger/index.html`
 
-| Fitur | SNMP | CLI (SSH) |
-|-------|------|-----------|
-| ONU List | ✅ | ✅ |
-| ONU Detail | ✅ | ✅ |
-| ONU Create | ✅ | ✅ |
-| ONU Delete | ✅ | ✅ |
-| ONU Rename | ✅ | ✅ |
-| ONU Reset/Reboot | ❌ | ✅ |
-| MAC Address Table | ❌ | ✅ |
-| Active Alarms | ❌ | ✅ |
-| VLAN Configuration | ❌ | ✅ |
-| Service Ports | ❌ | ✅ |
-| Unconfigured ONUs | ❌ | ✅ |
+## 🔧 Configuration
 
-Untuk fitur yang tidak tersedia via SNMP, gunakan CLI endpoints.
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PORT` | 8080 | Server port |
+| `GIN_MODE` | debug | Gin mode (debug/release) |
+| `AUTH_USER` | admin | Basic auth username |
+| `AUTH_PASS` | testing123 | Basic auth password |
+
+## 📁 Project Structure
+
+```
+snmp-zte/
+├── cmd/api/main.go           # Entry point
+├── internal/
+│   ├── cli/                  # CLI client (Telnet)
+│   ├── handler/              # HTTP handlers
+│   ├── driver/               # SNMP driver
+│   ├── model/                # Data models
+│   ├── snmp/                 # SNMP pool
+│   └── middleware/           # HTTP middleware
+├── docs/                     # Documentation
+├── go.mod
+├── Dockerfile
+└── README.md
+```
+
+## 📊 Endpoint Summary
+
+| Category | READ | WRITE | Total |
+|----------|------|-------|-------|
+| System | 1 | 0 | 1 |
+| Hardware | 8 | 0 | 8 |
+| GPON Profiles | 9 | 0 | 9 |
+| GPON ONU | 8 | 4 | 12 |
+| Line & Remote | 4 | 0 | 4 |
+| VLAN | 2 | 3 | 5 |
+| Interface | 4 | 0 | 4 |
+| Service Port | 1 | 2 | 3 |
+| IGMP/Multicast | 6 | 3 | 9 |
+| User | 2 | 0 | 2 |
+| SNMP | 2 | 0 | 2 |
+| Configuration | 4 | 0 | 4 |
+| T-CONT & GEM | 0 | 2 | 2 |
+| Profile Creation | 0 | 4 | 4 |
+| **TOTAL** | **51** | **20** | **71** |
 
 ## 🧪 Testing
 
-### Test dengan OLT Real
+Test dengan OLT real (91.192.81.36:2323):
 
 ```bash
 # Health check
 curl http://localhost:8080/health
 
-# ONU list
-curl -X POST http://localhost:8080/api/v1/query \
+# Show card
+curl -X POST http://localhost:8080/api/v1/cli/card \
   -H "Content-Type: application/json" \
-  -d '{
-    "ip": "YOUR_OLT_IP",
-    "port": 161,
-    "community": "public",
-    "model": "C320",
-    "query": "onu_list",
-    "board": 1,
-    "pon": 1
-  }'
+  -u "admin:testing123" \
+  -d '{"host":"91.192.81.36","port":2323,"username":"ardani","password":"Ardani@321"}'
+
+# Show ONU state
+curl -X POST http://localhost:8080/api/v1/cli/onu/state \
+  -H "Content-Type: application/json" \
+  -u "admin:testing123" \
+  -d '{"host":"91.192.81.36","port":2323,"username":"ardani","password":"Ardani@321","slot":1}'
 ```
 
-### Test Results (91.192.81.36:2161 - ZTE C320)
+## 📖 Documentation
 
-| Endpoint | Duration | Status |
-|----------|----------|--------|
-| onu_list | 265ms | ✅ |
-| onu_status | 261ms | ✅ |
-| onu_create | 519ms | ✅ |
-| onu_delete | 264ms | ✅ |
-| vlan_list | 263ms | ✅ |
-| profile_list | 5.6s | ✅ |
-| pon_info | 3.9s | ✅ |
-
-## 📚 Dokumentasi
-
-- [MIB Database](docs/MIB_DATABASE.md) - Database 598 OID
-- [Provisioning Capabilities](docs/PROVISIONING_CAPABILITIES.md) - SNMP provisioning
-- [VLAN OID Discovery](docs/VLAN_OID_DISCOVERY.md) - VLAN findings
-- [Research Summary](docs/RISET_SUMMARY.md) - Ringkasan riset (Indonesia)
+- [CLI Reference](docs/C320-CLI-REFERENCE.md) - CLI command reference
+- [Endpoints Status](docs/CLI-ENDPOINTS-STATUS.md) - Implementation status
+- [Quick Reference](docs/C320-SNMP-QUICK-REF.md) - SNMP quick reference
 
 ## 🤝 Contributing
 
 1. Fork repository
-2. Buat branch fitur (`git checkout -b feature/AmazingFeature`)
-3. Commit perubahan (`git commit -m 'Add some AmazingFeature'`)
-4. Push ke branch (`git push origin feature/AmazingFeature`)
-5. Buat Pull Request
+2. Create feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit changes (`git commit -m 'Add AmazingFeature'`)
+4. Push to branch (`git push origin feature/AmazingFeature`)
+5. Open Pull Request
 
 ## 📄 License
 
-MIT License - see [LICENSE](LICENSE) file.
+MIT License
 
 ## 👤 Author
 
-- **Ardani** - [github.com/ardani17](https://github.com/ardani17)
+**Ardani** - [github.com/ardani17](https://github.com/ardani17)
 
 ## 🙏 Acknowledgments
 
 - ZTE Corporation - Hardware documentation
 - go-snmp library - SNMP implementation
-- All contributors and testers
+- Chi router - HTTP routing
+- Swagger - API documentation
+
+---
+
+**Progress:** 100% Complete ✅  
+**Total Endpoints:** 71 (51 READ + 20 WRITE)  
+**Repository:** https://github.com/ardani17/snmp-zte

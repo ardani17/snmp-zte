@@ -103,7 +103,7 @@ func (h *CLIHandler) ShowClock(w http.ResponseWriter, r *http.Request) {
 	}
 	defer client.Close()
 
-	output, err := client.RawCommand(ctx, "show clock")
+	output, err := client.Execute(ctx, "show clock")
 	if err != nil {
 		response.Error(w, http.StatusInternalServerError, err.Error())
 		return
@@ -166,7 +166,7 @@ func (h *CLIHandler) ShowRack(w http.ResponseWriter, r *http.Request) {
 	}
 	defer client.Close()
 
-	output, err := client.RawCommand(ctx, "show rack")
+	output, err := client.Execute(ctx, "show rack")
 	if err != nil {
 		response.Error(w, http.StatusInternalServerError, err.Error())
 		return
@@ -192,7 +192,7 @@ func (h *CLIHandler) ShowShelf(w http.ResponseWriter, r *http.Request) {
 	}
 	defer client.Close()
 
-	output, err := client.RawCommand(ctx, "show shelf")
+	output, err := client.Execute(ctx, "show shelf")
 	if err != nil {
 		response.Error(w, http.StatusInternalServerError, err.Error())
 		return
@@ -218,7 +218,7 @@ func (h *CLIHandler) ShowFan(w http.ResponseWriter, r *http.Request) {
 	}
 	defer client.Close()
 
-	output, err := client.RawCommand(ctx, "show fan")
+	output, err := client.Execute(ctx, "show fan")
 	if err != nil {
 		response.Error(w, http.StatusInternalServerError, err.Error())
 		return
@@ -248,7 +248,7 @@ func (h *CLIHandler) ShowTcontProfile(w http.ResponseWriter, r *http.Request) {
 	}
 	defer client.Close()
 
-	output, err := client.RawCommand(ctx, "show gpon profile tcont")
+	output, err := client.Execute(ctx, "show gpon profile tcont")
 	if err != nil {
 		response.Error(w, http.StatusInternalServerError, err.Error())
 		return
@@ -274,7 +274,7 @@ func (h *CLIHandler) ShowOnuType(w http.ResponseWriter, r *http.Request) {
 	}
 	defer client.Close()
 
-	output, err := client.RawCommand(ctx, "show onu-type gpon")
+	output, err := client.Execute(ctx, "show onu-type gpon")
 	if err != nil {
 		response.Error(w, http.StatusInternalServerError, err.Error())
 		return
@@ -300,7 +300,7 @@ func (h *CLIHandler) ShowVlanProfile(w http.ResponseWriter, r *http.Request) {
 	}
 	defer client.Close()
 
-	output, err := client.RawCommand(ctx, "show gpon onu profile vlan")
+	output, err := client.Execute(ctx, "show gpon onu profile vlan")
 	if err != nil {
 		response.Error(w, http.StatusInternalServerError, err.Error())
 		return
@@ -434,7 +434,7 @@ func (h *CLIHandler) ShowONUConfig(w http.ResponseWriter, r *http.Request) {
 	defer client.Close()
 
 	cmd := fmt.Sprintf("show running-config interface gpon-onu_%d/%d/%d:%d", rack, shelf, req.Slot, req.OnuID)
-	output, err := client.RawCommand(ctx, cmd)
+	output, err := client.Execute(ctx, cmd)
 	if err != nil {
 		response.Error(w, http.StatusInternalServerError, err.Error())
 		return
@@ -478,7 +478,7 @@ func (h *CLIHandler) ShowONURunning(w http.ResponseWriter, r *http.Request) {
 	defer client.Close()
 
 	cmd := fmt.Sprintf("show onu running config gpon-onu_%d/%d/%d:%d", rack, shelf, req.Slot, req.OnuID)
-	output, err := client.RawCommand(ctx, cmd)
+	output, err := client.Execute(ctx, cmd)
 	if err != nil {
 		response.Error(w, http.StatusInternalServerError, err.Error())
 		return
@@ -517,7 +517,7 @@ func (h *CLIHandler) ShowInterface(w http.ResponseWriter, r *http.Request) {
 	defer client.Close()
 
 	cmd := fmt.Sprintf("show interface %s", req.Name)
-	output, err := client.RawCommand(ctx, cmd)
+	output, err := client.Execute(ctx, cmd)
 	if err != nil {
 		response.Error(w, http.StatusInternalServerError, err.Error())
 		return
@@ -543,7 +543,7 @@ func (h *CLIHandler) ShowMgmtInterface(w http.ResponseWriter, r *http.Request) {
 	}
 	defer client.Close()
 
-	output, err := client.RawCommand(ctx, "show interface mng1")
+	output, err := client.Execute(ctx, "show interface mng1")
 	if err != nil {
 		response.Error(w, http.StatusInternalServerError, err.Error())
 		return
@@ -591,7 +591,7 @@ func (h *CLIHandler) ShowServicePort(w http.ResponseWriter, r *http.Request) {
 	defer client.Close()
 
 	cmd := fmt.Sprintf("show service-port interface gpon-onu_%d/%d/%d:%d", rack, shelf, req.Slot, req.OnuID)
-	output, err := client.RawCommand(ctx, cmd)
+	output, err := client.Execute(ctx, cmd)
 	if err != nil {
 		response.Error(w, http.StatusInternalServerError, err.Error())
 		return
@@ -621,7 +621,7 @@ func (h *CLIHandler) ShowIGMP(w http.ResponseWriter, r *http.Request) {
 	}
 	defer client.Close()
 
-	output, err := client.RawCommand(ctx, "show igmp")
+	output, err := client.Execute(ctx, "show igmp")
 	if err != nil {
 		response.Error(w, http.StatusInternalServerError, err.Error())
 		return
@@ -651,7 +651,7 @@ func (h *CLIHandler) ShowUsers(w http.ResponseWriter, r *http.Request) {
 	}
 	defer client.Close()
 
-	output, err := client.RawCommand(ctx, "show username")
+	output, err := client.Execute(ctx, "show username")
 	if err != nil {
 		response.Error(w, http.StatusInternalServerError, err.Error())
 		return

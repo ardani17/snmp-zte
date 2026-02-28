@@ -3,7 +3,6 @@ package cli
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -29,6 +28,11 @@ func (z *ZTEC320Client) Connect() error {
 // Close menutup koneksi
 func (z *ZTEC320Client) Close() error {
 	return z.client.Close()
+}
+
+// Execute menjalankan command mentah (wrapper for client.Execute)
+func (z *ZTEC320Client) Execute(ctx context.Context, cmd string) (string, error) {
+	return z.client.Execute(ctx, cmd)
 }
 
 // ============================================================
@@ -1869,8 +1873,34 @@ func (z *ZTEC320Client) parseOnlineUsers(output string) []OnlineUser {
 }
 
 // ============================================================
-// PARSER FUNCTIONS - REMAINING ENDPOINTS
+// UTILITY FUNCTIONS
 // ============================================================
+
+// ValidateSN memvalidasi format Serial Number ONU
+func ValidateSN(sn string) bool {
+	// ZTE SN format: ZTEG00000002 (4 letters + 8 hex)
+	if len(sn) != 12 {
+		return false
+	}
+	
+	// Check first 4 characters are uppercase letters
+	for i := 0; i < 4; i++ {
+		c := sn[i]
+		if c < 'A' || c > 'Z' {
+			return false
+		}
+	}
+	
+	// Check last 8 characters are hex digits
+	for i := 4; i < 12; i++ {
+		c := sn[i]
+		if !((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f')) {
+			return false
+		}
+	}
+	
+	return true
+}
 
 func (z *ZTEC320Client) parseDialPlanProfile(output string) *DialPlanProfile {
 	profile := &DialPlanProfile{}
