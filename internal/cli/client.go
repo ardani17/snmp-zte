@@ -106,16 +106,16 @@ func (c *Client) send(data string) error {
 
 // readUntil membaca sampai menemukan salah satu pattern
 func (c *Client) readUntil(patterns ...string) (string, error) {
-	buf := make([]byte, 4096)
+	buf := make([]byte, 8192)
 	result := new(bytes.Buffer)
-	timeout := time.After(5 * time.Second)
+	timeout := time.After(10 * time.Second)
 
 	for {
 		select {
 		case <-timeout:
 			return result.String(), fmt.Errorf("timeout waiting for prompt")
 		default:
-			c.conn.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
+			c.conn.SetReadDeadline(time.Now().Add(200 * time.Millisecond))
 			n, err := c.conn.Read(buf)
 			if err != nil && err != io.EOF {
 				if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
@@ -150,8 +150,8 @@ func (c *Client) Execute(ctx context.Context, cmd string) (string, error) {
 	}
 
 	// Clear buffer first
-	buf := make([]byte, 4096)
-	c.conn.SetReadDeadline(time.Now().Add(50 * time.Millisecond))
+	buf := make([]byte, 8192)
+	c.conn.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
 	c.conn.Read(buf)
 
 	// Send command
@@ -159,15 +159,58 @@ func (c *Client) Execute(ctx context.Context, cmd string) (string, error) {
 		return "", err
 	}
 
-	// Wait for response
-	time.Sleep(200 * time.Millisecond)
-	output, err := c.readUntil("ZXAN#", "ZXAN(config)#", "ZXAN(config-if)#", "ZXAN(gpon-onu-mng)#")
+	// Wait for response (longer for complex commands)
+	time.Sleep(500 * time.Millisecond)
+	
+	// Use longer timeout for commands that might take time
+	output, err := c.readWithPagination(cmd)
 	if err != nil {
 		return "", err
 	}
 
 	// Clean output
 	return c.cleanOutput(output, cmd), nil
+}
+
+// readWithPagination membaca output dengan handle pagination dan timeout lebih lama
+func (c *Client) readWithPagination(cmd string) (string, error) {
+	buf := make([]byte, 16384) // Larger buffer
+	result := new(bytes.Buffer)
+	deadline := time.Now().Add(30 * time.Second) // 30 second total timeout
+
+	for time.Now().Before(deadline) {
+		c.conn.SetReadDeadline(time.Now().Add(500 * time.Millisecond))
+		n, err := c.conn.Read(buf)
+		if err != nil && err != io.EOF {
+			if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
+				output := result.String()
+				
+				// Check for prompt (command finished)
+				if strings.Contains(output, "ZXAN#") || 
+				   strings.Contains(output, "ZXAN(config)#") ||
+				   strings.Contains(output, "#") {
+					return output, nil
+				}
+				
+				// Check for pagination "--More--"
+				if strings.Contains(output, "--More--") || 
+				   strings.Contains(output, "(q to quit)") {
+					// Send space to continue
+					c.conn.Write([]byte(" "))
+					time.Sleep(200 * time.Millisecond)
+					continue
+				}
+				
+				continue
+			}
+			return result.String(), err
+		}
+		if n > 0 {
+			result.Write(buf[:n])
+		}
+	}
+
+	return result.String(), fmt.Errorf("timeout after 30s")
 }
 
 // cleanOutput membersihkan output dari command echo dan prompt
