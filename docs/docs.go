@@ -9,12 +9,689 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "contact": {},
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "API Support",
+            "email": "ardani@example.com"
+        },
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        },
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/v1/cli/card": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CLI-Hardware"
+                ],
+                "summary": "Show Card Status",
+                "parameters": [
+                    {
+                        "description": "Connection",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.CLIRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ardani_snmp-zte_pkg_response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cli/card/{slot}": {
+            "post": {
+                "tags": [
+                    "CLI-Hardware"
+                ],
+                "summary": "Show Card by Slot",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/config/backup": {
+            "post": {
+                "tags": [
+                    "CLI-Config"
+                ],
+                "summary": "Backup Config to TFTP",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/config/restore": {
+            "post": {
+                "tags": [
+                    "CLI-Config"
+                ],
+                "summary": "Restore Config from TFTP",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/config/running": {
+            "post": {
+                "tags": [
+                    "CLI-Config"
+                ],
+                "summary": "Show Running Config",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/config/save": {
+            "post": {
+                "tags": [
+                    "CLI-Config"
+                ],
+                "summary": "Save Config",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/fan": {
+            "post": {
+                "tags": [
+                    "CLI-Hardware"
+                ],
+                "summary": "Show Fan Status",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/gemport/create": {
+            "post": {
+                "tags": [
+                    "CLI-GEMPORT-WRITE"
+                ],
+                "summary": "Create GEM Port",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/gpon/dial-plan": {
+            "post": {
+                "tags": [
+                    "CLI-GPON"
+                ],
+                "summary": "Show Dial Plan Profile",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/gpon/ip-profile": {
+            "post": {
+                "tags": [
+                    "CLI-GPON"
+                ],
+                "summary": "Show IP Profile",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/gpon/mgc-profile": {
+            "post": {
+                "tags": [
+                    "CLI-GPON"
+                ],
+                "summary": "Show MGC Profile",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/gpon/onu-type": {
+            "post": {
+                "tags": [
+                    "CLI-GPON"
+                ],
+                "summary": "Show ONU Types",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/gpon/sip-profile": {
+            "post": {
+                "tags": [
+                    "CLI-GPON"
+                ],
+                "summary": "Show SIP Profile",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/gpon/tcont": {
+            "post": {
+                "tags": [
+                    "CLI-GPON"
+                ],
+                "summary": "Show T-CONT Profiles",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/gpon/vlan-profile": {
+            "post": {
+                "tags": [
+                    "CLI-GPON"
+                ],
+                "summary": "Show VLAN Profiles",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/gpon/voip-accesscode": {
+            "post": {
+                "tags": [
+                    "CLI-GPON"
+                ],
+                "summary": "Show VoIP Accesscode Profile",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/gpon/voip-appsrv": {
+            "post": {
+                "tags": [
+                    "CLI-GPON"
+                ],
+                "summary": "Show VoIP Appsrv Profile",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/igmp": {
+            "post": {
+                "tags": [
+                    "CLI-IGMP"
+                ],
+                "summary": "Show IGMP Status",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/igmp/dynamic-member": {
+            "post": {
+                "tags": [
+                    "CLI-IGMP"
+                ],
+                "summary": "Show IGMP Dynamic Member",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/igmp/enable": {
+            "post": {
+                "tags": [
+                    "CLI-IGMP-WRITE"
+                ],
+                "summary": "Enable IGMP",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/igmp/forwarding-table": {
+            "post": {
+                "tags": [
+                    "CLI-IGMP"
+                ],
+                "summary": "Show IGMP Forwarding Table",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/igmp/interface": {
+            "post": {
+                "tags": [
+                    "CLI-IGMP"
+                ],
+                "summary": "Show IGMP Interface",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/igmp/mvlan": {
+            "post": {
+                "tags": [
+                    "CLI-IGMP"
+                ],
+                "summary": "Show IGMP MVLAN List",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/igmp/mvlan/{id}": {
+            "post": {
+                "tags": [
+                    "CLI-IGMP"
+                ],
+                "summary": "Show IGMP MVLAN by ID",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/interface": {
+            "post": {
+                "tags": [
+                    "CLI-Interface"
+                ],
+                "summary": "Show Interface",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/interface/detail": {
+            "post": {
+                "tags": [
+                    "CLI-Interface"
+                ],
+                "summary": "Show Interface by Type",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/interface/mng": {
+            "post": {
+                "tags": [
+                    "CLI-Interface"
+                ],
+                "summary": "Show Management Interface",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/interface/vlan": {
+            "post": {
+                "tags": [
+                    "CLI-Interface"
+                ],
+                "summary": "Show Interface VLAN",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/mvlan/create": {
+            "post": {
+                "tags": [
+                    "CLI-IGMP-WRITE"
+                ],
+                "summary": "Create MVLAN",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/mvlan/group/add": {
+            "post": {
+                "tags": [
+                    "CLI-IGMP-WRITE"
+                ],
+                "summary": "Add MVLAN Group",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/onu/auth": {
+            "post": {
+                "tags": [
+                    "CLI-ONU"
+                ],
+                "summary": "Authenticate ONU",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/onu/baseinfo": {
+            "post": {
+                "tags": [
+                    "CLI-ONU"
+                ],
+                "summary": "Show ONU Base Info (replaces distance)",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/onu/config": {
+            "post": {
+                "tags": [
+                    "CLI-ONU"
+                ],
+                "summary": "Show ONU Config",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/onu/delete": {
+            "post": {
+                "tags": [
+                    "CLI-ONU"
+                ],
+                "summary": "Delete ONU",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/onu/detail": {
+            "post": {
+                "tags": [
+                    "CLI-ONU"
+                ],
+                "summary": "Show ONU Detail Info",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/onu/optical": {
+            "post": {
+                "tags": [
+                    "CLI-ONU"
+                ],
+                "summary": "Show ONU Optical Info",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/onu/rename": {
+            "post": {
+                "tags": [
+                    "CLI-ONU-WRITE"
+                ],
+                "summary": "Rename ONU",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/onu/reset": {
+            "post": {
+                "tags": [
+                    "CLI-ONU-WRITE"
+                ],
+                "summary": "Reset/Reboot ONU",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/onu/running": {
+            "post": {
+                "tags": [
+                    "CLI-ONU"
+                ],
+                "summary": "Show ONU Running Config",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/onu/state": {
+            "post": {
+                "tags": [
+                    "CLI-ONU"
+                ],
+                "summary": "Show ONU State",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/onu/traffic": {
+            "post": {
+                "tags": [
+                    "CLI-ONU"
+                ],
+                "summary": "Show ONU Traffic",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/onu/uncfg": {
+            "post": {
+                "tags": [
+                    "CLI-ONU"
+                ],
+                "summary": "Show Unconfigured ONUs",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/power": {
+            "post": {
+                "tags": [
+                    "CLI-Hardware"
+                ],
+                "summary": "Show Power Supply",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/profile/line": {
+            "post": {
+                "tags": [
+                    "CLI-Profile"
+                ],
+                "summary": "Show Line Profile Detail",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/profile/line/create": {
+            "post": {
+                "tags": [
+                    "CLI-PROFILE-WRITE"
+                ],
+                "summary": "Create Line Profile",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/profile/line/list": {
+            "post": {
+                "tags": [
+                    "CLI-Profile"
+                ],
+                "summary": "Show Line Profile List",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/profile/remote": {
+            "post": {
+                "tags": [
+                    "CLI-Profile"
+                ],
+                "summary": "Show Remote Profile Detail",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/profile/remote/create": {
+            "post": {
+                "tags": [
+                    "CLI-PROFILE-WRITE"
+                ],
+                "summary": "Create Remote Profile",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/profile/remote/list": {
+            "post": {
+                "tags": [
+                    "CLI-Profile"
+                ],
+                "summary": "Show Remote Profile List",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/profile/tcont/create": {
+            "post": {
+                "tags": [
+                    "CLI-PROFILE-WRITE"
+                ],
+                "summary": "Create T-CONT Profile",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/profile/vlan/create": {
+            "post": {
+                "tags": [
+                    "CLI-PROFILE-WRITE"
+                ],
+                "summary": "Create VLAN Profile",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/rack": {
+            "post": {
+                "tags": [
+                    "CLI-Hardware"
+                ],
+                "summary": "Show Rack Info",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/service-port": {
+            "post": {
+                "tags": [
+                    "CLI-Service"
+                ],
+                "summary": "Show Service Port",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/service-port/create": {
+            "post": {
+                "tags": [
+                    "CLI-SERVICEPORT-WRITE"
+                ],
+                "summary": "Create Service Port",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/service-port/delete": {
+            "post": {
+                "tags": [
+                    "CLI-SERVICEPORT-WRITE"
+                ],
+                "summary": "Delete Service Port",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/shelf": {
+            "post": {
+                "tags": [
+                    "CLI-Hardware"
+                ],
+                "summary": "Show Shelf Info",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/snmp/community": {
+            "post": {
+                "tags": [
+                    "CLI-SNMP"
+                ],
+                "summary": "Show SNMP Community",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/snmp/host": {
+            "post": {
+                "tags": [
+                    "CLI-SNMP"
+                ],
+                "summary": "Show SNMP Host",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/subcard": {
+            "post": {
+                "tags": [
+                    "CLI-Hardware"
+                ],
+                "summary": "Show SubCard",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/system/clock": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CLI-System"
+                ],
+                "summary": "Show System Clock",
+                "parameters": [
+                    {
+                        "description": "Connection",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.CLIRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ardani_snmp-zte_pkg_response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cli/tcont/create": {
+            "post": {
+                "tags": [
+                    "CLI-TCONT-WRITE"
+                ],
+                "summary": "Create T-CONT",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/temperature": {
+            "post": {
+                "tags": [
+                    "CLI-Hardware"
+                ],
+                "summary": "Show Temperature",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/user/list": {
+            "post": {
+                "tags": [
+                    "CLI-User"
+                ],
+                "summary": "Show Users",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/user/online": {
+            "post": {
+                "tags": [
+                    "CLI-User"
+                ],
+                "summary": "Show Online Users",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/vlan/create": {
+            "post": {
+                "tags": [
+                    "CLI-VLAN-WRITE"
+                ],
+                "summary": "Create VLAN",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/vlan/delete": {
+            "post": {
+                "tags": [
+                    "CLI-VLAN-WRITE"
+                ],
+                "summary": "Delete VLAN",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/vlan/list": {
+            "post": {
+                "tags": [
+                    "CLI-VLAN"
+                ],
+                "summary": "Show VLAN List",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/vlan/port/add": {
+            "post": {
+                "tags": [
+                    "CLI-VLAN-WRITE"
+                ],
+                "summary": "Add Port to VLAN",
+                "responses": {}
+            }
+        },
+        "/api/v1/cli/vlan/{id}": {
+            "post": {
+                "tags": [
+                    "CLI-VLAN"
+                ],
+                "summary": "Show VLAN by ID",
+                "responses": {}
+            }
+        },
         "/api/v1/olt-info": {
             "post": {
                 "description": "Mengambil informasi lengkap sistem OLT (Nama, Deskripsi, Uptime) serta informasi kapabilitas model perangkat (contoh: Maksimal ONU per PON).",
@@ -35,7 +712,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.OLTInfoRequest"
+                            "$ref": "#/definitions/internal_handler.OLTInfoRequest"
                         }
                     }
                 ],
@@ -45,13 +722,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Response"
+                                    "$ref": "#/definitions/github_com_ardani_snmp-zte_pkg_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/handler.OLTInfoResponse"
+                                            "$ref": "#/definitions/internal_handler.OLTInfoResponse"
                                         }
                                     }
                                 }
@@ -61,13 +738,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse"
                         }
                     }
                 }
@@ -89,7 +766,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/model.OLT"
+                                "$ref": "#/definitions/github_com_ardani_snmp-zte_internal_model.OLT"
                             }
                         }
                     }
@@ -114,7 +791,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.OLT"
+                            "$ref": "#/definitions/github_com_ardani_snmp-zte_internal_model.OLT"
                         }
                     }
                 ],
@@ -122,19 +799,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/model.OLT"
+                            "$ref": "#/definitions/github_com_ardani_snmp-zte_internal_model.OLT"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse"
                         }
                     }
                 }
@@ -166,13 +843,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.OLT"
+                            "$ref": "#/definitions/github_com_ardani_snmp-zte_internal_model.OLT"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse"
                         }
                     }
                 }
@@ -203,7 +880,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.OLT"
+                            "$ref": "#/definitions/github_com_ardani_snmp-zte_internal_model.OLT"
                         }
                     }
                 ],
@@ -211,19 +888,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.OLT"
+                            "$ref": "#/definitions/github_com_ardani_snmp-zte_internal_model.OLT"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse"
                         }
                     }
                 }
@@ -247,13 +924,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/github_com_ardani_snmp-zte_pkg_response.Response"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse"
                         }
                     }
                 }
@@ -296,22 +973,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/model.ONUInfo"
-                            }
+                            "$ref": "#/definitions/github_com_ardani_snmp-zte_pkg_response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse"
                         }
                     }
                 }
@@ -354,19 +1028,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/github_com_ardani_snmp-zte_pkg_response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse"
                         }
                     }
                 }
@@ -409,22 +1083,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/model.ONUSlot"
-                            }
+                            "$ref": "#/definitions/github_com_ardani_snmp-zte_pkg_response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse"
                         }
                     }
                 }
@@ -474,19 +1145,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.ONUDetail"
+                            "$ref": "#/definitions/github_com_ardani_snmp-zte_pkg_response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse"
                         }
                     }
                 }
@@ -494,7 +1165,7 @@ const docTemplate = `{
         },
         "/api/v1/query": {
             "post": {
-                "description": "Melakukan query SNMP ke OLT tanpa menyimpan data login.\nList 'query' yang didukung:\n- onu_list: Daftar semua ONU di Port PON tertentu\n- onu_detail: Detail lengkap satu ONU (WAJIB isi onu_id)\n- empty_slots: Cari ID ONU yang masih kosong/tersedia\n- system_info: Informasi sistem OLT (Nama, Deskripsi, Uptime)\n- board_info: Status kartu/board (CPU, Memori, Tipe)\n- all_boards: Status semua kartu yang ada di OLT\n- interface_stats: Statistik lalu lintas interface (semua port)\n- fan_info: Informasi status fan/kipas\n- temperature_info: Informasi suhu sistem dan CPU (°C)\n- onu_traffic: Statistik traffic ONU (RX/TX bytes, WAJIB isi onu_id)",
+                "description": "Melakukan query SNMP ke OLT tanpa menyimpan data login.\nList 'query' yang didukung:\n- onu_list: Daftar semua ONU di Port PON tertentu\n- onu_detail: Detail lengkap satu ONU (WAJIB isi onu_id)\n- empty_slots: Cari ID ONU yang masih kosong/tersedia\n- system_info: Informasi sistem OLT (Nama, Deskripsi, Uptime)\n- board_info: Status kartu/board (CPU, Memori, Tipe)\n- all_boards: Status semua kartu yang ada di OLT\n- interface_stats: Statistik lalu lintas interface (semua port)\n- fan_info: Informasi status fan/kipas\n- temperature_info: Informasi suhu sistem dan CPU (°C)\n- onu_traffic: Statistik traffic ONU (RX/TX bytes, WAJIB isi onu_id)\n- onu_bandwidth: Bandwidth SLA per ONU (assured/max kbps, WAJIB isi onu_id)\n- pon_port_stats: Statistik traffic per PON port\n- onu_errors: Error counter per ONU (CRC, FEC, dropped, WAJIB isi onu_id)\n- voltage_info: Informasi voltage/power supply OLT",
                 "consumes": [
                     "application/json"
                 ],
@@ -512,7 +1183,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.QueryRequest"
+                            "$ref": "#/definitions/internal_handler.QueryRequest"
                         }
                     }
                 ],
@@ -522,13 +1193,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Response"
+                                    "$ref": "#/definitions/github_com_ardani_snmp-zte_pkg_response.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/handler.QueryResponse"
+                                            "$ref": "#/definitions/internal_handler.QueryResponse"
                                         }
                                     }
                                 }
@@ -538,19 +1209,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse"
                         }
                     },
                     "504": {
                         "description": "Gateway Timeout",
                         "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse"
                         }
                     }
                 }
@@ -570,7 +1241,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/github_com_ardani_snmp-zte_pkg_response.Response"
                         }
                     }
                 }
@@ -578,7 +1249,112 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "handler.OLTInfoRequest": {
+        "github_com_ardani_snmp-zte_internal_model.OLT": {
+            "type": "object",
+            "properties": {
+                "board_count": {
+                    "type": "integer"
+                },
+                "community": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "ip_address": {
+                    "type": "string"
+                },
+                "model": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "pon_per_board": {
+                    "type": "integer"
+                },
+                "port": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_ardani_snmp-zte_pkg_response.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_ardani_snmp-zte_pkg_response.Response": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {},
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_handler.CLIRequest": {
+            "type": "object",
+            "properties": {
+                "command": {
+                    "description": "Command",
+                    "type": "string"
+                },
+                "host": {
+                    "description": "Koneksi",
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "onu_id": {
+                    "type": "integer"
+                },
+                "onu_type": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "port": {
+                    "type": "integer"
+                },
+                "query": {
+                    "type": "string"
+                },
+                "rack": {
+                    "description": "Parameter",
+                    "type": "integer"
+                },
+                "shelf": {
+                    "type": "integer"
+                },
+                "slot": {
+                    "type": "integer"
+                },
+                "sn": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                },
+                "vlan_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_handler.OLTInfoRequest": {
             "type": "object",
             "properties": {
                 "community": {
@@ -599,7 +1375,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.OLTInfoResponse": {
+        "internal_handler.OLTInfoResponse": {
             "type": "object",
             "properties": {
                 "duration": {
@@ -614,7 +1390,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.QueryRequest": {
+        "internal_handler.QueryRequest": {
             "type": "object",
             "properties": {
                 "board": {
@@ -634,6 +1410,11 @@ const docTemplate = `{
                     "description": "C320, C300, C600",
                     "type": "string",
                     "example": "C320"
+                },
+                "name": {
+                    "description": "Parameter Provisioning (untuk create/rename)",
+                    "type": "string",
+                    "example": "customer-john"
                 },
                 "onu_id": {
                     "type": "integer",
@@ -666,7 +1447,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.QueryResponse": {
+        "internal_handler.QueryResponse": {
             "type": "object",
             "properties": {
                 "data": {},
@@ -683,184 +1464,23 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
-        },
-        "model.OLT": {
-            "type": "object",
-            "properties": {
-                "board_count": {
-                    "type": "integer"
-                },
-                "community": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "ip_address": {
-                    "type": "string"
-                },
-                "model": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "pon_per_board": {
-                    "type": "integer"
-                },
-                "port": {
-                    "type": "integer"
-                }
-            }
-        },
-        "model.ONUDetail": {
-            "type": "object",
-            "properties": {
-                "board": {
-                    "type": "integer"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "distance": {
-                    "type": "string"
-                },
-                "ip_address": {
-                    "type": "string"
-                },
-                "last_down_duration": {
-                    "type": "string"
-                },
-                "last_offline": {
-                    "type": "string"
-                },
-                "last_online": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "offline_reason": {
-                    "type": "string"
-                },
-                "olt_id": {
-                    "type": "string"
-                },
-                "onu_id": {
-                    "type": "integer"
-                },
-                "pon": {
-                    "type": "integer"
-                },
-                "rx_power": {
-                    "type": "string"
-                },
-                "serial_number": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "tx_power": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                },
-                "uptime": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.ONUInfo": {
-            "type": "object",
-            "properties": {
-                "board": {
-                    "type": "integer"
-                },
-                "distance": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "olt_id": {
-                    "type": "string"
-                },
-                "onu_id": {
-                    "type": "integer"
-                },
-                "pon": {
-                    "type": "integer"
-                },
-                "rx_power": {
-                    "type": "string"
-                },
-                "serial_number": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "tx_power": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.ONUSlot": {
-            "type": "object",
-            "properties": {
-                "board": {
-                    "type": "integer"
-                },
-                "onu_id": {
-                    "type": "integer"
-                },
-                "pon": {
-                    "type": "integer"
-                }
-            }
-        },
-        "response.ErrorResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                }
-            }
-        },
-        "response.Response": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer"
-                },
-                "data": {},
-                "status": {
-                    "type": "string"
-                }
-            }
+        }
+    },
+    "securityDefinitions": {
+        "BasicAuth": {
+            "type": "basic"
         }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "2.1",
+	Version:          "3.0",
 	Host:             "localhost:8080",
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "SNMP-ZTE API",
-	Description:      "Sistem pemantauan SNMP Multi-OLT untuk perangkat ZTE",
+	Description:      "Basic authentication dengan username dan password",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

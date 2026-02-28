@@ -1,6 +1,76 @@
 basePath: /
 definitions:
-  handler.OLTInfoRequest:
+  github_com_ardani_snmp-zte_internal_model.OLT:
+    properties:
+      board_count:
+        type: integer
+      community:
+        type: string
+      id:
+        type: string
+      ip_address:
+        type: string
+      model:
+        type: string
+      name:
+        type: string
+      pon_per_board:
+        type: integer
+      port:
+        type: integer
+    type: object
+  github_com_ardani_snmp-zte_pkg_response.ErrorResponse:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+      status:
+        type: string
+    type: object
+  github_com_ardani_snmp-zte_pkg_response.Response:
+    properties:
+      code:
+        type: integer
+      data: {}
+      status:
+        type: string
+    type: object
+  internal_handler.CLIRequest:
+    properties:
+      command:
+        description: Command
+        type: string
+      host:
+        description: Koneksi
+        type: string
+      name:
+        type: string
+      onu_id:
+        type: integer
+      onu_type:
+        type: string
+      password:
+        type: string
+      port:
+        type: integer
+      query:
+        type: string
+      rack:
+        description: Parameter
+        type: integer
+      shelf:
+        type: integer
+      slot:
+        type: integer
+      sn:
+        type: string
+      username:
+        type: string
+      vlan_id:
+        type: integer
+    type: object
+  internal_handler.OLTInfoRequest:
     properties:
       community:
         example: public
@@ -15,7 +85,7 @@ definitions:
         example: 161
         type: integer
     type: object
-  handler.OLTInfoResponse:
+  internal_handler.OLTInfoResponse:
     properties:
       duration:
         description: Waktu yang dibutuhkan untuk query
@@ -25,7 +95,7 @@ definitions:
       system:
         description: Detail Sistem (Nama, Deskripsi, Uptime)
     type: object
-  handler.QueryRequest:
+  internal_handler.QueryRequest:
     properties:
       board:
         example: 1
@@ -40,6 +110,10 @@ definitions:
       model:
         description: C320, C300, C600
         example: C320
+        type: string
+      name:
+        description: Parameter Provisioning (untuk create/rename)
+        example: customer-john
         type: string
       onu_id:
         example: 1
@@ -68,7 +142,7 @@ definitions:
         example: onu_list
         type: string
     type: object
-  handler.QueryResponse:
+  internal_handler.QueryResponse:
     properties:
       data: {}
       duration:
@@ -80,122 +154,463 @@ definitions:
       timestamp:
         type: string
     type: object
-  model.OLT:
-    properties:
-      board_count:
-        type: integer
-      community:
-        type: string
-      id:
-        type: string
-      ip_address:
-        type: string
-      model:
-        type: string
-      name:
-        type: string
-      pon_per_board:
-        type: integer
-      port:
-        type: integer
-    type: object
-  model.ONUDetail:
-    properties:
-      board:
-        type: integer
-      description:
-        type: string
-      distance:
-        type: string
-      ip_address:
-        type: string
-      last_down_duration:
-        type: string
-      last_offline:
-        type: string
-      last_online:
-        type: string
-      name:
-        type: string
-      offline_reason:
-        type: string
-      olt_id:
-        type: string
-      onu_id:
-        type: integer
-      pon:
-        type: integer
-      rx_power:
-        type: string
-      serial_number:
-        type: string
-      status:
-        type: string
-      tx_power:
-        type: string
-      type:
-        type: string
-      uptime:
-        type: string
-    type: object
-  model.ONUInfo:
-    properties:
-      board:
-        type: integer
-      distance:
-        type: string
-      name:
-        type: string
-      olt_id:
-        type: string
-      onu_id:
-        type: integer
-      pon:
-        type: integer
-      rx_power:
-        type: string
-      serial_number:
-        type: string
-      status:
-        type: string
-      tx_power:
-        type: string
-      type:
-        type: string
-    type: object
-  model.ONUSlot:
-    properties:
-      board:
-        type: integer
-      onu_id:
-        type: integer
-      pon:
-        type: integer
-    type: object
-  response.ErrorResponse:
-    properties:
-      code:
-        type: integer
-      message:
-        type: string
-      status:
-        type: string
-    type: object
-  response.Response:
-    properties:
-      code:
-        type: integer
-      data: {}
-      status:
-        type: string
-    type: object
 host: localhost:8080
 info:
-  contact: {}
-  description: Sistem pemantauan SNMP Multi-OLT untuk perangkat ZTE
+  contact:
+    email: ardani@example.com
+    name: API Support
+  description: Basic authentication dengan username dan password
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
   title: SNMP-ZTE API
-  version: "2.1"
+  version: "3.0"
 paths:
+  /api/v1/cli/card:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Connection
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.CLIRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_ardani_snmp-zte_pkg_response.Response'
+      summary: Show Card Status
+      tags:
+      - CLI-Hardware
+  /api/v1/cli/card/{slot}:
+    post:
+      responses: {}
+      summary: Show Card by Slot
+      tags:
+      - CLI-Hardware
+  /api/v1/cli/config/backup:
+    post:
+      responses: {}
+      summary: Backup Config to TFTP
+      tags:
+      - CLI-Config
+  /api/v1/cli/config/restore:
+    post:
+      responses: {}
+      summary: Restore Config from TFTP
+      tags:
+      - CLI-Config
+  /api/v1/cli/config/running:
+    post:
+      responses: {}
+      summary: Show Running Config
+      tags:
+      - CLI-Config
+  /api/v1/cli/config/save:
+    post:
+      responses: {}
+      summary: Save Config
+      tags:
+      - CLI-Config
+  /api/v1/cli/fan:
+    post:
+      responses: {}
+      summary: Show Fan Status
+      tags:
+      - CLI-Hardware
+  /api/v1/cli/gemport/create:
+    post:
+      responses: {}
+      summary: Create GEM Port
+      tags:
+      - CLI-GEMPORT-WRITE
+  /api/v1/cli/gpon/dial-plan:
+    post:
+      responses: {}
+      summary: Show Dial Plan Profile
+      tags:
+      - CLI-GPON
+  /api/v1/cli/gpon/ip-profile:
+    post:
+      responses: {}
+      summary: Show IP Profile
+      tags:
+      - CLI-GPON
+  /api/v1/cli/gpon/mgc-profile:
+    post:
+      responses: {}
+      summary: Show MGC Profile
+      tags:
+      - CLI-GPON
+  /api/v1/cli/gpon/onu-type:
+    post:
+      responses: {}
+      summary: Show ONU Types
+      tags:
+      - CLI-GPON
+  /api/v1/cli/gpon/sip-profile:
+    post:
+      responses: {}
+      summary: Show SIP Profile
+      tags:
+      - CLI-GPON
+  /api/v1/cli/gpon/tcont:
+    post:
+      responses: {}
+      summary: Show T-CONT Profiles
+      tags:
+      - CLI-GPON
+  /api/v1/cli/gpon/vlan-profile:
+    post:
+      responses: {}
+      summary: Show VLAN Profiles
+      tags:
+      - CLI-GPON
+  /api/v1/cli/gpon/voip-accesscode:
+    post:
+      responses: {}
+      summary: Show VoIP Accesscode Profile
+      tags:
+      - CLI-GPON
+  /api/v1/cli/gpon/voip-appsrv:
+    post:
+      responses: {}
+      summary: Show VoIP Appsrv Profile
+      tags:
+      - CLI-GPON
+  /api/v1/cli/igmp:
+    post:
+      responses: {}
+      summary: Show IGMP Status
+      tags:
+      - CLI-IGMP
+  /api/v1/cli/igmp/dynamic-member:
+    post:
+      responses: {}
+      summary: Show IGMP Dynamic Member
+      tags:
+      - CLI-IGMP
+  /api/v1/cli/igmp/enable:
+    post:
+      responses: {}
+      summary: Enable IGMP
+      tags:
+      - CLI-IGMP-WRITE
+  /api/v1/cli/igmp/forwarding-table:
+    post:
+      responses: {}
+      summary: Show IGMP Forwarding Table
+      tags:
+      - CLI-IGMP
+  /api/v1/cli/igmp/interface:
+    post:
+      responses: {}
+      summary: Show IGMP Interface
+      tags:
+      - CLI-IGMP
+  /api/v1/cli/igmp/mvlan:
+    post:
+      responses: {}
+      summary: Show IGMP MVLAN List
+      tags:
+      - CLI-IGMP
+  /api/v1/cli/igmp/mvlan/{id}:
+    post:
+      responses: {}
+      summary: Show IGMP MVLAN by ID
+      tags:
+      - CLI-IGMP
+  /api/v1/cli/interface:
+    post:
+      responses: {}
+      summary: Show Interface
+      tags:
+      - CLI-Interface
+  /api/v1/cli/interface/detail:
+    post:
+      responses: {}
+      summary: Show Interface by Type
+      tags:
+      - CLI-Interface
+  /api/v1/cli/interface/mng:
+    post:
+      responses: {}
+      summary: Show Management Interface
+      tags:
+      - CLI-Interface
+  /api/v1/cli/interface/vlan:
+    post:
+      responses: {}
+      summary: Show Interface VLAN
+      tags:
+      - CLI-Interface
+  /api/v1/cli/mvlan/create:
+    post:
+      responses: {}
+      summary: Create MVLAN
+      tags:
+      - CLI-IGMP-WRITE
+  /api/v1/cli/mvlan/group/add:
+    post:
+      responses: {}
+      summary: Add MVLAN Group
+      tags:
+      - CLI-IGMP-WRITE
+  /api/v1/cli/onu/auth:
+    post:
+      responses: {}
+      summary: Authenticate ONU
+      tags:
+      - CLI-ONU
+  /api/v1/cli/onu/baseinfo:
+    post:
+      responses: {}
+      summary: Show ONU Base Info (replaces distance)
+      tags:
+      - CLI-ONU
+  /api/v1/cli/onu/config:
+    post:
+      responses: {}
+      summary: Show ONU Config
+      tags:
+      - CLI-ONU
+  /api/v1/cli/onu/delete:
+    post:
+      responses: {}
+      summary: Delete ONU
+      tags:
+      - CLI-ONU
+  /api/v1/cli/onu/detail:
+    post:
+      responses: {}
+      summary: Show ONU Detail Info
+      tags:
+      - CLI-ONU
+  /api/v1/cli/onu/optical:
+    post:
+      responses: {}
+      summary: Show ONU Optical Info
+      tags:
+      - CLI-ONU
+  /api/v1/cli/onu/rename:
+    post:
+      responses: {}
+      summary: Rename ONU
+      tags:
+      - CLI-ONU-WRITE
+  /api/v1/cli/onu/reset:
+    post:
+      responses: {}
+      summary: Reset/Reboot ONU
+      tags:
+      - CLI-ONU-WRITE
+  /api/v1/cli/onu/running:
+    post:
+      responses: {}
+      summary: Show ONU Running Config
+      tags:
+      - CLI-ONU
+  /api/v1/cli/onu/state:
+    post:
+      responses: {}
+      summary: Show ONU State
+      tags:
+      - CLI-ONU
+  /api/v1/cli/onu/traffic:
+    post:
+      responses: {}
+      summary: Show ONU Traffic
+      tags:
+      - CLI-ONU
+  /api/v1/cli/onu/uncfg:
+    post:
+      responses: {}
+      summary: Show Unconfigured ONUs
+      tags:
+      - CLI-ONU
+  /api/v1/cli/power:
+    post:
+      responses: {}
+      summary: Show Power Supply
+      tags:
+      - CLI-Hardware
+  /api/v1/cli/profile/line:
+    post:
+      responses: {}
+      summary: Show Line Profile Detail
+      tags:
+      - CLI-Profile
+  /api/v1/cli/profile/line/create:
+    post:
+      responses: {}
+      summary: Create Line Profile
+      tags:
+      - CLI-PROFILE-WRITE
+  /api/v1/cli/profile/line/list:
+    post:
+      responses: {}
+      summary: Show Line Profile List
+      tags:
+      - CLI-Profile
+  /api/v1/cli/profile/remote:
+    post:
+      responses: {}
+      summary: Show Remote Profile Detail
+      tags:
+      - CLI-Profile
+  /api/v1/cli/profile/remote/create:
+    post:
+      responses: {}
+      summary: Create Remote Profile
+      tags:
+      - CLI-PROFILE-WRITE
+  /api/v1/cli/profile/remote/list:
+    post:
+      responses: {}
+      summary: Show Remote Profile List
+      tags:
+      - CLI-Profile
+  /api/v1/cli/profile/tcont/create:
+    post:
+      responses: {}
+      summary: Create T-CONT Profile
+      tags:
+      - CLI-PROFILE-WRITE
+  /api/v1/cli/profile/vlan/create:
+    post:
+      responses: {}
+      summary: Create VLAN Profile
+      tags:
+      - CLI-PROFILE-WRITE
+  /api/v1/cli/rack:
+    post:
+      responses: {}
+      summary: Show Rack Info
+      tags:
+      - CLI-Hardware
+  /api/v1/cli/service-port:
+    post:
+      responses: {}
+      summary: Show Service Port
+      tags:
+      - CLI-Service
+  /api/v1/cli/service-port/create:
+    post:
+      responses: {}
+      summary: Create Service Port
+      tags:
+      - CLI-SERVICEPORT-WRITE
+  /api/v1/cli/service-port/delete:
+    post:
+      responses: {}
+      summary: Delete Service Port
+      tags:
+      - CLI-SERVICEPORT-WRITE
+  /api/v1/cli/shelf:
+    post:
+      responses: {}
+      summary: Show Shelf Info
+      tags:
+      - CLI-Hardware
+  /api/v1/cli/snmp/community:
+    post:
+      responses: {}
+      summary: Show SNMP Community
+      tags:
+      - CLI-SNMP
+  /api/v1/cli/snmp/host:
+    post:
+      responses: {}
+      summary: Show SNMP Host
+      tags:
+      - CLI-SNMP
+  /api/v1/cli/subcard:
+    post:
+      responses: {}
+      summary: Show SubCard
+      tags:
+      - CLI-Hardware
+  /api/v1/cli/system/clock:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Connection
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.CLIRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_ardani_snmp-zte_pkg_response.Response'
+      summary: Show System Clock
+      tags:
+      - CLI-System
+  /api/v1/cli/tcont/create:
+    post:
+      responses: {}
+      summary: Create T-CONT
+      tags:
+      - CLI-TCONT-WRITE
+  /api/v1/cli/temperature:
+    post:
+      responses: {}
+      summary: Show Temperature
+      tags:
+      - CLI-Hardware
+  /api/v1/cli/user/list:
+    post:
+      responses: {}
+      summary: Show Users
+      tags:
+      - CLI-User
+  /api/v1/cli/user/online:
+    post:
+      responses: {}
+      summary: Show Online Users
+      tags:
+      - CLI-User
+  /api/v1/cli/vlan/{id}:
+    post:
+      responses: {}
+      summary: Show VLAN by ID
+      tags:
+      - CLI-VLAN
+  /api/v1/cli/vlan/create:
+    post:
+      responses: {}
+      summary: Create VLAN
+      tags:
+      - CLI-VLAN-WRITE
+  /api/v1/cli/vlan/delete:
+    post:
+      responses: {}
+      summary: Delete VLAN
+      tags:
+      - CLI-VLAN-WRITE
+  /api/v1/cli/vlan/list:
+    post:
+      responses: {}
+      summary: Show VLAN List
+      tags:
+      - CLI-VLAN
+  /api/v1/cli/vlan/port/add:
+    post:
+      responses: {}
+      summary: Add Port to VLAN
+      tags:
+      - CLI-VLAN-WRITE
   /api/v1/olt-info:
     post:
       consumes:
@@ -208,7 +623,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.OLTInfoRequest'
+          $ref: '#/definitions/internal_handler.OLTInfoRequest'
       produces:
       - application/json
       responses:
@@ -216,19 +631,19 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/response.Response'
+            - $ref: '#/definitions/github_com_ardani_snmp-zte_pkg_response.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/handler.OLTInfoResponse'
+                  $ref: '#/definitions/internal_handler.OLTInfoResponse'
               type: object
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse'
       summary: Ambil Detail Sistem & Model OLT
       tags:
       - Query
@@ -242,7 +657,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/model.OLT'
+              $ref: '#/definitions/github_com_ardani_snmp-zte_internal_model.OLT'
             type: array
       summary: List semua OLT
       tags:
@@ -257,22 +672,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/model.OLT'
+          $ref: '#/definitions/github_com_ardani_snmp-zte_internal_model.OLT'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/model.OLT'
+            $ref: '#/definitions/github_com_ardani_snmp-zte_internal_model.OLT'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse'
       summary: Daftarkan OLT Baru
       tags:
       - OLT
@@ -289,11 +704,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/github_com_ardani_snmp-zte_pkg_response.Response'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse'
       summary: Hapus OLT
       tags:
       - OLT
@@ -313,11 +728,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.OLT'
+            $ref: '#/definitions/github_com_ardani_snmp-zte_internal_model.OLT'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse'
       summary: Ambil Detail OLT
       tags:
       - OLT
@@ -336,22 +751,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/model.OLT'
+          $ref: '#/definitions/github_com_ardani_snmp-zte_internal_model.OLT'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.OLT'
+            $ref: '#/definitions/github_com_ardani_snmp-zte_internal_model.OLT'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse'
       summary: Perbarui Data OLT
       tags:
       - OLT
@@ -381,17 +796,15 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/model.ONUInfo'
-            type: array
+            $ref: '#/definitions/github_com_ardani_snmp-zte_pkg_response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse'
       summary: List ONU di Port PON
       tags:
       - ONU
@@ -420,15 +833,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/github_com_ardani_snmp-zte_pkg_response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse'
       summary: Bersihkan Cache PON
       tags:
       - ONU
@@ -457,17 +870,15 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/model.ONUSlot'
-            type: array
+            $ref: '#/definitions/github_com_ardani_snmp-zte_pkg_response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse'
       summary: Cari Slot ONU Kosong
       tags:
       - ONU
@@ -502,15 +913,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.ONUDetail'
+            $ref: '#/definitions/github_com_ardani_snmp-zte_pkg_response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse'
       summary: Detail Lengkap ONU
       tags:
       - ONU
@@ -531,13 +942,17 @@ paths:
         - fan_info: Informasi status fan/kipas
         - temperature_info: Informasi suhu sistem dan CPU (°C)
         - onu_traffic: Statistik traffic ONU (RX/TX bytes, WAJIB isi onu_id)
+        - onu_bandwidth: Bandwidth SLA per ONU (assured/max kbps, WAJIB isi onu_id)
+        - pon_port_stats: Statistik traffic per PON port
+        - onu_errors: Error counter per ONU (CRC, FEC, dropped, WAJIB isi onu_id)
+        - voltage_info: Informasi voltage/power supply OLT
       parameters:
       - description: Detail Query (IP, Community, Model, dan Jenis Query)
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.QueryRequest'
+          $ref: '#/definitions/internal_handler.QueryRequest'
       produces:
       - application/json
       responses:
@@ -545,23 +960,23 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/response.Response'
+            - $ref: '#/definitions/github_com_ardani_snmp-zte_pkg_response.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/handler.QueryResponse'
+                  $ref: '#/definitions/internal_handler.QueryResponse'
               type: object
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse'
         "504":
           description: Gateway Timeout
           schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/github_com_ardani_snmp-zte_pkg_response.ErrorResponse'
       summary: Stateless SNMP Query (Query Tanpa Kredensial)
       tags:
       - Query
@@ -574,8 +989,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/github_com_ardani_snmp-zte_pkg_response.Response'
       summary: Get SNMP Pool Stats
       tags:
       - System
+securityDefinitions:
+  BasicAuth:
+    type: basic
 swagger: "2.0"

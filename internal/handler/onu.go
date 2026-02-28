@@ -27,7 +27,7 @@ func NewONUHandler(service *service.ONUService) *ONUHandler {
 // @Param olt_id path string true "ID OLT"
 // @Param board_id path int true "ID Board/Slot"
 // @Param pon_id path int true "ID Port PON"
-// @Success 200 {array} model.ONUInfo
+// @Success 200 {object} response.Response
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 500 {object} response.ErrorResponse
 // @Router /api/v1/olts/{olt_id}/board/{board_id}/pon/{pon_id} [get]
@@ -63,7 +63,7 @@ func (h *ONUHandler) List(w http.ResponseWriter, r *http.Request) {
 // @Param board_id path int true "ID Board/Slot"
 // @Param pon_id path int true "ID Port PON"
 // @Param onu_id path int true "ID ONU"
-// @Success 200 {object} model.ONUDetail
+// @Success 200 {object} response.Response
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 500 {object} response.ErrorResponse
 // @Router /api/v1/olts/{olt_id}/board/{board_id}/pon/{pon_id}/onu/{onu_id} [get]
@@ -104,7 +104,7 @@ func (h *ONUHandler) Detail(w http.ResponseWriter, r *http.Request) {
 // @Param olt_id path string true "ID OLT"
 // @Param board_id path int true "ID Board/Slot"
 // @Param pon_id path int true "ID Port PON"
-// @Success 200 {array} model.ONUSlot
+// @Success 200 {object} response.Response
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 500 {object} response.ErrorResponse
 // @Router /api/v1/olts/{olt_id}/board/{board_id}/pon/{pon_id}/empty [get]

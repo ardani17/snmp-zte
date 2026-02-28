@@ -24,10 +24,28 @@ import (
 )
 
 // @title SNMP-ZTE API
-// @version 2.1
-// @description Sistem pemantauan SNMP Multi-OLT untuk perangkat ZTE
+// @version 3.0
+// @description REST API untuk monitoring dan provisioning ZTE OLT (C320, C300, C600) via SNMP dan CLI (Telnet)
+// @description <br><b>Features:</b>
+// @description - 71 Endpoints (51 READ + 20 WRITE)
+// @description - SNMPv2c Support
+// @description - CLI via Telnet
+// @description - Multi-OLT Support
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.email ardani@example.com
+
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
+
 // @host localhost:8080
 // @BasePath /
+
+// @securityDefinitions.basic BasicAuth
+// @in header
+// @name Authorization
+// @description Basic authentication dengan username dan password
 func main() {
 	// 1. Inisialisasi Logger untuk mencetak log ke konsol
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
