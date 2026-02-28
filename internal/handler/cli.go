@@ -707,11 +707,11 @@ func (h *CLIHandler) ShowONUDetail(w http.ResponseWriter, r *http.Request) {
 	h.respond(w, "show_onu_detail_info", data, start)
 }
 
-// ShowONUDistance godoc
-// @Summary Show ONU Distance
+// ShowONUBaseInfo godoc
+// @Summary Show ONU Base Info (replaces distance)
 // @Tags CLI-ONU
-// @Router /api/v1/cli/onu/distance [post]
-func (h *CLIHandler) ShowONUDistance(w http.ResponseWriter, r *http.Request) {
+// @Router /api/v1/cli/onu/baseinfo [post]
+func (h *CLIHandler) ShowONUBaseInfo(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	var req CLIRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -741,13 +741,13 @@ func (h *CLIHandler) ShowONUDistance(w http.ResponseWriter, r *http.Request) {
 	}
 	defer client.Close()
 
-	data, err := client.ShowGPONONUDistance(ctx, rack, shelf, req.Slot)
+	data, err := client.ShowGPONONUBaseInfo(ctx, rack, shelf, req.Slot)
 	if err != nil {
 		response.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	h.respond(w, "show_gpon_onu_distance", data, start)
+	h.respond(w, "show_gpon_onu_baseinfo", data, start)
 }
 
 // ShowONUTraffic godoc
@@ -1258,11 +1258,11 @@ func (h *CLIHandler) ShowIGMPMVlanByID(w http.ResponseWriter, r *http.Request) {
 	h.respond(w, "show_igmp_mvlan_id", data, start)
 }
 
-// ShowIGMPGroup godoc
-// @Summary Show IGMP Group
+// ShowIGMPDynamicMember godoc
+// @Summary Show IGMP Dynamic Member
 // @Tags CLI-IGMP
-// @Router /api/v1/cli/igmp/group [post]
-func (h *CLIHandler) ShowIGMPGroup(w http.ResponseWriter, r *http.Request) {
+// @Router /api/v1/cli/igmp/dynamic-member [post]
+func (h *CLIHandler) ShowIGMPDynamicMember(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	var req CLIRequest
 	json.NewDecoder(r.Body).Decode(&req)
@@ -1275,13 +1275,65 @@ func (h *CLIHandler) ShowIGMPGroup(w http.ResponseWriter, r *http.Request) {
 	}
 	defer client.Close()
 
-	output, err := client.ShowIGMPGroup(ctx)
+	output, err := client.ShowIGMPDynamicMember(ctx)
 	if err != nil {
 		response.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	h.respond(w, "show_igmp_group", output, start)
+	h.respond(w, "show_igmp_dynamic_member", output, start)
+}
+
+// ShowIGMPForwardingTable godoc
+// @Summary Show IGMP Forwarding Table
+// @Tags CLI-IGMP
+// @Router /api/v1/cli/igmp/forwarding-table [post]
+func (h *CLIHandler) ShowIGMPForwardingTable(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	json.NewDecoder(r.Body).Decode(&req)
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	output, err := client.ShowIGMPForwardingTable(ctx)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "show_igmp_forwarding_table", output, start)
+}
+
+// ShowIGMPInterface godoc
+// @Summary Show IGMP Interface
+// @Tags CLI-IGMP
+// @Router /api/v1/cli/igmp/interface [post]
+func (h *CLIHandler) ShowIGMPInterface(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	json.NewDecoder(r.Body).Decode(&req)
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	output, err := client.ShowIGMPInterface(ctx)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "show_igmp_interface", output, start)
 }
 
 // ============================================================

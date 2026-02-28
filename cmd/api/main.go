@@ -168,7 +168,7 @@ func setupRouter(oltHandler *handler.OLTHandler, onuHandler *handler.ONUHandler,
 			r.Post("/onu/config", cliHandler.ShowONUConfig)
 			r.Post("/onu/running", cliHandler.ShowONURunning)
 			r.Post("/onu/detail", cliHandler.ShowONUDetail)
-			r.Post("/onu/distance", cliHandler.ShowONUDistance)
+			r.Post("/onu/baseinfo", cliHandler.ShowONUBaseInfo)
 			r.Post("/onu/traffic", cliHandler.ShowONUTraffic)
 			r.Post("/onu/optical", cliHandler.ShowONUOptical)
 			
@@ -188,7 +188,9 @@ func setupRouter(oltHandler *handler.OLTHandler, onuHandler *handler.ONUHandler,
 			r.Post("/igmp", cliHandler.ShowIGMP)
 			r.Post("/igmp/mvlan", cliHandler.ShowIGMPMVlan)
 			r.Post("/igmp/mvlan/id", cliHandler.ShowIGMPMVlanByID)
-			r.Post("/igmp/group", cliHandler.ShowIGMPGroup)
+			r.Post("/igmp/dynamic-member", cliHandler.ShowIGMPDynamicMember)
+			r.Post("/igmp/forwarding-table", cliHandler.ShowIGMPForwardingTable)
+			r.Post("/igmp/interface", cliHandler.ShowIGMPInterface)
 			
 			// Users
 			r.Post("/user/list", cliHandler.ShowUsers)

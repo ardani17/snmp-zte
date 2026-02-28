@@ -599,14 +599,15 @@ type ONUDistance struct {
 }
 
 // ShowGPONONUDistance menampilkan distance ONU
-// Command: show gpon onu distance gpon-olt_{rack}/{shelf}/{slot}
-func (z *ZTEC320Client) ShowGPONONUDistance(ctx context.Context, rack, shelf, slot int) ([]ONUDistance, error) {
-	cmd := fmt.Sprintf("show gpon onu distance gpon-olt_%d/%d/%d", rack, shelf, slot)
+// Command: show gpon onu baseinfo gpon-olt_{rack}/{shelf}/{slot}
+// Note: 'distance' command doesn't exist on some OLT models
+func (z *ZTEC320Client) ShowGPONONUBaseInfo(ctx context.Context, rack, shelf, slot int) ([]ONUInfo, error) {
+	cmd := fmt.Sprintf("show gpon onu baseinfo gpon-olt_%d/%d/%d", rack, shelf, slot)
 	output, err := z.client.Execute(ctx, cmd)
 	if err != nil {
 		return nil, err
 	}
-	return z.parseONUDistance(output), nil
+	return z.parseONUState(output), nil
 }
 
 // ONUTraffic informasi traffic ONU
@@ -891,10 +892,22 @@ func (z *ZTEC320Client) ShowIGMPMVlanByID(ctx context.Context, id int) (*IGMPMVl
 	return nil, fmt.Errorf("mvlan not found")
 }
 
-// ShowIGMPGroup menampilkan IGMP group
-// Command: show igmp group
-func (z *ZTEC320Client) ShowIGMPGroup(ctx context.Context) (string, error) {
-	return z.client.Execute(ctx, "show igmp group")
+// ShowIGMPDynamicMember menampilkan IGMP dynamic membership
+// Command: show igmp dynamic-member
+func (z *ZTEC320Client) ShowIGMPDynamicMember(ctx context.Context) (string, error) {
+	return z.client.Execute(ctx, "show igmp dynamic-member")
+}
+
+// ShowIGMPForwardingTable menampilkan IGMP forwarding table
+// Command: show igmp forwarding-table
+func (z *ZTEC320Client) ShowIGMPForwardingTable(ctx context.Context) (string, error) {
+	return z.client.Execute(ctx, "show igmp forwarding-table")
+}
+
+// ShowIGMPInterface menampilkan IGMP interface config
+// Command: show igmp interface
+func (z *ZTEC320Client) ShowIGMPInterface(ctx context.Context) (string, error) {
+	return z.client.Execute(ctx, "show igmp interface")
 }
 
 // ============================================================
