@@ -962,6 +962,170 @@ func (z *ZTEC320Client) ShowOnlineUsers(ctx context.Context) ([]OnlineUser, erro
 }
 
 // ============================================================
+// REMAINING READ ENDPOINTS
+// ============================================================
+
+// DialPlanProfile informasi dial plan profile
+type DialPlanProfile struct {
+	Name    string   `json:"name"`
+	Digits  []string `json:"digits,omitempty"`
+	Timeout string   `json:"timeout,omitempty"`
+}
+
+// ShowDialPlanProfile menampilkan dial plan profile
+// Command: show gpon onu profile dial-plan {name}
+func (z *ZTEC320Client) ShowDialPlanProfile(ctx context.Context, name string) (*DialPlanProfile, error) {
+	cmd := fmt.Sprintf("show gpon onu profile dial-plan %s", name)
+	output, err := z.client.Execute(ctx, cmd)
+	if err != nil {
+		return nil, err
+	}
+	return z.parseDialPlanProfile(output), nil
+}
+
+// VoipAccesscodeProfile informasi voip accesscode profile
+type VoipAccesscodeProfile struct {
+	Name       string   `json:"name"`
+	Accesscode []string `json:"accesscode,omitempty"`
+}
+
+// ShowVoipAccesscodeProfile menampilkan voip accesscode profile
+// Command: show gpon onu profile voip-accesscode {name}
+func (z *ZTEC320Client) ShowVoipAccesscodeProfile(ctx context.Context, name string) (*VoipAccesscodeProfile, error) {
+	cmd := fmt.Sprintf("show gpon onu profile voip-accesscode %s", name)
+	output, err := z.client.Execute(ctx, cmd)
+	if err != nil {
+		return nil, err
+	}
+	return z.parseVoipAccesscodeProfile(output), nil
+}
+
+// VoipAppsrvProfile informasi voip appsrv profile
+type VoipAppsrvProfile struct {
+	Name  string   `json:"name"`
+	Apps  []string `json:"apps,omitempty"`
+}
+
+// ShowVoipAppsrvProfile menampilkan voip appsrv profile
+// Command: show gpon onu profile voip-appsrv {name}
+func (z *ZTEC320Client) ShowVoipAppsrvProfile(ctx context.Context, name string) (*VoipAppsrvProfile, error) {
+	cmd := fmt.Sprintf("show gpon onu profile voip-appsrv %s", name)
+	output, err := z.client.Execute(ctx, cmd)
+	if err != nil {
+		return nil, err
+	}
+	return z.parseVoipAppsrvProfile(output), nil
+}
+
+// SNMPCommunity informasi SNMP community
+type SNMPCommunity struct {
+	Community string `json:"community"`
+	Access    string `json:"access"`
+}
+
+// ShowSNMPCommunity menampilkan SNMP community
+// Command: show snmp community
+func (z *ZTEC320Client) ShowSNMPCommunity(ctx context.Context) ([]SNMPCommunity, error) {
+	output, err := z.client.Execute(ctx, "show snmp community")
+	if err != nil {
+		return nil, err
+	}
+	return z.parseSNMPCommunity(output), nil
+}
+
+// SNMPHost informasi SNMP host
+type SNMPHost struct {
+	Host      string `json:"host"`
+	Port      string `json:"port"`
+	Community string `json:"community"`
+	Version   string `json:"version"`
+}
+
+// ShowSNMPHost menampilkan SNMP host
+// Command: show snmp host
+func (z *ZTEC320Client) ShowSNMPHost(ctx context.Context) ([]SNMPHost, error) {
+	output, err := z.client.Execute(ctx, "show snmp host")
+	if err != nil {
+		return nil, err
+	}
+	return z.parseSNMPHost(output), nil
+}
+
+// ShowRunningConfig menampilkan running config (already declared)
+// Use existing method at line 232
+
+// SaveConfig menyimpan konfigurasi (already declared)
+// Use existing method at line 535
+
+// BackupConfig backup konfigurasi ke TFTP
+// Command: copy running-config tftp://{ip}/{filename}
+func (z *ZTEC320Client) BackupConfig(ctx context.Context, tftpIP, filename string) (string, error) {
+	cmd := fmt.Sprintf("copy running-config tftp://%s/%s", tftpIP, filename)
+	return z.client.Execute(ctx, cmd)
+}
+
+// RestoreConfig restore konfigurasi dari TFTP
+// Command: copy tftp://{ip}/{filename} running-config
+func (z *ZTEC320Client) RestoreConfig(ctx context.Context, tftpIP, filename string) (string, error) {
+	cmd := fmt.Sprintf("copy tftp://%s/%s running-config", tftpIP, filename)
+	return z.client.Execute(ctx, cmd)
+}
+
+// ShowInterfaceVLAN menampilkan interface VLAN
+// Command: show interface vlan{id}
+func (z *ZTEC320Client) ShowInterfaceVLAN(ctx context.Context, vlanID int) (*InterfaceStats, error) {
+	cmd := fmt.Sprintf("show interface vlan%d", vlanID)
+	output, err := z.client.Execute(ctx, cmd)
+	if err != nil {
+		return nil, err
+	}
+	return z.parseInterfaceStats(output), nil
+}
+
+// PowerSupplyInfo informasi power supply
+type PowerSupplyInfo struct {
+	Rack    int    `json:"rack"`
+	Shelf   int    `json:"shelf"`
+	Slot    int    `json:"slot"`
+	Status  string `json:"status"`
+	Voltage string `json:"voltage,omitempty"`
+	Current string `json:"current,omitempty"`
+}
+
+// ShowPowerSupply menampilkan power supply info
+// Command: show power
+func (z *ZTEC320Client) ShowPowerSupply(ctx context.Context) ([]PowerSupplyInfo, error) {
+	output, err := z.client.Execute(ctx, "show power")
+	if err != nil {
+		return nil, err
+	}
+	return z.parsePowerSupply(output), nil
+}
+
+// TemperatureInfo informasi temperature
+type TemperatureInfo struct {
+	Rack        int    `json:"rack"`
+	Shelf       int    `json:"shelf"`
+	Slot        int    `json:"slot"`
+	Temperature string `json:"temperature"`
+	Status      string `json:"status"`
+}
+
+// ShowTemperature menampilkan temperature info
+// Command: show temperature
+func (z *ZTEC320Client) ShowTemperature(ctx context.Context) ([]TemperatureInfo, error) {
+	output, err := z.client.Execute(ctx, "show temperature")
+	if err != nil {
+		// Alternative: get from show fan
+		output, err = z.client.Execute(ctx, "show fan")
+		if err != nil {
+			return nil, err
+		}
+	}
+	return z.parseTemperature(output), nil
+}
+
+// ============================================================
 // PARSER FUNCTIONS - PRIORITY 1
 // ============================================================
 
@@ -1331,7 +1495,7 @@ func (z *ZTEC320Client) parseOnlineUsers(output string) []OnlineUser {
 	
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
-		if line == "" || strings.HasPrefix(line, "Username") || strings.HasPrefix(line, "---") {
+		if line == "" || strings.HasPrefix(line, "Username") || strings.HasPrefix(line, "---") || strings.HasPrefix(line, "Line") {
 			continue
 		}
 		fields := strings.Fields(line)
@@ -1345,4 +1509,138 @@ func (z *ZTEC320Client) parseOnlineUsers(output string) []OnlineUser {
 	}
 	
 	return users
+}
+
+// ============================================================
+// PARSER FUNCTIONS - REMAINING ENDPOINTS
+// ============================================================
+
+func (z *ZTEC320Client) parseDialPlanProfile(output string) *DialPlanProfile {
+	profile := &DialPlanProfile{}
+	lines := strings.Split(output, "\n")
+	
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if strings.Contains(line, "Profile Name") {
+			profile.Name = z.extractValue(line)
+		}
+	}
+	
+	return profile
+}
+
+func (z *ZTEC320Client) parseVoipAccesscodeProfile(output string) *VoipAccesscodeProfile {
+	profile := &VoipAccesscodeProfile{}
+	lines := strings.Split(output, "\n")
+	
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if strings.Contains(line, "Profile Name") {
+			profile.Name = z.extractValue(line)
+		}
+	}
+	
+	return profile
+}
+
+func (z *ZTEC320Client) parseVoipAppsrvProfile(output string) *VoipAppsrvProfile {
+	profile := &VoipAppsrvProfile{}
+	lines := strings.Split(output, "\n")
+	
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if strings.Contains(line, "Profile Name") {
+			profile.Name = z.extractValue(line)
+		}
+	}
+	
+	return profile
+}
+
+func (z *ZTEC320Client) parseSNMPCommunity(output string) []SNMPCommunity {
+	var communities []SNMPCommunity
+	lines := strings.Split(output, "\n")
+	
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "Community") || strings.HasPrefix(line, "---") {
+			continue
+		}
+		fields := strings.Fields(line)
+		if len(fields) >= 2 {
+			communities = append(communities, SNMPCommunity{
+				Community: fields[0],
+				Access:    fields[1],
+			})
+		}
+	}
+	
+	return communities
+}
+
+func (z *ZTEC320Client) parseSNMPHost(output string) []SNMPHost {
+	var hosts []SNMPHost
+	lines := strings.Split(output, "\n")
+	
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "Host") || strings.HasPrefix(line, "---") {
+			continue
+		}
+		fields := strings.Fields(line)
+		if len(fields) >= 1 {
+			hosts = append(hosts, SNMPHost{
+				Host: fields[0],
+			})
+		}
+	}
+	
+	return hosts
+}
+
+func (z *ZTEC320Client) parsePowerSupply(output string) []PowerSupplyInfo {
+	var supplies []PowerSupplyInfo
+	lines := strings.Split(output, "\n")
+	
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "Rack") || strings.HasPrefix(line, "---") {
+			continue
+		}
+		fields := strings.Fields(line)
+		if len(fields) >= 4 {
+			rack, _ := strconv.Atoi(fields[0])
+			shelf, _ := strconv.Atoi(fields[1])
+			slot, _ := strconv.Atoi(fields[2])
+			supplies = append(supplies, PowerSupplyInfo{
+				Rack:   rack,
+				Shelf:  shelf,
+				Slot:   slot,
+				Status: fields[3],
+			})
+		}
+	}
+	
+	return supplies
+}
+
+func (z *ZTEC320Client) parseTemperature(output string) []TemperatureInfo {
+	var temps []TemperatureInfo
+	lines := strings.Split(output, "\n")
+	
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if strings.Contains(line, "Temperature") || strings.Contains(line, "Temp") {
+			// Extract temperature value
+			if strings.Contains(line, ":") {
+				value := z.extractValue(line)
+				temps = append(temps, TemperatureInfo{
+					Temperature: value,
+					Status:      "normal",
+				})
+			}
+		}
+	}
+	
+	return temps
 }

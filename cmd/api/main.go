@@ -147,6 +147,8 @@ func setupRouter(oltHandler *handler.OLTHandler, onuHandler *handler.ONUHandler,
 			r.Post("/shelf", cliHandler.ShowShelf)
 			r.Post("/subcard", cliHandler.ShowSubCard)
 			r.Post("/fan", cliHandler.ShowFan)
+			r.Post("/power", cliHandler.ShowPowerSupply)
+			r.Post("/temperature", cliHandler.ShowTemperature)
 			
 			// GPON Profiles
 			r.Post("/gpon/tcont", cliHandler.ShowTcontProfile)
@@ -155,6 +157,9 @@ func setupRouter(oltHandler *handler.OLTHandler, onuHandler *handler.ONUHandler,
 			r.Post("/gpon/ip-profile", cliHandler.ShowIPProfile)
 			r.Post("/gpon/sip-profile", cliHandler.ShowSIPProfile)
 			r.Post("/gpon/mgc-profile", cliHandler.ShowMGCProfile)
+			r.Post("/gpon/dial-plan", cliHandler.ShowDialPlanProfile)
+			r.Post("/gpon/voip-accesscode", cliHandler.ShowVoipAccesscodeProfile)
+			r.Post("/gpon/voip-appsrv", cliHandler.ShowVoipAppsrvProfile)
 			
 			// Line & Remote Profiles
 			r.Post("/profile/line/list", cliHandler.ShowLineProfileList)
@@ -180,6 +185,7 @@ func setupRouter(oltHandler *handler.OLTHandler, onuHandler *handler.ONUHandler,
 			r.Post("/interface", cliHandler.ShowInterface)
 			r.Post("/interface/detail", cliHandler.ShowInterfaceByType)
 			r.Post("/interface/mng", cliHandler.ShowMgmtInterface)
+			r.Post("/interface/vlan", cliHandler.ShowInterfaceVLAN)
 			
 			// Service Port
 			r.Post("/service-port", cliHandler.ShowServicePort)
@@ -195,6 +201,16 @@ func setupRouter(oltHandler *handler.OLTHandler, onuHandler *handler.ONUHandler,
 			// Users
 			r.Post("/user/list", cliHandler.ShowUsers)
 			r.Post("/user/online", cliHandler.ShowOnlineUsers)
+			
+			// SNMP
+			r.Post("/snmp/community", cliHandler.ShowSNMPCommunity)
+			r.Post("/snmp/host", cliHandler.ShowSNMPHost)
+			
+			// Configuration
+			r.Post("/config/running", cliHandler.ShowRunningConfig)
+			r.Post("/config/save", cliHandler.SaveConfig)
+			r.Post("/config/backup", cliHandler.BackupConfig)
+			r.Post("/config/restore", cliHandler.RestoreConfig)
 			
 			// WRITE Operations (Provisioning)
 			r.Post("/onu/auth", cliHandler.AuthenticateONU)

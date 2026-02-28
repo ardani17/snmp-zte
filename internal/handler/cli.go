@@ -1405,6 +1405,383 @@ func (h *CLIHandler) ShowOnlineUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 // ============================================================
+// REMAINING READ ENDPOINTS
+// ============================================================
+
+// ShowDialPlanProfile godoc
+// @Summary Show Dial Plan Profile
+// @Tags CLI-GPON
+// @Router /api/v1/cli/gpon/dial-plan [post]
+func (h *CLIHandler) ShowDialPlanProfile(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, "Invalid request")
+		return
+	}
+
+	if req.Name == "" {
+		response.BadRequest(w, "name is required")
+		return
+	}
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	data, err := client.ShowDialPlanProfile(ctx, req.Name)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "show_gpon_onu_profile_dial-plan", data, start)
+}
+
+// ShowVoipAccesscodeProfile godoc
+// @Summary Show VoIP Accesscode Profile
+// @Tags CLI-GPON
+// @Router /api/v1/cli/gpon/voip-accesscode [post]
+func (h *CLIHandler) ShowVoipAccesscodeProfile(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, "Invalid request")
+		return
+	}
+
+	if req.Name == "" {
+		response.BadRequest(w, "name is required")
+		return
+	}
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	data, err := client.ShowVoipAccesscodeProfile(ctx, req.Name)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "show_gpon_onu_profile_voip-accesscode", data, start)
+}
+
+// ShowVoipAppsrvProfile godoc
+// @Summary Show VoIP Appsrv Profile
+// @Tags CLI-GPON
+// @Router /api/v1/cli/gpon/voip-appsrv [post]
+func (h *CLIHandler) ShowVoipAppsrvProfile(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, "Invalid request")
+		return
+	}
+
+	if req.Name == "" {
+		response.BadRequest(w, "name is required")
+		return
+	}
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	data, err := client.ShowVoipAppsrvProfile(ctx, req.Name)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "show_gpon_onu_profile_voip-appsrv", data, start)
+}
+
+// ShowSNMPCommunity godoc
+// @Summary Show SNMP Community
+// @Tags CLI-SNMP
+// @Router /api/v1/cli/snmp/community [post]
+func (h *CLIHandler) ShowSNMPCommunity(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	json.NewDecoder(r.Body).Decode(&req)
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	data, err := client.ShowSNMPCommunity(ctx)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "show_snmp_community", data, start)
+}
+
+// ShowSNMPHost godoc
+// @Summary Show SNMP Host
+// @Tags CLI-SNMP
+// @Router /api/v1/cli/snmp/host [post]
+func (h *CLIHandler) ShowSNMPHost(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	json.NewDecoder(r.Body).Decode(&req)
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	data, err := client.ShowSNMPHost(ctx)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "show_snmp_host", data, start)
+}
+
+// ShowRunningConfig godoc
+// @Summary Show Running Config
+// @Tags CLI-Config
+// @Router /api/v1/cli/config/running [post]
+func (h *CLIHandler) ShowRunningConfig(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	json.NewDecoder(r.Body).Decode(&req)
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	output, err := client.ShowRunningConfig(ctx)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "show_running-config", output, start)
+}
+
+// SaveConfig godoc
+// @Summary Save Config
+// @Tags CLI-Config
+// @Router /api/v1/cli/config/save [post]
+func (h *CLIHandler) SaveConfig(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	json.NewDecoder(r.Body).Decode(&req)
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	err := client.SaveConfig(ctx)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "write", map[string]interface{}{
+		"success": true,
+		"message": "Configuration saved successfully",
+	}, start)
+}
+
+// BackupConfig godoc
+// @Summary Backup Config to TFTP
+// @Tags CLI-Config
+// @Router /api/v1/cli/config/backup [post]
+func (h *CLIHandler) BackupConfig(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, "Invalid request")
+		return
+	}
+
+	if req.Name == "" || req.SN == "" {
+		response.BadRequest(w, "name (tftp_ip) and sn (filename) are required")
+		return
+	}
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	output, err := client.BackupConfig(ctx, req.Name, req.SN)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "copy_running-config_tftp", map[string]interface{}{
+		"success":  true,
+		"message":  output,
+		"tftp_ip":  req.Name,
+		"filename": req.SN,
+	}, start)
+}
+
+// RestoreConfig godoc
+// @Summary Restore Config from TFTP
+// @Tags CLI-Config
+// @Router /api/v1/cli/config/restore [post]
+func (h *CLIHandler) RestoreConfig(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, "Invalid request")
+		return
+	}
+
+	if req.Name == "" || req.SN == "" {
+		response.BadRequest(w, "name (tftp_ip) and sn (filename) are required")
+		return
+	}
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	output, err := client.RestoreConfig(ctx, req.Name, req.SN)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "copy_tftp_running-config", map[string]interface{}{
+		"success":  true,
+		"message":  output,
+		"tftp_ip":  req.Name,
+		"filename": req.SN,
+	}, start)
+}
+
+// ShowInterfaceVLAN godoc
+// @Summary Show Interface VLAN
+// @Tags CLI-Interface
+// @Router /api/v1/cli/interface/vlan [post]
+func (h *CLIHandler) ShowInterfaceVLAN(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, "Invalid request")
+		return
+	}
+
+	if req.VlanID == 0 {
+		response.BadRequest(w, "vlan_id is required")
+		return
+	}
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	data, err := client.ShowInterfaceVLAN(ctx, req.VlanID)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "show_interface_vlan", data, start)
+}
+
+// ShowPowerSupply godoc
+// @Summary Show Power Supply
+// @Tags CLI-Hardware
+// @Router /api/v1/cli/power [post]
+func (h *CLIHandler) ShowPowerSupply(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	json.NewDecoder(r.Body).Decode(&req)
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	data, err := client.ShowPowerSupply(ctx)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "show_power", data, start)
+}
+
+// ShowTemperature godoc
+// @Summary Show Temperature
+// @Tags CLI-Hardware
+// @Router /api/v1/cli/temperature [post]
+func (h *CLIHandler) ShowTemperature(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req CLIRequest
+	json.NewDecoder(r.Body).Decode(&req)
+
+	ctx := context.Background()
+	client := h.getClient(req)
+	if err := client.Connect(); err != nil {
+		response.Error(w, http.StatusGatewayTimeout, "Connection failed")
+		return
+	}
+	defer client.Close()
+
+	data, err := client.ShowTemperature(ctx)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.respond(w, "show_temperature", data, start)
+}
+
+// ============================================================
 // WRITE ENDPOINTS (Provisioning)
 // ============================================================
 
